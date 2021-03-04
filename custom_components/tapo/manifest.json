@@ -2,11 +2,9 @@
   "domain": "tapo",
   "name": "Tapo controller",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tapo",
+  "version": "1.0.0",
+  "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "requirements": ["plugp100==2.0"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": ["@petretiandrea"]
 }
