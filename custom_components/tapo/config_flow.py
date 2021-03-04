@@ -39,6 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": tapo.get_device_name(), "unique_id": tapo.get_device_id()}
 
 
+@config_entries.HANDLERS.register(DOMAIN)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tapo."""
 
