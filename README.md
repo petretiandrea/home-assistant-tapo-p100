@@ -5,7 +5,7 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 
 ## Next improvements (TODO)
 - [ ] add support for tapo light bulb
-- [ ] allow configuration from home assistant UI with config flow
+- [x] allow configuration from home assistant UI with config flow
 - [ ] improve it using pure async home assistant's method
 
 ## How to install into home assistant
