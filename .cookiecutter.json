@@ -1,0 +1,10 @@
+{
+  "_template": "gh:oncleben31/cookiecutter-homeassistant-custom-component",
+  "class_name_prefix": "Tapo",
+  "domain_name": "tapo",
+  "friendly_name": "tapo",
+  "github_user": "petretiandrea",
+  "project_name": "tapo",
+  "test_suite": "yes",
+  "version": "1.0"
+}

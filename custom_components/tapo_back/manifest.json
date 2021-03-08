@@ -1,0 +1,10 @@
+{
+  "domain": "tapo",
+  "name": "tapo",
+  "documentation": "https://github.com/petretiandrea/tapo",
+  "issue_tracker": "https://github.com/petretiandrea/tapo/issues",
+  "dependencies": [],
+  "config_flow": true,
+  "codeowners": ["@petretiandrea"],
+  "requirements": []
+}
