@@ -4,8 +4,8 @@ NAME = "tapo"
 DOMAIN = "tapo"
 VERSION = "1.0"
 
-SUPPORTED_DEVICE_AS_SWITCH = ["p100"]
-SUPPORTED_DEVICE_AS_LIGHT = ["p105"]  # TODO: change this
+SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105"]
+SUPPORTED_DEVICE_AS_LIGHT = ["l530 series"]  # TODO: change this
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
