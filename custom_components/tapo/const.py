@@ -11,7 +11,7 @@ ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
 # TODO: add suport for ligth and use "model" from get_state of tapo
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "light"]
 
 CONF_HOST = "host"
 CONF_USERNAME = "username"
