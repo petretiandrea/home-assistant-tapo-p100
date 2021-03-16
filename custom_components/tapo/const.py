@@ -1,11 +1,19 @@
 """Constants for the tapo integration."""
 
+from homeassistant.components.light import (
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+)
+
 NAME = "tapo"
 DOMAIN = "tapo"
 VERSION = "1.0"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105"]
-SUPPORTED_DEVICE_AS_LIGHT = ["l530 series"]  # TODO: change this
+SUPPORTED_DEVICE_AS_LIGHT = {
+    "l530": SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+}
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
