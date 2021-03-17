@@ -27,7 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
 
     for (model, capabilities) in SUPPORTED_DEVICE_AS_LIGHT.items():
         if model.lower() in coordinator.data.model.lower():
-            light = TapoLight(coordinator, entry, capabilities)
+            light = TapoLight(
+                coordinator,
+                entry,
+                capabilities,
+            )
             async_add_devices([light], True)
 
 
@@ -35,8 +39,9 @@ class TapoLight(TapoEntity, LightEntity):
     def __init__(self, coordinator, config_entry, features: int):
         super().__init__(coordinator, config_entry)
         self.features = features
-        self._max_merids = kelvin_to_mired(6500)
-        self._min_merids = kelvin_to_mired(2500)
+        self._max_merids = kelvin_to_mired(2500)
+        self._min_merids = kelvin_to_mired(6500)
+        self.emulated = Emulated()
 
     @property
     def is_on(self):
@@ -54,15 +59,16 @@ class TapoLight(TapoEntity, LightEntity):
 
     @property
     def hs_color(self):
-        hue = self._tapo_coordinator.data.hue
-        saturation = self._tapo_coordinator.data.saturation
-        if hue and saturation:
-            return hue, saturation
+        pass
+        # hue = self._tapo_coordinator.data.hue
+        # saturation = self._tapo_coordinator.data.saturation
+        # if hue and saturation:
+        #    return hue, saturation
 
     @property
     def color_temp(self):
         color_temp = self._tapo_coordinator.data.color_temp
-        if color_temp is not None:
+        if color_temp:
             return kelvin_to_mired(color_temp)
 
     @property
@@ -104,12 +110,60 @@ class TapoLight(TapoEntity, LightEntity):
     async def _change_color_temp(self, color_temp):
         constraint_color_temp = max(self._min_merids, min(color_temp, self._max_merids))
         kelvin_color_temp = mired_to_kelvin(constraint_color_temp)
-
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )
 
     async def _change_color(self, hs_color):
+        hue = hs_color[0] / 360 * 65536
+        saturation = hs_color[1] / 100 * 255
         await self._execute_with_fallback(
-            self._tapo_coordinator.api.set_hue_saturation(hs_color[0], hs_color[1])
+            self._tapo_coordinator.api.set_hue_saturation(hue, saturation)
         )
+
+
+EX = {
+    "device_id": "80235BB614053ACC4A9E499A85827FC91D7955EE",
+    "fw_ver": "1.1.9 Build 20210122 Rel. 56165",
+    "hw_ver": "1.0.0",
+    "type": "SMART.TAPOBULB",
+    "model": "L530 Series",
+    "mac": "60-32-B1-FD-3E-17",
+    "hw_id": "93F94D88DA9499F43B929DD38EBDF09A",
+    "fw_id": "7BECA9DC454565672FEC87D1104F9972",
+    "oem_id": "D042998E924F77C9E23A75966003ADD8",
+    "specs": "EU",
+    "lang": "en_US",
+    "device_on": True,
+    "on_time": 2712,
+    "overheated": False,
+    "nickname": "VGFwbyA1MzBlIEJlZHJvb20=",
+    "avatar": "hang_lamp_1",
+    "brightness": 100,
+    "dynamic_light_effect_enable": False,
+    "color_temp": 2500,
+    "default_states": {
+        "type": "last_states",
+        "state": {"brightness": 100, "color_temp": 2500},
+    },
+    "time_diff": 60,
+    "has_set_location_info": True,
+    "ip": "removed",
+    "ssid": "removed",
+    "signal_level": 2,
+    "rssi": -60,
+}
+
+
+class Emulated:
+    def __init__(self):
+        self.state = EX
+
+    def set_brightness(self, value):
+        self.state["brightness"] = value
+
+    def set_color_temp(self, color_temp):
+        self.state["color_temp"] = color_temp
+
+    def get_state(self) -> TapoDeviceState:
+        return TapoDeviceState(self.state)
