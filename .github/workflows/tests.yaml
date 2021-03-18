@@ -37,7 +37,7 @@ jobs:
 
       - name: Run pre-commit on all files
         run: |
-          pre-commit run --all-files --show-diff-on-failure --color=always
+          pre-commit run --files custom_components/* --show-diff-on-failure --color=always
 
   hacs:
     runs-on: "ubuntu-latest"
