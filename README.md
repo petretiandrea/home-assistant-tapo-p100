@@ -1,10 +1,12 @@
 # Home Assistant Tapo Integration
+
 This is a custom integration to control Tapo devices from home assistant.
 
 The core of the integration is provied by [plugp100](https://github.com/petretiandrea/plugp100) python library based on work of [@K4CZP3R](https://github.com/K4CZP3R/tapo-p100-python).
 
 <!--- [![GitHub Release][releases-shield]][releases] -->
 <!--- [![GitHub Activity][commits-shield]][commits] -->
+
 [![License][license-shield]](LICENSE)
 
 <!--- [![pre-commit][pre-commit-shield]][pre-commit] -->
@@ -15,6 +17,7 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 ## Next improvements (TODO)
+
 - [x] add support for tapo light bulb
 - [x] allow configuration from home assistant UI with config flow
 - [x] improve it using pure async home assistant's method
@@ -23,11 +26,13 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 ## Installation
 
 Recomended way:
+
 1. Install from HACS, add this repository as custom repository
 2. Search into HACS store the tapo integration and install
 3. Full restart of home assistant is recomended
 
 "Manual" way:
+
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
 3. In the `custom_components` directory (folder) create a new folder called `tapo`.
@@ -45,6 +50,7 @@ Recomended way:
 <!---->
 
 ## Contributions are welcome!
+
 Open a pull request, every contribution are welcome.
 
 ---
