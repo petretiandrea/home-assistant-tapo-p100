@@ -5,16 +5,15 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS, CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
-from .tapo_helper import TapoHelper
+from plugp100 import TapoApiClient, TapoDeviceState
 
 _LOGGGER = logging.getLogger(__name__)
-
-# list the platforms that you want to support.
-# TODO: add suport for ligth and use "model" from get_state of tapo
-PLATFORMS = ["switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -26,13 +25,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
 
-    data = entry.as_dict()["data"]
-    connector = TapoHelper(data["host"], data["username"], data["password"])
+    host = entry.data.get(CONF_HOST)
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
 
-    if not await hass.async_add_executor_job(connector.setup):
+    session = async_get_clientsession(hass)
+    client = TapoApiClient(host, username, password, session)
+
+    coordinator = TapoUpdateCoordinator(hass, client=client)
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = connector
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -56,3 +62,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
+    def __init__(self, hass: HomeAssistant, client: TapoApiClient):
+        self.api = client
+        super().__init__(hass, _LOGGGER, name=DOMAIN)
+
+    @property
+    def tapo_client(self) -> TapoApiClient:
+        return self.api
+
+    async def _async_update_data(self):
+        try:
+            return await self._update_with_fallback()
+        except Exception as exception:
+            raise UpdateFailed() from exception
+
+    async def _update_with_fallback(self, retry=True):
+        try:
+            return await self.api.get_state()
+        except Exception as error:
+            if retry:
+                await self.api.login()
+                return await self._update_with_fallback(False)

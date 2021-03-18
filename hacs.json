@@ -1,6 +1,8 @@
 {
   "name": "tapo",
+  "hacs": "1.6.0",
   "domains": ["tapo", "switch", "light"],
   "iot_class": "Local Polling",
-  "render_readme": true
+  "render_readme": true,
+  "homeassistant": "0.118.0"
 }
