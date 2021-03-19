@@ -21,7 +21,7 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 - [x] add support for tapo light bulb
 - [x] allow configuration from home assistant UI with config flow
 - [x] improve it using pure async home assistant's method
-- [ ] add support for color bulb
+- [x] add support for color bulb
 
 ## Installation
 
