@@ -118,5 +118,7 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_color(self, hs_color):
         await self._execute_with_fallback(
-            self._tapo_coordinator.api.set_hue_saturation(hs_color[0], hs_color[1])
+            lambda: self._tapo_coordinator.api.set_hue_saturation(
+                hs_color[0], hs_color[1]
+            )
         )
