@@ -61,25 +61,25 @@ jobs:
 
       - name: Hassfest validation
         uses: "home-assistant/actions/hassfest@master"
-  tests:
-    runs-on: "ubuntu-latest"
-    name: Run tests
-    steps:
-      - name: Check out code from GitHub
-        uses: "actions/checkout@v2.3.4"
-      - name: Setup Python ${{ env.DEFAULT_PYTHON }}
-        uses: "actions/setup-python@v2.2.1"
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: Install requirements
-        run: |
-          pip install --constraint=.github/workflows/constraints.txt pip
-          pip install -r requirements_test.txt
-      - name: Tests suite
-        run: |
-          pytest \
-            --timeout=9 \
-            --durations=10 \
-            -n auto \
-            -p no:sugar \
-            tests
+  # tests:
+  #   runs-on: "ubuntu-latest"
+  #   name: Run tests
+  #   steps:
+  #     - name: Check out code from GitHub
+  #       uses: "actions/checkout@v2.3.4"
+  #     - name: Setup Python ${{ env.DEFAULT_PYTHON }}
+  #       uses: "actions/setup-python@v2.2.1"
+  #       with:
+  #         python-version: ${{ env.DEFAULT_PYTHON }}
+  #     - name: Install requirements
+  #       run: |
+  #         pip install --constraint=.github/workflows/constraints.txt pip
+  #         pip install -r requirements_test.txt
+  #     - name: Tests suite
+  #       run: |
+  #         pytest \
+  #           --timeout=9 \
+  #           --durations=10 \
+  #           -n auto \
+  #           -p no:sugar \
+  #           tests
