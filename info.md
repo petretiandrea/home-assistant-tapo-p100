@@ -1,3 +1,7 @@
+{% if prerelease %}
+### NB!: This is a Beta version!
+{% endif %}
+
 # Home Assistant Tapo Integration
 
 This is a custom integration to control Tapo devices from home assistant.

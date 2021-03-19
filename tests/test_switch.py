@@ -31,9 +31,7 @@ async def test_switch_services(hass):
 
     # Functions/objects can be patched directly in test code as well and can be used to test
     # additional things, like whether a function was called or what arguments it was called with
-    with patch(
-        "custom_components.tapo.TapoApiClient.async_set_title"
-    ) as title_func:
+    with patch("custom_components.tapo.TapoApiClient.async_set_title") as title_func:
         await hass.services.async_call(
             SWITCH,
             SERVICE_TURN_OFF,
