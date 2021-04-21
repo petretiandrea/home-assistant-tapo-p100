@@ -2,7 +2,7 @@
   "domain": "tapo",
   "name": "Tapo Controller",
   "config_flow": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues/",
   "requirements": [
