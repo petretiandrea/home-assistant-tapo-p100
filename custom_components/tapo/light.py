@@ -1,3 +1,4 @@
+from custom_components.tapo.utils import clamp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.light import (
@@ -39,6 +40,8 @@ class TapoLight(TapoEntity, LightEntity):
     def __init__(self, coordinator, config_entry, features: int):
         super().__init__(coordinator, config_entry)
         self.features = features
+        self._max_kelvin = 6500
+        self._min_kelvin = 2500
         self._max_merids = kelvin_to_mired(2500)
         self._min_merids = kelvin_to_mired(6500)
 
@@ -110,8 +113,8 @@ class TapoLight(TapoEntity, LightEntity):
         await self._execute_with_fallback(_set_brightness)
 
     async def _change_color_temp(self, color_temp):
-        constraint_color_temp = max(self._min_merids, min(color_temp, self._max_merids))
-        kelvin_color_temp = mired_to_kelvin(constraint_color_temp)
+        constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
+        kelvin_color_temp = clamp(mired_to_kelvin(constraint_color_temp), min_value=self._min_kelvin, max_value=self._max_kelvin)
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )
