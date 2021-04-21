@@ -2,10 +2,14 @@
   "domain": "tapo",
   "name": "Tapo controller",
   "config_flow": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues/",
-  "requirements": ["plugp100==2.1.5"],
+  "requirements": [
+    "plugp100==2.1.6"
+  ],
   "dependencies": [],
-  "codeowners": ["@petretiandrea"]
+  "codeowners": [
+    "@petretiandrea"
+  ]
 }
