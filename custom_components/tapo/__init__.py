@@ -1,6 +1,8 @@
 """The tapo integration."""
 import logging
 import asyncio
+import async_timeout
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -8,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 
 from .const import DOMAIN, PLATFORMS, CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
@@ -63,11 +66,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return unload_ok
 
+SCAN_INTERVAL = timedelta(seconds=30)
 
 class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
     def __init__(self, hass: HomeAssistant, client: TapoApiClient):
         self.api = client
-        super().__init__(hass, _LOGGGER, name=DOMAIN)
+        debouncer = Debouncer(hass, _LOGGGER, cooldown=2, immediate=True)
+        super().__init__(hass, _LOGGGER, name=DOMAIN, update_interval=SCAN_INTERVAL, request_refresh_debouncer=debouncer)
 
     @property
     def tapo_client(self) -> TapoApiClient:
@@ -75,7 +80,8 @@ class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
 
     async def _async_update_data(self):
         try:
-            return await self._update_with_fallback()
+            async with async_timeout.timeout(10):
+                return await self._update_with_fallback()
         except Exception as exception:
             raise UpdateFailed() from exception
 

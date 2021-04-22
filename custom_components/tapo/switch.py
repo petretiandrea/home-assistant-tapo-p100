@@ -24,8 +24,8 @@ class P100Switch(TapoEntity, SwitchEntity):
 
     async def async_turn_on(self):
         await self._execute_with_fallback(self._tapo_coordinator.api.on)
-        await self._tapo_coordinator.async_refresh()
+        await self._tapo_coordinator.async_request_refresh()
 
     async def async_turn_off(self):
         await self._execute_with_fallback(self._tapo_coordinator.api.off)
-        await self._tapo_coordinator.async_refresh()
+        await self._tapo_coordinator.async_request_refresh()
