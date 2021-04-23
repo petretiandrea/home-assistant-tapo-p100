@@ -7,8 +7,6 @@ on:
       - master
       - dev
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
 
 env:
   DEFAULT_PYTHON: 3.9
