@@ -67,11 +67,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 SCAN_INTERVAL = timedelta(seconds=30)
+DEBOUNCER_COOLDOWN = 2
 
 class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
     def __init__(self, hass: HomeAssistant, client: TapoApiClient):
         self.api = client
-        debouncer = Debouncer(hass, _LOGGGER, cooldown=2, immediate=True)
+        debouncer = Debouncer(hass, _LOGGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True)
         super().__init__(hass, _LOGGGER, name=DOMAIN, update_interval=SCAN_INTERVAL, request_refresh_debouncer=debouncer)
 
     @property
