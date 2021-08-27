@@ -1,4 +1,6 @@
+from custom_components.tapo.const import DOMAIN
 from typing import Union, Callable, Awaitable, TypeVar
+from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +15,14 @@ class TapoEntity(CoordinatorEntity):
     @property
     def _tapo_coordinator(self) -> TapoUpdateCoordinator:
         return self.coordinator
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.data.device_id)},
+            "name": self.coordinator.data.nickname,
+            "manufacturer": "TP-Link",
+        }
 
     @property
     def unique_id(self):

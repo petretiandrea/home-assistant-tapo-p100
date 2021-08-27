@@ -53,7 +53,6 @@ class TapoLight(TapoEntity, LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return self.features
-        # return SUPPORT_BRIGHTNESS  # TODO: return supported feature starting from model type
 
     @property
     def brightness(self):
@@ -114,7 +113,11 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_color_temp(self, color_temp):
         constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
-        kelvin_color_temp = clamp(mired_to_kelvin(constraint_color_temp), min_value=self._min_kelvin, max_value=self._max_kelvin)
+        kelvin_color_temp = clamp(
+            mired_to_kelvin(constraint_color_temp),
+            min_value=self._min_kelvin,
+            max_value=self._max_kelvin,
+        )
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )

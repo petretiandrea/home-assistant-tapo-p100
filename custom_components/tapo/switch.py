@@ -1,11 +1,17 @@
+from typing import Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import DEVICE_CLASS_ENERGY, STATE_CLASS_MEASUREMENT
 from plugp100 import TapoDeviceState
 
 from . import TapoUpdateCoordinator
 from .tapo_entity import TapoEntity
-from .const import DOMAIN, SUPPORTED_DEVICE_AS_SWITCH
+from .const import (
+    DOMAIN,
+    SUPPORTED_DEVICE_AS_SWITCH,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
