@@ -8,5 +8,5 @@
   ],
   "iot_class": "Local Polling",
   "render_readme": true,
-  "homeassistant": "0.118.0"
+  "homeassistant": "2021.9.0"
 }

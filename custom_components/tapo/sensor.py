@@ -56,6 +56,6 @@ class TapoTodayEnergySensor(TapoEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         if self.coordinator.data.energy_info != None:
-            return self.coordinator.data.energy_info.today_energy
+            return self.coordinator.data.energy_info.today_energy / 1000
         else:
             return None
