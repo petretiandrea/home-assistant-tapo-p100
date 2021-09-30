@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import StateType
 from . import TapoUpdateCoordinator
 from .tapo_entity import TapoEntity
+from plugp100 import TapoDeviceState
 
 
 @dataclass
@@ -102,5 +103,8 @@ class TapoCurrentEnergySensor(TapoSensor):
 
     @property
     def native_value(self) -> StateType:
-        ## TODO: to be implemented by plugp100
-        return None
+        data: TapoDeviceState = self.coordinator.data
+        if data.energy_info != None:
+            return data.energy_info.current_power / 1000
+        else:
+            return None
