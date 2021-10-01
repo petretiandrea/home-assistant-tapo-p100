@@ -24,12 +24,15 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 - [x] add support for color bulb
 
 ## Installation
-
 Recomended way:
 
 1. Install from HACS, add this repository as custom repository
 2. Search into HACS store the tapo integration and install
 3. Full restart of home assistant is recomended
+
+This video show installation steps:
+
+[![Install Steps](http://img.youtube.com/vi/KSYldphgE5A/0.jpg)](https://youtu.be/KSYldphgE5A)
 
 "Manual" way:
 
