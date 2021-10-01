@@ -1,2 +1,2 @@
 homeassistant
-plugp100==2.1.9
+plugp100==2.1.10b1

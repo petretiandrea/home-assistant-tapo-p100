@@ -1,9 +1,13 @@
+from typing import Dict, Any, Callable
+from custom_components.tapo.common_setup import (
+    TapoUpdateCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 from custom_components.tapo.utils import clamp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.light import (
     LightEntity,
-    SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     ATTR_BRIGHTNESS,
@@ -14,31 +18,39 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
-from typing import List, Optional
-from plugp100 import TapoDeviceState
-
-from . import TapoUpdateCoordinator
-from .tapo_entity import TapoEntity
-from .const import DOMAIN, SUPPORTED_DEVICE_AS_LIGHT
+from custom_components.tapo.tapo_entity import TapoEntity
+from custom_components.tapo.const import DOMAIN, SUPPORTED_DEVICE_AS_LIGHT
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
     # get tapo helper
     coordinator: TapoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    _setup_from_coordinator(coordinator, async_add_devices)
 
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    async_add_entities: Callable,
+    discovery_info=None,
+) -> None:
+    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
+    _setup_from_coordinator(coordinator, async_add_entities)
+
+
+def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
     for (model, capabilities) in SUPPORTED_DEVICE_AS_LIGHT.items():
         if model.lower() in coordinator.data.model.lower():
             light = TapoLight(
                 coordinator,
-                entry,
                 capabilities,
             )
             async_add_devices([light], True)
 
 
 class TapoLight(TapoEntity, LightEntity):
-    def __init__(self, coordinator, config_entry, features: int):
-        super().__init__(coordinator, config_entry)
+    def __init__(self, coordinator, features: int):
+        super().__init__(coordinator)
         self.features = features
         self._max_kelvin = 6500
         self._min_kelvin = 2500
@@ -53,7 +65,6 @@ class TapoLight(TapoEntity, LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return self.features
-        # return SUPPORT_BRIGHTNESS  # TODO: return supported feature starting from model type
 
     @property
     def brightness(self):
@@ -114,7 +125,11 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_color_temp(self, color_temp):
         constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
-        kelvin_color_temp = clamp(mired_to_kelvin(constraint_color_temp), min_value=self._min_kelvin, max_value=self._max_kelvin)
+        kelvin_color_temp = clamp(
+            mired_to_kelvin(constraint_color_temp),
+            min_value=self._min_kelvin,
+            max_value=self._max_kelvin,
+        )
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )
