@@ -16,12 +16,14 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![Project Maintenance][maintenance-shield]][user_profile]
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-## Next improvements (TODO)
+## Features
 
-- [x] add support for tapo light bulb
+- [x] pure async home assistant's method
+- [x] support for tapo switch (`P100`, `P110`, `P105`) 
+- [x] support for tapo light bulb with or without color (`L530`, `L510`)
+- [x] support for P110 energy monitoring 
 - [x] allow configuration from home assistant UI with config flow
-- [x] improve it using pure async home assistant's method
-- [x] add support for color bulb
+- [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
 
 ## Installation
 Recomended way:
@@ -51,6 +53,18 @@ This video show installation steps:
 3. Insert host, username and password for control your tapo device
 4. Wait for connection. It automatically recognize if the tapo device is switch or light
 <!---->
+
+## Configuration by configuration.yaml
+Domain can be `switch`, `light` or `sensor`.
+
+An example with switch:
+```yaml
+switch:
+  platform: tapo
+  host: ...
+  username: ...
+  password: ...
+```
 
 ## Contributions are welcome!
 
