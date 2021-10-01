@@ -39,10 +39,6 @@ class TapoSensor(TapoEntity, SensorEntity):
         self.sensor_config = sensor_config
 
     @property
-    def icon(self) -> str:
-        return "mdi:power"
-
-    @property
     def unique_id(self):
         return super().unique_id + "_" + self.sensor_config.name.replace(" ", "_")
 

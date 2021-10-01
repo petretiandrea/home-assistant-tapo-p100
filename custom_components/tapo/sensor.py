@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import enum
 from typing import Optional
+from homeassistant.components import sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import SwitchEntity
@@ -23,4 +24,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
 
     if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR:
         sensors = [factory(coordinator, entry) for factory in SUPPORTED_SENSOR]
-        async_add_devices([sensors], True)
+        async_add_devices(sensors, True)
