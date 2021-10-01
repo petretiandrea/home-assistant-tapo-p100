@@ -10,7 +10,7 @@ from homeassistant import data_entry_flow
 from plugp100 import TapoApiClient
 from plugp100.core.exceptions.TapoException import TapoException
 
-from .const import (
+from custom_components.tapo.const import (
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,

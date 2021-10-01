@@ -1,25 +1,37 @@
-from typing import Optional
+from typing import Callable, Dict, Any
+from custom_components.tapo.tapo_entity import TapoEntity
+from custom_components.tapo.const import (
+    DOMAIN,
+    SUPPORTED_DEVICE_AS_SWITCH,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.sensor import DEVICE_CLASS_ENERGY, STATE_CLASS_MEASUREMENT
-from plugp100 import TapoDeviceState
-
-from . import TapoUpdateCoordinator
-from .tapo_entity import TapoEntity
-from .const import (
-    DOMAIN,
-    SUPPORTED_DEVICE_AS_SWITCH,
+from custom_components.tapo.common_setup import (
+    TapoUpdateCoordinator,
+    setup_tapo_coordinator_from_dictionary,
 )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
     # get tapo helper
     coordinator: TapoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    _setup_from_coordinator(coordinator, async_add_devices)
 
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    async_add_entities: Callable,
+    discovery_info=None,
+) -> None:
+    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
+    _setup_from_coordinator(coordinator, async_add_entities)
+
+
+def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
     if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH:
-        switch = P100Switch(coordinator, entry)
+        switch = P100Switch(coordinator)
         async_add_devices([switch], True)
 
 

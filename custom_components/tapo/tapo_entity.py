@@ -1,3 +1,4 @@
+from custom_components.tapo.common_setup import TapoUpdateCoordinator
 from custom_components.tapo.const import DOMAIN
 from typing import Union, Callable, Awaitable, TypeVar
 from homeassistant.helpers.entity import DeviceInfo
@@ -5,11 +6,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.config_entries import ConfigEntry
 
-from . import TapoUpdateCoordinator
-
 
 class TapoEntity(CoordinatorEntity):
-    def __init__(self, coordiantor: TapoUpdateCoordinator, config_entry: ConfigEntry):
+    def __init__(self, coordiantor: TapoUpdateCoordinator):
         super().__init__(coordiantor)
 
     @property

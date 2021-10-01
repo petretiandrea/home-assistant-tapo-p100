@@ -15,8 +15,8 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
 )
 from homeassistant.helpers.typing import StateType
-from . import TapoUpdateCoordinator
-from .tapo_entity import TapoEntity
+from custom_components.tapo.common_setup import TapoUpdateCoordinator
+from custom_components.tapo.tapo_entity import TapoEntity
 from plugp100 import TapoDeviceState
 
 
@@ -32,10 +32,9 @@ class TapoSensor(TapoEntity, SensorEntity):
     def __init__(
         self,
         coordiantor: TapoUpdateCoordinator,
-        config_entry: ConfigEntry,
         sensor_config: SensorConfig,
     ):
-        super().__init__(coordiantor, config_entry)
+        super().__init__(coordiantor)
         self.sensor_config = sensor_config
 
     @property
@@ -60,14 +59,9 @@ class TapoSensor(TapoEntity, SensorEntity):
 
 
 class TapoTodayEnergySensor(TapoSensor):
-    def __init__(
-        self,
-        coordiantor: TapoUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ):
+    def __init__(self, coordiantor: TapoUpdateCoordinator):
         super().__init__(
             coordiantor,
-            config_entry,
             SensorConfig(
                 "today energy",
                 DEVICE_CLASS_ENERGY,
@@ -85,10 +79,9 @@ class TapoTodayEnergySensor(TapoSensor):
 
 
 class TapoCurrentEnergySensor(TapoSensor):
-    def __init__(self, coordiantor: TapoUpdateCoordinator, config_entry: ConfigEntry):
+    def __init__(self, coordiantor: TapoUpdateCoordinator):
         super().__init__(
             coordiantor,
-            config_entry,
             SensorConfig(
                 "current energy",
                 DEVICE_CLASS_POWER,
