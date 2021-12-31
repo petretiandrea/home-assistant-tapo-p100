@@ -10,7 +10,16 @@
     "plugp100==2.1.10b1"
   ],
   "dependencies": [],
+  "after_dependencies": [
+    "dhcp"
+  ],
   "codeowners": [
     "@petretiandrea"
+  ],
+  "dhcp": [
+    {
+      "hostname": "*",
+      "macaddress": "CC32E5*"
+    }
   ]
 }

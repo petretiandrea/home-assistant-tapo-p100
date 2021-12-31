@@ -3,9 +3,11 @@ import logging
 import re
 
 import voluptuous as vol
+import json
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant import data_entry_flow
 from plugp100 import TapoApiClient
 from plugp100.core.exceptions.TapoException import TapoException
@@ -34,6 +36,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
+        _LOGGER.debug("received dhcp discovery: %s", json.dumps(discovery_info))
+        pass
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
