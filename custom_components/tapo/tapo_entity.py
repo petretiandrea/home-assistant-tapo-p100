@@ -20,6 +20,7 @@ class TapoEntity(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self.coordinator.data.device_id)},
             "name": self.coordinator.data.nickname,
+            "model": self.coordinator.data.model,
             "manufacturer": "TP-Link",
         }
 
