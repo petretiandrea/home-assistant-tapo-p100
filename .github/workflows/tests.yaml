@@ -45,7 +45,7 @@ jobs:
         uses: "actions/checkout@v2.4.0"
 
       - name: HACS validation
-        uses: "hacs/action@21.2.2"
+        uses: "hacs/action@21.12.1"
         with:
           category: "integration"
           ignore: brands, wheels, requirements
