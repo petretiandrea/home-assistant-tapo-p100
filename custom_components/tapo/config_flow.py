@@ -22,7 +22,15 @@ _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {CONF_HOST: str, CONF_USERNAME: str, CONF_PASSWORD: str}
+    {
+        vol.Required(
+            CONF_HOST, description="The IP address of your tapo device (must be static)"
+        ): str,
+        vol.Required(
+            CONF_USERNAME, description="The username used with Tapo App, so your email"
+        ): str,
+        vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
+    }
 )
 
 HOST_REGEX = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
@@ -39,7 +47,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         errors = {}
