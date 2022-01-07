@@ -7,13 +7,13 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 <!--- [![GitHub Release][releases-shield]][releases] -->
 <!--- [![GitHub Activity][commits-shield]][commits] -->
 
-[![License][license-shield]](LICENSE)
 
 <!--- [![pre-commit][pre-commit-shield]][pre-commit] -->
 <!--- [![Black][black-shield]][black] -->
 
 [![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
+[![License][license-shield]](LICENSE)
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 ## Features
@@ -76,11 +76,11 @@ Open a pull request, every contribution are welcome.
 [black]: https://github.com/psf/black
 [black-shield]: https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge
 [buymecoffee]: https://www.buymeacoffee.com/petretiandrea
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg
+[buymecoffeebadge]: https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png
 [commits-shield]: https://img.shields.io/github/commit-activity/y/petretiandrea/tapo.svg?style=for-the-badge
 [commits]: https://github.com/petretiandrea/tapo/commits/main
 [hacs]: https://github.com/petretiandrea/home-assistant-tapo-p100
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg
+[hacsbadge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
