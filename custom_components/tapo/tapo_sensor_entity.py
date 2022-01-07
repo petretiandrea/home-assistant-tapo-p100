@@ -1,10 +1,9 @@
 from dataclasses import dataclass
-import enum
 from typing import Optional
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
 )
@@ -13,6 +12,8 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.helpers.typing import StateType
 from custom_components.tapo.common_setup import TapoUpdateCoordinator
@@ -72,10 +73,9 @@ class TapoTodayEnergySensor(TapoSensor):
 
     @property
     def native_value(self) -> StateType:
-        if self.coordinator.data.energy_info != None:
+        if self.coordinator.data.energy_info is not None:
             return self.coordinator.data.energy_info.today_energy / 1000
-        else:
-            return None
+        return None
 
 
 class TapoCurrentEnergySensor(TapoSensor):
@@ -93,7 +93,46 @@ class TapoCurrentEnergySensor(TapoSensor):
     @property
     def native_value(self) -> StateType:
         data: TapoDeviceState = self.coordinator.data
-        if data.energy_info != None:
+        if data.energy_info is not None:
             return data.energy_info.current_power / 1000
-        else:
-            return None
+        return None
+
+
+class TapoOverheatSensor(TapoSensor):
+    def __init__(self, coordiantor: TapoUpdateCoordinator):
+        super().__init__(
+            coordiantor,
+            SensorConfig(
+                name="overheat",
+                device_class="heat",
+                state_class=None,
+                unit_measure=None,
+            ),
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        data: TapoDeviceState = self.coordinator.data
+        if data is not None:
+            return data.overheated
+        return None
+
+
+class TapoSignalSensor(TapoSensor):
+    def __init__(self, coordiantor: TapoUpdateCoordinator):
+        super().__init__(
+            coordiantor,
+            SensorConfig(
+                name="signal level",
+                device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+                state_class=None,
+                unit_measure=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            ),
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        data: TapoDeviceState = self.coordinator.data
+        if data is not None:
+            return data.rssi
+        return 0
