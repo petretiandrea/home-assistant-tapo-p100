@@ -48,7 +48,6 @@ jobs:
         uses: "hacs/action@21.12.1"
         with:
           category: "integration"
-          ignore: brands, wheels, requirements
 
   hassfest:
     runs-on: "ubuntu-latest"
