@@ -7,6 +7,10 @@ on:
       - master
       - dev
   pull_request:
+    branches:
+      - main
+      - master
+      - dev
 
 env:
   DEFAULT_PYTHON: 3.9
@@ -36,10 +40,9 @@ jobs:
       - name: Run pre-commit on all files
         run: |
           pre-commit run --files custom_components/* --show-diff-on-failure --color=always
-
   hacs:
     runs-on: "ubuntu-latest"
-    name: HACS
+    name: HACS Validation
     steps:
       - name: Check out the repository
         uses: "actions/checkout@v2.4.0"
@@ -49,15 +52,6 @@ jobs:
         with:
           category: "integration"
 
-  hassfest:
-    runs-on: "ubuntu-latest"
-    name: Hassfest
-    steps:
-      - name: Check out the repository
-        uses: "actions/checkout@v2.4.0"
-
-      - name: Hassfest validation
-        uses: "home-assistant/actions/hassfest@master"
   # tests:
   #   runs-on: "ubuntu-latest"
   #   name: Run tests
