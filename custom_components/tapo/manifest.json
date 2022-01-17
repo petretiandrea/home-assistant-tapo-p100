@@ -7,7 +7,7 @@
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues/",
   "requirements": [
-    "git+https://github.com/petretiandrea/plugp100@v2.1.11#plugp100"
+    "plugp100=2.1.11"
   ],
   "dependencies": [],
   "codeowners": [
