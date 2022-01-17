@@ -1,2 +1,2 @@
 homeassistant
-git+https://github.com/petretiandrea/plugp100@v2.1.11#egg=plugp100
+plugp100==2.1.12
