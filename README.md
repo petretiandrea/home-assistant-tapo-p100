@@ -25,6 +25,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 - [x] pure async home assistant's method
 - [x] support for tapo switch (`P100`, `P110`, `P105`) 
 - [x] support for tapo light bulb with or without color (`L530`, `L510`)
+- [x] support for tapo light strip with or without color (`L900`) 
 - [x] support for P110 energy monitoring 
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
