@@ -54,7 +54,7 @@ async def setup_tapo_coordinator(
     client = TapoApiClient(host, username, password, session)
 
     coordinator = TapoUpdateCoordinator(hass, client=client)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.last_update_success:
         raise Exception("Failed to retrieve first tapo data")
