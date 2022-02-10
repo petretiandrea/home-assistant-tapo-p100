@@ -4,7 +4,7 @@ This is a custom integration to control Tapo devices from home assistant.
 
 The core of the integration is provied by [plugp100](https://github.com/petretiandrea/plugp100) python library based on work of [@K4CZP3R](https://github.com/K4CZP3R/tapo-p100-python).
 
-<!--- [![GitHub Release][releases-shield]][releases] -->
+<!-- [![GitHub Release][releases-shield]][releases] -->
 <!--- [![GitHub Activity][commits-shield]][commits] -->
 
 
@@ -23,18 +23,21 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ## Features
 
 - [x] pure async home assistant's method
-- [x] support for tapo switch (`P100`, `P110`, `P105`) 
+- [x] support for tapo switch (`P100`, `P110`, `P105`)
 - [x] support for tapo light bulb with or without color (`L530`, `L510`)
-- [x] support for tapo light strip with or without color (`L900`) 
-- [x] support for P110 energy monitoring 
+- [x] support for tapo light strip with or without color (`L900`)
+- [x] support for P110 energy monitoring
+- [x] support for additional tapo sensors: `overheat` and `wifi_signal`
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
 
-## Installation
-**NOW this integration is part of HACS store, so you don't need anymore to add this repository as a custom repository. You can find it directly on HACS Store**
+# How to install
 
-Recomended way (**Old way as a custom repository**):
+## Simplest and recomended way
+This integration is part of HACS store, so you don't need anymore to add this repository as a custom repository.
+You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is requried**)
 
+## Old way as a custom repository (not recomended, but use if you want to use beta versions)
 1. Install from HACS, add this repository as custom repository
 2. Search into HACS store the tapo integration and install
 3. Full restart of home assistant is recomended
@@ -43,8 +46,7 @@ This video show installation steps:
 
 [![Install Steps](http://img.youtube.com/vi/KSYldphgE5A/0.jpg)](https://youtu.be/KSYldphgE5A)
 
-"Manual" way:
-
+## "Manual" way
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
 3. In the `custom_components` directory (folder) create a new folder called `tapo`.
@@ -53,12 +55,16 @@ This video show installation steps:
 6. Restart Home Assistant
 7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "tapo"
 
-## Configuration is done in the UI
 
-1. Go to integrations menu
-2. Search for `Tapo` integration
-3. Insert host, username and password for control your tapo device
-4. Wait for connection. It automatically recognize if the tapo device is switch or light
+# How to add a Tapo device (after installing the integration)
+## Using UI
+
+1. Be sure the integration is installed successfully
+2. Go to integrations menu
+3. Search for `Tapo` integration
+4. Insert host (ip address), username and password for control your tapo device (the same used for tapo app).
+   If you have a problem in this phase, like "invalid auth" error, please see [#122](https://github.com/petretiandrea/home-assistant-tapo-p100/issues/122), and if error persist write a comment in the same issue
+5. Wait for connection. It automatically recognize if the tapo device is switch or light or something else :)
 <!---->
 
 ## Configuration by configuration.yaml

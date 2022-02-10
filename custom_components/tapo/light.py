@@ -68,7 +68,7 @@ class TapoLight(TapoEntity, LightEntity):
 
     @property
     def brightness(self):
-        return (self._tapo_coordinator.data.brightness / 100) * 255
+        return round((self._tapo_coordinator.data.brightness * 255) / 100)
 
     @property
     def hs_color(self):
