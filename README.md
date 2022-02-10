@@ -16,17 +16,24 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![License][license-shield]](LICENSE)
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
+## Warning!!!
+For some unknown reason email with capital letter thrown an "Invalid authentication" error. So before open an new issue check your email address on Tapo App Settings. If contains capital letter, the integration won't work. I've opened an issue that explain this [#122](https://github.com/petretiandrea/home-assistant-tapo-p100/issues/122), I will fix asap. As workaround you can create a new account using all lower-case in your email address.
+
+
 ## Features
 
 - [x] pure async home assistant's method
 - [x] support for tapo switch (`P100`, `P110`, `P105`) 
 - [x] support for tapo light bulb with or without color (`L530`, `L510`)
+- [x] support for tapo light strip with or without color (`L900`) 
 - [x] support for P110 energy monitoring 
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
 
 ## Installation
-Recomended way:
+**NOW this integration is part of HACS store, so you don't need anymore to add this repository as a custom repository. You can find it directly on HACS Store**
+
+Recomended way (**Old way as a custom repository**):
 
 1. Install from HACS, add this repository as custom repository
 2. Search into HACS store the tapo integration and install
@@ -80,7 +87,7 @@ Open a pull request, every contribution are welcome.
 [commits-shield]: https://img.shields.io/github/commit-activity/y/petretiandrea/tapo.svg?style=for-the-badge
 [commits]: https://github.com/petretiandrea/tapo/commits/main
 [hacs]: https://github.com/petretiandrea/home-assistant-tapo-p100
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
