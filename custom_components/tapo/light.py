@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Any, Callable
 from custom_components.tapo.common_setup import (
     TapoUpdateCoordinator,
@@ -20,6 +21,9 @@ from homeassistant.util.color import (
 )
 from custom_components.tapo.tapo_entity import TapoEntity
 from custom_components.tapo.const import DOMAIN, SUPPORTED_DEVICE_AS_LIGHT
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
@@ -96,9 +100,9 @@ class TapoLight(TapoEntity, LightEntity):
         color = kwargs.get(ATTR_HS_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        print(f"Setting brightness: {brightness}")
-        print(f"Setting color: {color}")
-        print(f"Setting color_temp: {color_temp}")
+        _LOGGER.info(f"Setting brightness: {brightness}")
+        _LOGGER.info(f"Setting color: {color}")
+        _LOGGER.info(f"Setting color_temp: {color_temp}")
 
         if brightness or color or color_temp:
             if brightness:
@@ -121,7 +125,7 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_brightness(self, new_brightness):
         brightness_to_set = round((new_brightness / 255) * 100)
-        print(f"Mapped brightness: {brightness_to_set}")
+        _LOGGER.info(f"Mapped brightness: {brightness_to_set}")
 
         async def _set_brightness():
             await self._tapo_coordinator.api.set_brightness(brightness_to_set)
@@ -129,7 +133,7 @@ class TapoLight(TapoEntity, LightEntity):
         await self._execute_with_fallback(_set_brightness)
 
     async def _change_color_temp(self, color_temp):
-        print(f"Mapped color temp: {color_temp}")
+        _LOGGER.info(f"Mapped color temp: {color_temp}")
         constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
         kelvin_color_temp = clamp(
             mired_to_kelvin(constraint_color_temp),
@@ -141,7 +145,7 @@ class TapoLight(TapoEntity, LightEntity):
         )
 
     async def _change_color(self, hs_color):
-        print(f"Mapped colors: {hs_color}")
+        _LOGGER.info(f"Mapped colors: {hs_color}")
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
                 hs_color[0], hs_color[1]
