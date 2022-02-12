@@ -148,9 +148,10 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info(f"Mapped colors: {hs_color}")
         # L530 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
-        await self._execute_with_fallback(
-            lambda: self._tapo_coordinator.api.set_color_temperature(0)
-        )
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            await self._execute_with_fallback(
+                lambda: self._tapo_coordinator.api.set_color_temperature(0)
+            )
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
                 hs_color[0], hs_color[1]
