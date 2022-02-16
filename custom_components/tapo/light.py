@@ -44,7 +44,7 @@ async def async_setup_platform(
 
 def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
     for (model, capabilities) in SUPPORTED_DEVICE_AS_LIGHT.items():
-        if model.lower() in coordinator.data.model.lower():
+        if model.lower() in model:
             light = TapoLight(
                 coordinator,
                 capabilities,
@@ -105,6 +105,8 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info(f"Setting color_temp: {color_temp}")
 
         if brightness or color or color_temp:
+            if self.is_on is False:
+                await self._execute_with_fallback(self._tapo_coordinator.api.on)
             if brightness:
                 await self._change_brightness(brightness)
             if color and self.supported_features & SUPPORT_COLOR:
@@ -152,6 +154,7 @@ class TapoLight(TapoEntity, LightEntity):
             await self._execute_with_fallback(
                 lambda: self._tapo_coordinator.api.set_color_temperature(0)
             )
+
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
                 hs_color[0], hs_color[1]
