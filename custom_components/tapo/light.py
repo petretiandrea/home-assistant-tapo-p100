@@ -44,7 +44,7 @@ async def async_setup_platform(
 
 def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
     for (model, capabilities) in SUPPORTED_DEVICE_AS_LIGHT.items():
-        if model.lower() in model:
+        if model.lower() in coordinator.data.model.lower():
             light = TapoLight(
                 coordinator,
                 capabilities,
