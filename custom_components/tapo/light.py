@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, Any, Callable
+
+from plugp100 import TapoDeviceState
 from custom_components.tapo.common_setup import (
     TapoUpdateCoordinator,
     setup_tapo_coordinator_from_dictionary,
@@ -148,9 +150,11 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_color(self, hs_color):
         _LOGGER.info(f"Mapped colors: {hs_color}")
-        # L530 device need to set color_temp to 0 before set hue and saturation.
+        # L530 HW 2 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
-        if self.supported_features & SUPPORT_COLOR_TEMP:
+        if (
+            await self.is_hardware_v2()
+        ) and self.supported_features & SUPPORT_COLOR_TEMP:
             await self._execute_with_fallback(
                 lambda: self._tapo_coordinator.api.set_color_temperature(0)
             )
@@ -160,3 +164,10 @@ class TapoLight(TapoEntity, LightEntity):
                 hs_color[0], hs_color[1]
             )
         )
+
+    async def is_hardware_v2(self) -> bool:
+        device_state: TapoDeviceState = self.coordinator.data
+        hw_version = (
+            device_state.state["hw_ver"] if "hw_ver" in device_state.state else None
+        )
+        return hw_version is not None and hw_version == "2.0"
