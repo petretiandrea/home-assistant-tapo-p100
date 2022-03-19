@@ -4,7 +4,6 @@ from homeassistant.core import HomeAssistant
 from custom_components.tapo.common_setup import TapoUpdateCoordinator
 from custom_components.tapo.tapo_sensor_entity import (
     TapoCurrentEnergySensor,
-    TapoOverheatSensor,
     TapoSignalSensor,
     TapoTodayEnergySensor,
     TapoMonthEnergySensor,
@@ -15,7 +14,11 @@ from custom_components.tapo.const import (
 )
 
 ### Supported sensors: Today energy and current energy
-SUPPORTED_SENSOR = [TapoTodayEnergySensor, TapoMonthEnergySensor, TapoCurrentEnergySensor]
+SUPPORTED_SENSOR = [
+    TapoTodayEnergySensor,
+    TapoMonthEnergySensor,
+    TapoCurrentEnergySensor,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
