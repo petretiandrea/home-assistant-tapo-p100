@@ -2,7 +2,7 @@
   "domain": "tapo",
   "name": "Tapo Controller",
   "config_flow": true,
-  "version": "1.2.9",
+  "version": "1.2.10",
   "iot_class": "local_polling",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues/",
