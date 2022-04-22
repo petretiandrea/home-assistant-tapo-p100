@@ -21,7 +21,7 @@ jobs:
     name: Pre-commit
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v2.3.1
@@ -45,7 +45,7 @@ jobs:
     name: HACS Validation
     steps:
       - name: Check out the repository
-        uses: "actions/checkout@v2.4.0"
+        uses: "actions/checkout@v3.0.2"
 
       - name: HACS validation
         uses: "hacs/action@21.12.1"
@@ -57,7 +57,7 @@ jobs:
   #   name: Run tests
   #   steps:
   #     - name: Check out code from GitHub
-  #       uses: "actions/checkout@v2.4.0"
+  #       uses: "actions/checkout@v3.0.2"
   #     - name: Setup Python ${{ env.DEFAULT_PYTHON }}
   #       uses: "actions/setup-python@v2.3.1"
   #       with:
