@@ -7,6 +7,7 @@ from custom_components.tapo.tapo_sensor_entity import (
     TapoSignalSensor,
     TapoTodayEnergySensor,
     TapoMonthEnergySensor,
+    TapoThisMonthEnergySensor,
 )
 from custom_components.tapo.const import (
     DOMAIN,
@@ -17,6 +18,7 @@ from custom_components.tapo.const import (
 SUPPORTED_SENSOR = [
     TapoTodayEnergySensor,
     TapoMonthEnergySensor,
+    TapoThisMonthEnergySensor,
     TapoCurrentEnergySensor,
 ]
 
