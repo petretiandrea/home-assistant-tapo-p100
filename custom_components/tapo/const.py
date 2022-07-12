@@ -8,7 +8,7 @@ from homeassistant.components.light import (
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "1.2.13"
+VERSION = "1.2.14"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
