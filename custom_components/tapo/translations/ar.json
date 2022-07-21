@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "تم تهيئة الجهاز بالفعل"
+    },
+    "error": {
+      "cannot_connect": "فشل في الاتصال",
+      "invalid_auth": "مصادقة غير صالحة",
+      "unknown": "خطأ غير متوقع"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "عنوان IP",
+          "password": "كلمة المرور",
+          "username": "اسم المستخدم"
+        }
+      }
+    }
+  },
+  "title": "tapo_p100"
+}
