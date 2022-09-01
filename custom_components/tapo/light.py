@@ -131,10 +131,9 @@ class TapoLight(TapoEntity, LightEntity):
         brightness_to_set = round((new_brightness / 255) * 100)
         _LOGGER.info(f"Mapped brightness: {brightness_to_set}")
 
-        async def _set_brightness():
-            await self._tapo_coordinator.api.set_brightness(brightness_to_set)
-
-        await self._execute_with_fallback(_set_brightness)
+        await self._execute_with_fallback(
+            lambda: self._tapo_coordinator.api.set_brightness(brightness_to_set)
+        )
 
     async def _change_color_temp(self, color_temp):
         _LOGGER.info(f"Mapped color temp: {color_temp}")
@@ -144,6 +143,12 @@ class TapoLight(TapoEntity, LightEntity):
             min_value=self._min_kelvin,
             max_value=self._max_kelvin,
         )
+
+        if self.is_hardware_v2() and self.supported_features & SUPPORT_COLOR_TEMP:
+            await self._execute_with_fallback(
+                lambda: self._tapo_coordinator.api.set_hue_saturation(0, 0)
+            )
+
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )
@@ -152,9 +157,7 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info(f"Mapped colors: {hs_color}")
         # L530 HW 2 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
-        if (
-            await self.is_hardware_v2()
-        ) and self.supported_features & SUPPORT_COLOR_TEMP:
+        if self.is_hardware_v2() and self.supported_features & SUPPORT_COLOR_TEMP:
             await self._execute_with_fallback(
                 lambda: self._tapo_coordinator.api.set_color_temperature(0)
             )
@@ -165,7 +168,7 @@ class TapoLight(TapoEntity, LightEntity):
             )
         )
 
-    async def is_hardware_v2(self) -> bool:
+    def is_hardware_v2(self) -> bool:
         device_state: TapoDeviceState = self.coordinator.data
         hw_version = (
             device_state.state["hw_ver"] if "hw_ver" in device_state.state else None

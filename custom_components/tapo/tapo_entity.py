@@ -40,5 +40,6 @@ class TapoEntity(CoordinatorEntity):
         try:
             return await function()
         except Exception:
-            await self.coordinator.api.login()
-            return await self._execute_with_fallback(function, False)
+            if retry:
+                await self.coordinator.api.login()
+                return await self._execute_with_fallback(function, False)
