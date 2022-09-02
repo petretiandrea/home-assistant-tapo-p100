@@ -33,8 +33,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-HOST_REGEX = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
-
 
 @config_entries.HANDLERS.register(DOMAIN)
 class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,7 +82,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
         """
 
-        if not re.match(HOST_REGEX, data[CONF_HOST]):
+        if not data[CONF_HOST]:
             raise InvalidHost
 
         tapo_api = await self._test_credentials(
