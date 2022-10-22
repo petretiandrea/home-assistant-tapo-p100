@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from plugp100 import TapoApiClient, TapoDeviceState
+from plugp100 import TapoApiClient, TapoApiClientConfig, TapoDeviceState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -51,7 +51,8 @@ async def setup_tapo_coordinator(
     hass: HomeAssistant, host: str, username: str, password: str
 ) -> "TapoUpdateCoordinator":
     session = async_get_clientsession(hass)
-    client = TapoApiClient(host, username, password, session)
+    config = TapoApiClientConfig(host, username, password, session)
+    client = TapoApiClient.from_config(config)
 
     coordinator = TapoUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()

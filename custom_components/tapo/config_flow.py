@@ -4,11 +4,10 @@ import re
 
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant import data_entry_flow
-from plugp100 import TapoApiClient
-from plugp100.core.exceptions.TapoException import TapoException
+from plugp100 import TapoApiClient, TapoApiClientConfig
 
 from custom_components.tapo.const import (
     DOMAIN,
@@ -99,7 +98,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_credentials(self, address, username, password) -> TapoApiClient:
         try:
             session = async_create_clientsession(self.hass)
-            client = TapoApiClient(address, username, password, session)
+            config = TapoApiClientConfig(address, username, password, session)
+            client = TapoApiClient.from_config(config)
             await client.login()
             return client
         except Exception as error:
