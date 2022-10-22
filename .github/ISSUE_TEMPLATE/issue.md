@@ -13,13 +13,13 @@ Issues not containing the minimum requirements will be closed:
 
 -->
 
-## Version of the custom_component
-
+## Version of the integration
 <!-- If you are not using the newest version, download and try that before opening an issue
 If you are unsure about the version check the const.py file.
 -->
 
 ## Configuration
+<!-- Device: your tapo device name, firware version -->
 
 ```yaml
 Add your logs here.
