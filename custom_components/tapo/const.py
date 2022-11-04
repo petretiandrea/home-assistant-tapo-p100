@@ -20,6 +20,7 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "l530": SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
     "l520": SUPPORT_BRIGHTNESS,
     "l510": SUPPORT_BRIGHTNESS,
+    "l610": SUPPORT_BRIGHTNESS,
 }
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
