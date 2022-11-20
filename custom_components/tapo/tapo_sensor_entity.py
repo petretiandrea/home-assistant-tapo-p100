@@ -121,7 +121,7 @@ class TapoCurrentEnergySensor(TapoSensor):
         super().__init__(
             coordiantor,
             SensorConfig(
-                "current energy",
+                "current power",
                 DEVICE_CLASS_POWER,
                 STATE_CLASS_MEASUREMENT,
                 POWER_WATT,

@@ -13,7 +13,7 @@ from custom_components.tapo.const import (
     SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR,
 )
 
-### Supported sensors: Today energy and current energy
+### Supported sensors: Today energy and current power
 SUPPORTED_SENSOR = [
     TapoTodayEnergySensor,
     TapoMonthEnergySensor,
