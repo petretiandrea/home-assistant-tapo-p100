@@ -1,26 +1,21 @@
-import async_timeout
-import logging
 from typing import Dict, Any
 from datetime import timedelta
-from dataclasses import dataclass
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import logging
+import async_timeout
 from plugp100 import TapoApiClient, TapoApiClientConfig, TapoDeviceState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from custom_components.tapo.const import (
     DOMAIN,
-    PLATFORMS,
     CONF_HOST,
     CONF_USERNAME,
     CONF_PASSWORD,
 )
-
 
 _LOGGGER = logging.getLogger(__name__)
 
@@ -33,6 +28,7 @@ async def setup_tapo_coordinator_from_dictionary(
         entry.get(CONF_HOST),
         entry.get(CONF_USERNAME),
         entry.get(CONF_PASSWORD),
+        "",
     )
 
 
@@ -44,21 +40,33 @@ async def setup_tapo_coordinator_from_config_entry(
         entry.data.get(CONF_HOST),
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        entry.unique_id,
     )
 
 
 async def setup_tapo_coordinator(
-    hass: HomeAssistant, host: str, username: str, password: str
+    hass: HomeAssistant, host: str, username: str, password: str, unique_id: str
 ) -> "TapoCoordinator":
-    session = async_get_clientsession(hass)
-    config = TapoApiClientConfig(host, username, password, session)
-    client = TapoApiClient.from_config(config)
+    api = (
+        hass.data[DOMAIN][f"{unique_id}_api"]
+        if f"{unique_id}_api" in hass.data[DOMAIN]
+        else None
+    )
+    if api is not None:
+        _LOGGGER.debug("Re-using setup API to create a coordinator")
+        coordinator = TapoCoordinator(hass, client=api)
+    else:
+        _LOGGGER.debug("Creating new API to create a coordinator")
+        session = async_get_clientsession(hass)
+        config = TapoApiClientConfig(host, username, password, session)
+        client = TapoApiClient.from_config(config)
+        coordinator = TapoCoordinator(hass, client=client)
 
-    coordinator = TapoCoordinator(hass, client=client)
-    await coordinator.async_config_entry_first_refresh()
-
-    if not coordinator.last_update_success:
-        raise Exception("Failed to retrieve first tapo data")
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as error:
+        _LOGGGER.error("Failed to setup %s", str(error))
+        raise error
 
     return coordinator
 

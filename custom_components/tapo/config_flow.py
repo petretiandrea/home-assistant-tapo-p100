@@ -1,6 +1,6 @@
 """Config flow for tapo integration."""
 import logging
-import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -19,7 +19,7 @@ from custom_components.tapo.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
@@ -40,7 +40,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -51,54 +53,53 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            entry_metadata = await self._validate_input(user_input)
-            # check if the same device has already been configured
-            await self.async_set_unique_id(entry_metadata["unique_id"])
+            if not user_input[CONF_HOST]:
+                raise InvalidHost
+            api = await self._try_setup_api(user_input)
+            unique_data = await self._get_unique_data_from_api(api)
+            unique_id = unique_data["unique_id"]
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
-        except CannotConnect:
+            self.hass.data[DOMAIN][f"{unique_id}_api"] = api
+        except CannotConnect as error:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+            _LOGGER.error("Failed to setup %s", str(error))
+        except InvalidAuth as error:
             errors["base"] = "invalid_auth"
-        except InvalidHost:
+            _LOGGER.error("Failed to setup %s", str(error))
+        except InvalidHost as error:
             errors["base"] = "invalid_hostname"
+            _LOGGER.error("Failed to setup %s", str(error))
         except data_entry_flow.AbortFlow:
             return self.async_abort(reason="already_configured")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+        except Exception as error:  # pylint: disable=broad-except
             errors["base"] = "unknown"
+            _LOGGER.error("Failed to setup %s", str(error))
         else:
-            return self.async_create_entry(
-                title=entry_metadata["title"], data=user_input
-            )
+            return self.async_create_entry(title=unique_data["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def _validate_input(self, data):
-        """Validate the user input allows us to connect.
+    async def _get_unique_data_from_api(self, api: TapoApiClient) -> dict[str, Any]:
+        try:
+            state = await api.get_state()
+            return {"title": state.nickname, "unique_id": state.device_id}
+        except Exception as error:
+            raise CannotConnect from error
 
-        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-        """
-
-        if not data[CONF_HOST]:
-            raise InvalidHost
-
-        tapo_api = await self._test_credentials(
-            data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
-
-        state = await tapo_api.get_state()
-        if not state:
-            raise CannotConnect
-
-        # Return info that you want to store in the config entry.
-        return {"title": state.nickname, "unique_id": state.device_id}
-
-    async def _test_credentials(self, address, username, password) -> TapoApiClient:
+    async def _try_setup_api(
+        self, user_input: dict[str, Any] | None = None
+    ) -> TapoApiClient:
         try:
             session = async_create_clientsession(self.hass)
-            config = TapoApiClientConfig(address, username, password, session)
+            config = TapoApiClientConfig(
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session,
+            )
             client = TapoApiClient.from_config(config)
             await client.login()
             return client

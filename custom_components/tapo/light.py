@@ -97,9 +97,9 @@ class TapoLight(TapoEntity, LightEntity):
         color = kwargs.get(ATTR_HS_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        _LOGGER.info(f"Setting brightness: {brightness}")
-        _LOGGER.info(f"Setting color: {color}")
-        _LOGGER.info(f"Setting color_temp: {color_temp}")
+        _LOGGER.info("Setting brightness: %s", str(brightness))
+        _LOGGER.info("Setting color: %s", str(color))
+        _LOGGER.info("Setting color_temp: %s", str(color_temp))
 
         if brightness or color or color_temp:
             if brightness:
@@ -122,14 +122,14 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_brightness(self, new_brightness):
         brightness_to_set = round((new_brightness / 255) * 100)
-        _LOGGER.info(f"Mapped brightness: {brightness_to_set}")
+        _LOGGER.info("Mapped brightness: %s", str(brightness_to_set))
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_brightness(brightness_to_set)
         )
 
     async def _change_color_temp(self, color_temp):
-        _LOGGER.info(f"Mapped color temp: {color_temp}")
+        _LOGGER.info("Mapped color temp: %s", str(color_temp))
         constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
         kelvin_color_temp = clamp(
             mired_to_kelvin(constraint_color_temp),
@@ -150,7 +150,7 @@ class TapoLight(TapoEntity, LightEntity):
         )
 
     async def _change_color(self, hs_color):
-        _LOGGER.info(f"Mapped colors: {hs_color}")
+        _LOGGER.info("Mapped colors: %s", str(hs_color))
         # L530 HW 2 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
         if (
