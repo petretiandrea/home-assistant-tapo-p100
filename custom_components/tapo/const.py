@@ -1,10 +1,6 @@
 """Constants for the tapo integration."""
 
-from homeassistant.components.light import (
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-)
+from homeassistant.components.light import ColorMode
 
 NAME = "tapo"
 DOMAIN = "tapo"
@@ -13,14 +9,14 @@ VERSION = "1.2.18"
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
 SUPPORTED_DEVICE_AS_LIGHT = {
-    "l920": SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
-    "l930": SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
-    "l900": SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
-    "l630": SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
-    "l530": SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
-    "l520": SUPPORT_BRIGHTNESS,
-    "l510": SUPPORT_BRIGHTNESS,
-    "l610": SUPPORT_BRIGHTNESS,
+    "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
+    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
+    "l900": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
+    "l630": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
+    "l530": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
+    "l520": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "l510": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
 }
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
