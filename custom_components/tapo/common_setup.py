@@ -27,7 +27,7 @@ _LOGGGER = logging.getLogger(__name__)
 
 async def setup_tapo_coordinator_from_dictionary(
     hass: HomeAssistant, entry: Dict[str, Any]
-) -> "TapoUpdateCoordinator":
+) -> "TapoCoordinator":
     return await setup_tapo_coordinator(
         hass,
         entry.get(CONF_HOST),
@@ -38,7 +38,7 @@ async def setup_tapo_coordinator_from_dictionary(
 
 async def setup_tapo_coordinator_from_config_entry(
     hass: HomeAssistant, entry: ConfigEntry
-) -> "TapoUpdateCoordinator":
+) -> "TapoCoordinator":
     return await setup_tapo_coordinator(
         hass,
         entry.data.get(CONF_HOST),
@@ -49,12 +49,12 @@ async def setup_tapo_coordinator_from_config_entry(
 
 async def setup_tapo_coordinator(
     hass: HomeAssistant, host: str, username: str, password: str
-) -> "TapoUpdateCoordinator":
+) -> "TapoCoordinator":
     session = async_get_clientsession(hass)
     config = TapoApiClientConfig(host, username, password, session)
     client = TapoApiClient.from_config(config)
 
-    coordinator = TapoUpdateCoordinator(hass, client=client)
+    coordinator = TapoCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.last_update_success:
@@ -67,7 +67,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 DEBOUNCER_COOLDOWN = 2
 
 
-class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
+class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
     def __init__(self, hass: HomeAssistant, client: TapoApiClient):
         self.api = client
         debouncer = Debouncer(
@@ -90,12 +90,14 @@ class TapoUpdateCoordinator(DataUpdateCoordinator[TapoDeviceState]):
             async with async_timeout.timeout(10):
                 return await self._update_with_fallback()
         except Exception as exception:
-            raise UpdateFailed() from exception
+            raise UpdateFailed(
+                f"Error communication with API: {exception}"
+            ) from exception
 
     async def _update_with_fallback(self, retry=True):
         try:
             return await self.api.get_state()
-        except Exception as error:
+        except Exception:
             if retry:
                 await self.api.login()
                 return await self._update_with_fallback(False)

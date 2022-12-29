@@ -2,10 +2,6 @@ import logging
 from typing import Dict, Any, Callable
 
 from plugp100 import TapoDeviceState
-from custom_components.tapo.common_setup import (
-    TapoUpdateCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
 from custom_components.tapo.utils import clamp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,8 +17,12 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
-from custom_components.tapo.tapo_entity import TapoEntity
 from custom_components.tapo.const import DOMAIN, SUPPORTED_DEVICE_AS_LIGHT
+from custom_components.tapo.tapo_entity import TapoEntity
+from custom_components.tapo.common_setup import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
     # get tapo helper
-    coordinator: TapoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TapoCoordinator = hass.data[DOMAIN][entry.entry_id]
     _setup_from_coordinator(coordinator, async_add_devices)
 
 
@@ -44,7 +44,7 @@ async def async_setup_platform(
     _setup_from_coordinator(coordinator, async_add_entities)
 
 
-def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
+def _setup_from_coordinator(coordinator: TapoCoordinator, async_add_devices):
     for (model, capabilities) in SUPPORTED_DEVICE_AS_LIGHT.items():
         if model.lower() in coordinator.data.model.lower():
             light = TapoLight(
