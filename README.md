@@ -11,6 +11,7 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 <!--- [![pre-commit][pre-commit-shield]][pre-commit] -->
 <!--- [![Black][black-shield]][black] -->
 
+[![Stable Release][stable_release]][stable_release]
 [![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
 [![License][license-shield]](LICENSE)
@@ -97,7 +98,7 @@ Open a pull request, every contribution are welcome.
 [commits-shield]: https://img.shields.io/github/commit-activity/y/petretiandrea/tapo.svg?style=for-the-badge
 [commits]: https://github.com/petretiandrea/tapo/commits/main
 [hacs]: https://github.com/petretiandrea/home-assistant-tapo-p100
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
@@ -110,3 +111,4 @@ Open a pull request, every contribution are welcome.
 [releases-shield]: https://img.shields.io/github/release/petretiandrea/tapo.svg?style=for-the-badge
 [releases]: https://github.com/petretiandrea/home-assistant-tapo-p100/releases
 [user_profile]: https://github.com/petretiandrea
+[stable_release]: https://img.shields.io/github/v/release/petretiandrea/home-assistant-tapo-p100?label=stable&sort=semver
