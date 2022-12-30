@@ -3,6 +3,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     POWER_WATT,
@@ -11,6 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TIME_MINUTES,
 )
 
 from custom_components.tapo.sensors.sensor_config import SensorConfig
@@ -47,19 +50,19 @@ class MonthEnergySensorSource(TapoSensorSource):
         return None
 
 
-class ThisMonthEnergySensorSource(TapoSensorSource):
-    def get_config(self) -> SensorConfig:
-        return SensorConfig(
-            "this month energy",
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_TOTAL_INCREASING,
-            ENERGY_KILO_WATT_HOUR,
-        )
+# class ThisMonthEnergySensorSource(TapoSensorSource):
+#     def get_config(self) -> SensorConfig:
+#         return SensorConfig(
+#             "this month energy",
+#             DEVICE_CLASS_ENERGY,
+#             STATE_CLASS_TOTAL_INCREASING,
+#             ENERGY_KILO_WATT_HOUR,
+#         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
-        if state.energy_info is not None:
-            return state.energy_info.this_month_energy / 1000
-        return None
+#     def get_value(self, state: TapoDeviceState | None) -> StateType:
+#         if state.energy_info is not None:
+#             return state.energy_info.this_month_energy / 1000
+#         return None
 
 
 class CurrentEnergySensorSource(TapoSensorSource):
@@ -108,3 +111,35 @@ class SignalSensorSource(TapoSensorSource):
             return 0
         except Exception:  # pylint: disable=broad-except
             return 0
+
+
+class TodayRuntimeSensorSource(TapoSensorSource):
+    def get_config(self) -> SensorConfig:
+        return SensorConfig(
+            "today runtime",
+            SensorDeviceClass.DURATION,
+            SensorStateClass.TOTAL_INCREASING,
+            TIME_MINUTES,
+        )
+
+    def get_value(self, state: TapoDeviceState | None) -> StateType:
+        if state is not None:
+            if state.energy_info is not None:
+                return state.energy_info.today_runtime
+        return None
+
+
+class MonthRuntimeSensorSource(TapoSensorSource):
+    def get_config(self) -> SensorConfig:
+        return SensorConfig(
+            "month runtime",
+            SensorDeviceClass.DURATION,
+            SensorStateClass.TOTAL_INCREASING,
+            TIME_MINUTES,
+        )
+
+    def get_value(self, state: TapoDeviceState | None) -> StateType:
+        if state is not None:
+            if state.energy_info is not None:
+                return state.energy_info.month_runtime
+        return None
