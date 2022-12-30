@@ -50,19 +50,19 @@ class MonthEnergySensorSource(TapoSensorSource):
         return None
 
 
-class ThisMonthEnergySensorSource(TapoSensorSource):
-    def get_config(self) -> SensorConfig:
-        return SensorConfig(
-            "this month energy",
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_TOTAL_INCREASING,
-            ENERGY_KILO_WATT_HOUR,
-        )
+# class ThisMonthEnergySensorSource(TapoSensorSource):
+#     def get_config(self) -> SensorConfig:
+#         return SensorConfig(
+#             "this month energy",
+#             DEVICE_CLASS_ENERGY,
+#             STATE_CLASS_TOTAL_INCREASING,
+#             ENERGY_KILO_WATT_HOUR,
+#         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
-        if state.energy_info is not None:
-            return state.energy_info.this_month_energy / 1000
-        return None
+#     def get_value(self, state: TapoDeviceState | None) -> StateType:
+#         if state.energy_info is not None:
+#             return state.energy_info.this_month_energy / 1000
+#         return None
 
 
 class CurrentEnergySensorSource(TapoSensorSource):
@@ -125,7 +125,7 @@ class TodayRuntimeSensorSource(TapoSensorSource):
     def get_value(self, state: TapoDeviceState | None) -> StateType:
         if state is not None:
             if state.energy_info is not None:
-                return state.energy_info.today_energy
+                return state.energy_info.today_runtime
         return None
 
 
@@ -141,5 +141,5 @@ class MonthRuntimeSensorSource(TapoSensorSource):
     def get_value(self, state: TapoDeviceState | None) -> StateType:
         if state is not None:
             if state.energy_info is not None:
-                return state.energy_info.month_energy
+                return state.energy_info.month_runtime
         return None
