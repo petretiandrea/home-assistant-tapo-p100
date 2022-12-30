@@ -106,5 +106,5 @@ class SignalSensorSource(TapoSensorSource):
             if state is not None:
                 return state.rssi
             return 0
-        except:
+        except Exception:  # pylint: disable=broad-except
             return 0
