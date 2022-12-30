@@ -12,10 +12,8 @@ from custom_components.tapo.const import (
 from custom_components.tapo.sensors import (
     CurrentEnergySensorSource,
     MonthEnergySensorSource,
-    MonthRuntimeSensorSource,
     SignalSensorSource,
     TodayEnergySensorSource,
-    TodayRuntimeSensorSource,
 )
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 from custom_components.tapo.tapo_entity import TapoEntity
@@ -25,8 +23,6 @@ SUPPORTED_SENSOR = [
     CurrentEnergySensorSource,
     TodayEnergySensorSource,
     MonthEnergySensorSource,
-    TodayRuntimeSensorSource,
-    MonthRuntimeSensorSource,
     # TapoThisMonthEnergySensor, hotfix
 ]
 
