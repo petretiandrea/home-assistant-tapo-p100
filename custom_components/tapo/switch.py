@@ -1,49 +1,54 @@
-from typing import Callable, Dict, Any
+from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.components.switch import SwitchEntity
+from custom_components.tapo.common_setup import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 from custom_components.tapo.tapo_entity import TapoEntity
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_SWITCH,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.components.switch import SwitchEntity
-from custom_components.tapo.common_setup import (
-    TapoUpdateCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+):
     # get tapo helper
-    coordinator: TapoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TapoCoordinator = hass.data[DOMAIN][entry.entry_id]
     _setup_from_coordinator(coordinator, async_add_devices)
 
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: Callable,
-    discovery_info=None,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
     _setup_from_coordinator(coordinator, async_add_entities)
 
 
-def _setup_from_coordinator(coordinator: TapoUpdateCoordinator, async_add_devices):
+def _setup_from_coordinator(
+    coordinator: TapoCoordinator, async_add_devices: AddEntitiesCallback
+):
     if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH:
-        switch = P100Switch(coordinator)
-        async_add_devices([switch], True)
+        async_add_devices([TapoPlug(coordinator)], True)
 
 
-class P100Switch(TapoEntity, SwitchEntity):
+class TapoPlug(TapoEntity, SwitchEntity):
     @property
-    def is_on(self):
-        return self._tapo_coordinator.data.device_on
+    def is_on(self) -> bool | None:
+        return self.last_state and self.last_state.device_on
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs):
         await self._execute_with_fallback(self._tapo_coordinator.api.on)
         await self._tapo_coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         await self._execute_with_fallback(self._tapo_coordinator.api.off)
         await self._tapo_coordinator.async_request_refresh()
