@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, Awaitable, TypeVar
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -6,11 +7,13 @@ from plugp100 import TapoDeviceState
 from custom_components.tapo.common_setup import TapoCoordinator
 from custom_components.tapo.const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class TapoEntity(CoordinatorEntity):
-    def __init__(self, coordiantor: TapoCoordinator):
-        super().__init__(coordiantor)
-        self._data = coordiantor.data
+    def __init__(self, coordinator: TapoCoordinator):
+        super().__init__(coordinator)
+        self._data = coordinator.data
 
     @property
     def _tapo_coordinator(self) -> TapoCoordinator:
@@ -51,7 +54,8 @@ class TapoEntity(CoordinatorEntity):
     ) -> T:
         try:
             return await function()
-        except Exception:
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Error during command execution %s", str(error))
             if retry:
                 await self.coordinator.api.login()
                 return await self._execute_with_fallback(function, False)

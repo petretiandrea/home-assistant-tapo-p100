@@ -1,14 +1,21 @@
 from typing import Dict, Any
 from datetime import timedelta
 import logging
+import aiohttp
 import async_timeout
-from plugp100 import TapoApiClient, TapoApiClientConfig, TapoDeviceState
+from plugp100 import (
+    TapoApiClient,
+    TapoApiClientConfig,
+    TapoDeviceState,
+    TapoException,
+    TapoError,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from custom_components.tapo.const import (
     DOMAIN,
@@ -97,10 +104,12 @@ class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
         try:
             async with async_timeout.timeout(10):
                 return await self._update_with_fallback()
+        except TapoException as error:
+            self._raise_from_tapo_exception(error)
+        except (aiohttp.ClientError) as error:
+            raise UpdateFailed(f"Error communication with API: {error}") from error
         except Exception as exception:
-            raise UpdateFailed(
-                f"Error communication with API: {exception}"
-            ) from exception
+            raise UpdateFailed(f"Unexpected exception: {exception}") from exception
 
     async def _update_with_fallback(self, retry=True):
         try:
@@ -109,3 +118,10 @@ class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
             if retry:
                 await self.api.login()
                 return await self._update_with_fallback(False)
+
+    def _raise_from_tapo_exception(self, exception: TapoException):
+        _LOGGGER.error("Tapo exception: %s", str(exception))
+        if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+            raise ConfigEntryAuthFailed from exception
+        else:
+            raise UpdateFailed(f"Error tapo exception: {exception}") from exception

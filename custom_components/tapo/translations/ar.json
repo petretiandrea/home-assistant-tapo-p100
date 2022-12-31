@@ -5,7 +5,7 @@
     },
     "error": {
       "cannot_connect": "فشل في الاتصال",
-      "invalid_auth": "مصادقة غير صالحة",
+      "invalid_auth": "بيانات الاعتماد غير صالحة",
       "unknown": "خطأ غير متوقع"
     },
     "step": {

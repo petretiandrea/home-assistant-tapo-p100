@@ -1,20 +1,21 @@
 """Config flow for tapo integration."""
 import logging
 from typing import Any
+import aiohttp
 
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant import data_entry_flow
-from plugp100 import TapoApiClient, TapoApiClientConfig
+from plugp100 import TapoApiClient, TapoApiClientConfig, TapoException, TapoError
 
 from custom_components.tapo.const import (
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
     CONF_PASSWORD,
-)  # pylint:disable=unused-import
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,15 +62,15 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             self.hass.data[DOMAIN][f"{unique_id}_api"] = api
-        except CannotConnect as error:
-            errors["base"] = "cannot_connect"
-            _LOGGER.error("Failed to setup %s", str(error))
         except InvalidAuth as error:
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Failed to setup %s", str(error))
+            _LOGGER.error("Failed to setup, invalid auth %s", str(error))
+        except CannotConnect as error:
+            errors["base"] = "cannot_connect"
+            _LOGGER.error("Failed to setup cannot connect %s", str(error))
         except InvalidHost as error:
             errors["base"] = "invalid_hostname"
-            _LOGGER.error("Failed to setup %s", str(error))
+            _LOGGER.error("Failed to setup invalid host %s", str(error))
         except data_entry_flow.AbortFlow:
             return self.async_abort(reason="already_configured")
         except Exception as error:  # pylint: disable=broad-except
@@ -86,7 +87,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             state = await api.get_state()
             return {"title": state.nickname, "unique_id": state.device_id}
-        except Exception as error:
+        except TapoException as error:
+            self._raise_from_tapo_exception(error)
+        except (aiohttp.ClientError, Exception) as error:
             raise CannotConnect from error
 
     async def _try_setup_api(
@@ -103,8 +106,17 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = TapoApiClient.from_config(config)
             await client.login()
             return client
-        except Exception as error:
-            raise InvalidAuth from error
+        except TapoException as error:
+            self._raise_from_tapo_exception(error)
+        except (aiohttp.ClientError, Exception) as error:
+            raise CannotConnect from error
+
+    def _raise_from_tapo_exception(self, exception: TapoException):
+        _LOGGER.error("Tapo exception %s", str(exception.error_code))
+        if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+            raise InvalidAuth from exception
+        else:
+            raise CannotConnect from exception
 
 
 class CannotConnect(exceptions.HomeAssistantError):
