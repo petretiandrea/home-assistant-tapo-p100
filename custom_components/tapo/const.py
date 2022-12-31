@@ -4,7 +4,7 @@ from homeassistant.components.light import ColorMode
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
