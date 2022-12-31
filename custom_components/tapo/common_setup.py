@@ -11,6 +11,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from custom_components.tapo.const import (
+    CONF_POLLING_RATE,
+    DEFAULT_POLLING_RATE_MS,
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
@@ -29,6 +31,7 @@ async def setup_tapo_coordinator_from_dictionary(
         entry.get(CONF_USERNAME),
         entry.get(CONF_PASSWORD),
         "",
+        timedelta(milliseconds=entry.get(CONF_POLLING_RATE, DEFAULT_POLLING_RATE_MS)),
     )
 
 
@@ -41,11 +44,19 @@ async def setup_tapo_coordinator_from_config_entry(
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         entry.unique_id,
+        timedelta(
+            milliseconds=entry.data.get(CONF_POLLING_RATE, DEFAULT_POLLING_RATE_MS)
+        ),
     )
 
 
 async def setup_tapo_coordinator(
-    hass: HomeAssistant, host: str, username: str, password: str, unique_id: str
+    hass: HomeAssistant,
+    host: str,
+    username: str,
+    password: str,
+    unique_id: str,
+    polling_rate: timedelta,
 ) -> "TapoCoordinator":
     api = (
         hass.data[DOMAIN][f"{unique_id}_api"]
@@ -53,14 +64,22 @@ async def setup_tapo_coordinator(
         else None
     )
     if api is not None:
-        _LOGGGER.debug("Re-using setup API to create a coordinator")
-        coordinator = TapoCoordinator(hass, client=api)
+        _LOGGGER.debug(
+            "Re-using setup API to create a coordinator, polling rate %s",
+            str(polling_rate),
+        )
+        coordinator = TapoCoordinator(hass, client=api, polling_interval=polling_rate)
     else:
-        _LOGGGER.debug("Creating new API to create a coordinator")
+        _LOGGGER.debug(
+            "Creating new API to create a coordinator, polling rate %s",
+            str(polling_rate),
+        )
         session = async_get_clientsession(hass)
         config = TapoApiClientConfig(host, username, password, session)
         client = TapoApiClient.from_config(config)
-        coordinator = TapoCoordinator(hass, client=client)
+        coordinator = TapoCoordinator(
+            hass, client=client, polling_interval=polling_rate
+        )
 
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -71,12 +90,13 @@ async def setup_tapo_coordinator(
     return coordinator
 
 
-SCAN_INTERVAL = timedelta(seconds=30)
 DEBOUNCER_COOLDOWN = 2
 
 
 class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
-    def __init__(self, hass: HomeAssistant, client: TapoApiClient):
+    def __init__(
+        self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta
+    ):
         self.api = client
         debouncer = Debouncer(
             hass, _LOGGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True
@@ -85,7 +105,7 @@ class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
             hass,
             _LOGGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=polling_interval,
             request_refresh_debouncer=debouncer,
         )
 

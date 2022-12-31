@@ -10,10 +10,12 @@ from homeassistant import data_entry_flow
 from plugp100 import TapoApiClient, TapoApiClientConfig
 
 from custom_components.tapo.const import (
+    DEFAULT_POLLING_RATE_MS,
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_POLLING_RATE,
 )  # pylint:disable=unused-import
 
 
@@ -29,6 +31,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
         ): str,
         vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
+        vol.Required(
+            CONF_POLLING_RATE,
+            default=DEFAULT_POLLING_RATE_MS,
+            description="The refresh rate",
+        ): int,
     }
 )
 
