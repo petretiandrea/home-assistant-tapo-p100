@@ -61,6 +61,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id = unique_data["unique_id"]
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
+            self.hass.data.setdefault(DOMAIN, {})
             self.hass.data[DOMAIN][f"{unique_id}_api"] = api
         except InvalidAuth as error:
             errors["base"] = "invalid_auth"
