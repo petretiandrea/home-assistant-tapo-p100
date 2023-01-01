@@ -82,7 +82,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 DEBOUNCER_COOLDOWN = 2
 
 
-class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
+class TapoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, client: TapoApiClient):
         self.api = client
         debouncer = Debouncer(

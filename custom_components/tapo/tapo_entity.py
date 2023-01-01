@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Awaitable, TypeVar
+from typing import Callable, Awaitable, Optional, TypeVar
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,7 +20,7 @@ class TapoEntity(CoordinatorEntity):
         return self.coordinator
 
     @property
-    def last_state(self) -> TapoDeviceState | None:
+    def last_state(self) -> Optional[TapoDeviceState]:
         return self._data
 
     @property
