@@ -2,5 +2,5 @@
   "name": "Tapo Controller",
   "hacs": "1.6.0",
   "render_readme": true,
-  "homeassistant": "2022.6.0"
+  "homeassistant": "2022.12.8"
 }
