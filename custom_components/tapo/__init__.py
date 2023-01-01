@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
     try:
         coordinator = await setup_tapo_coordinator_from_config_entry(hass, entry)
+        hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = coordinator
         for component in PLATFORMS:
             hass.async_create_task(
