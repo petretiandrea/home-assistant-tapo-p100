@@ -1,6 +1,6 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-  "image": "ghcr.io/ludeeus/devcontainer/integration:python-3.10.4",
+  "image": "ghcr.io/ludeeus/devcontainer/integration:21.8.0",
   "name": "tapo integration development",
   "context": "..",
   "appPort": [

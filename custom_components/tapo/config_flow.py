@@ -1,6 +1,6 @@
 """Config flow for tapo integration."""
 import logging
-from typing import Any
+from typing import Any, Optional
 import aiohttp
 
 import voluptuous as vol
@@ -24,7 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_HOST, description="The IP address of your tapo device (must be static)"
+            CONF_HOST,
+            description="The IP address of your tapo device (must be static)",
         ): str,
         vol.Required(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
@@ -42,7 +43,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Optional[dict[str, Any]] = None
     ) -> data_entry_flow.FlowResult:
         """Handle the initial step."""
         if user_input is None:
@@ -94,7 +95,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect from error
 
     async def _try_setup_api(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Optional[dict[str, Any]] = None
     ) -> TapoApiClient:
         try:
             session = async_create_clientsession(self.hass)
