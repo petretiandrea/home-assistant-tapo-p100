@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +28,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: Any,
 ) -> None:
     coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
     _setup_from_coordinator(coordinator, async_add_entities)
@@ -42,7 +43,7 @@ def _setup_from_coordinator(
 
 class TapoPlug(TapoEntity, SwitchEntity):
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> Optional[bool]:
         return self.last_state and self.last_state.device_on
 
     async def async_turn_on(self, **kwargs):

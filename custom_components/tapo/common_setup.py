@@ -6,7 +6,6 @@ import async_timeout
 from plugp100 import (
     TapoApiClient,
     TapoApiClientConfig,
-    TapoDeviceState,
     TapoException,
     TapoError,
 )

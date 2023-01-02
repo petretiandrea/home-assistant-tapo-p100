@@ -1,3 +1,4 @@
+from typing import Optional
 from plugp100 import TapoDeviceState
 from homeassistant.helpers.typing import StateType
 from homeassistant.components.sensor import (
@@ -29,7 +30,7 @@ class TodayEnergySensorSource(TapoSensorSource):
             ENERGY_KILO_WATT_HOUR,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state.energy_info is not None:
             return state.energy_info.today_energy / 1000
         return None
@@ -44,7 +45,7 @@ class MonthEnergySensorSource(TapoSensorSource):
             ENERGY_KILO_WATT_HOUR,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state.energy_info is not None:
             return state.energy_info.month_energy / 1000
         return None
@@ -74,7 +75,7 @@ class CurrentEnergySensorSource(TapoSensorSource):
             POWER_WATT,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state.energy_info is not None:
             return state.energy_info.current_power / 1000
         return None
@@ -89,7 +90,7 @@ class OverheatSensorSource(TapoSensorSource):
             unit_measure=None,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state is not None:
             return state.overheated
         return None
@@ -104,7 +105,7 @@ class SignalSensorSource(TapoSensorSource):
             unit_measure=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         try:
             if state is not None:
                 return state.rssi
@@ -122,7 +123,7 @@ class TodayRuntimeSensorSource(TapoSensorSource):
             TIME_MINUTES,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state is not None:
             if state.energy_info is not None:
                 return state.energy_info.today_runtime
@@ -138,7 +139,7 @@ class MonthRuntimeSensorSource(TapoSensorSource):
             TIME_MINUTES,
         )
 
-    def get_value(self, state: TapoDeviceState | None) -> StateType:
+    def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state is not None:
             if state.energy_info is not None:
                 return state.energy_info.month_runtime

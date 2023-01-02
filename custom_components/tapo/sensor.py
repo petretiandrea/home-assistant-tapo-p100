@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Union
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
@@ -75,5 +75,5 @@ class TapoSensor(TapoEntity, SensorEntity):
         return self._sensor_config.unit_measure
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> Union[StateType, date, datetime]:
         return self._sensor_source.get_value(self.last_state)
