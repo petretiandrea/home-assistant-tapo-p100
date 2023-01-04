@@ -137,13 +137,13 @@ class TapoLight(TapoEntity, LightEntity):
             max_value=self._max_kelvin,
         )
 
-        if (
-            self.last_state.is_hardware_v2
-            and ColorMode.COLOR_TEMP in self.supported_color_modes
-        ):
-            await self._execute_with_fallback(
-                lambda: self._tapo_coordinator.api.set_hue_saturation(0, 0)
-            )
+        # if (
+        #     self.last_state.is_hardware_v2
+        #     and ColorMode.COLOR_TEMP in self.supported_color_modes
+        # ):
+        #     await self._execute_with_fallback(
+        #         lambda: self._tapo_coordinator.api.set_hue_saturation(0, 0)
+        #     )
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
@@ -153,13 +153,13 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info("Change colors to: %s", str(hs_color))
         # L530 HW 2 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
-        if (
-            self.last_state.is_hardware_v2
-            and ColorMode.COLOR_TEMP in self.supported_color_modes
-        ):
-            await self._execute_with_fallback(
-                lambda: self._tapo_coordinator.api.set_color_temperature(0)
-            )
+        # if (
+        #     self.last_state.is_hardware_v2
+        #     and ColorMode.COLOR_TEMP in self.supported_color_modes
+        # ):
+        #     await self._execute_with_fallback(
+        #         lambda: self._tapo_coordinator.api.set_color_temperature(0)
+        #     )
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
