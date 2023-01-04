@@ -11,9 +11,9 @@
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "host": "IP address or hostname of tapo device",
+          "password": "Tapo App Password",
+          "username": "Tapo App Username (email)"
         }
       }
     }
