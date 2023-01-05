@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from custom_components.tapo.const import (
+    CONF_ALTERNATIVE_IP,
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
@@ -29,9 +30,10 @@ _LOGGGER = logging.getLogger(__name__)
 async def setup_tapo_coordinator_from_dictionary(
     hass: HomeAssistant, entry: Dict[str, Any]
 ) -> "TapoCoordinator":
+    host = entry.get(CONF_HOST, None)
     return await setup_tapo_coordinator(
         hass,
-        entry.get(CONF_HOST),
+        host if host is not None else entry.get(CONF_ALTERNATIVE_IP),
         entry.get(CONF_USERNAME),
         entry.get(CONF_PASSWORD),
         "",

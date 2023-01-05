@@ -28,6 +28,8 @@ CONF_HOST = "host"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 
+CONF_ALTERNATIVE_IP = "ip_address"
+
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------
 {NAME}
