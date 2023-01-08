@@ -23,7 +23,25 @@ categories:
     labels:
       - "dependencies"
       - "build"
+
+name-template: "Release $RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+
 template: |
   ## Changes
 
   $CHANGES
+
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+  minor:
+    labels:
+      - 'enhancement'
+  patch:
+    labels:
+      - 'bug'
+      - 'refactoring'
+      - 'dependencies'
+  default: patch
