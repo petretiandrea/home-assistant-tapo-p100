@@ -11,7 +11,7 @@
     "step": {
       "user": {
         "title": "Add new device",
-        "description": "Enter the ip address of your tapo device and tapo app credentials",
+        "description": "Enter the ip address of your tapo device and tapo app credentials.",
         "data": {
           "host": "IP address or hostname of tapo device",
           "password": "Tapo App Password",
@@ -21,9 +21,9 @@
       },
       "advanced_config": {
         "title": "Advanced configuration",
-        "description": "By customizing the polling rate unexpected behavior could occur. The device could even become unresponsive for a while.",
+        "description": "By customizing the polling rate unexpected behavior could happens. The device could even become unresponsive for a while.",
         "data": {
-          "polling_rate": "Refresh rate in milliseconds"
+          "scan_interval": "Refresh rate in milliseconds"
         }
       }
     }

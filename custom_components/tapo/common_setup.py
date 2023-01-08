@@ -16,9 +16,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.const import CONF_SCAN_INTERVAL
 from custom_components.tapo.const import (
-    CONF_POLLING_RATE,
-    DEFAULT_POLLING_RATE_MS,
+    DEFAULT_POLLING_RATE_S,
     CONF_ALTERNATIVE_IP,
     DOMAIN,
     CONF_HOST,
@@ -39,7 +39,7 @@ async def setup_tapo_coordinator_from_dictionary(
         entry.get(CONF_USERNAME),
         entry.get(CONF_PASSWORD),
         "",
-        timedelta(milliseconds=entry.get(CONF_POLLING_RATE, DEFAULT_POLLING_RATE_MS)),
+        timedelta(seconds=entry.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
     )
 
 
@@ -52,9 +52,7 @@ async def setup_tapo_coordinator_from_config_entry(
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         entry.unique_id,
-        timedelta(
-            milliseconds=entry.data.get(CONF_POLLING_RATE, DEFAULT_POLLING_RATE_MS)
-        ),
+        timedelta(seconds=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
     )
 
 
