@@ -102,7 +102,9 @@ DEBOUNCER_COOLDOWN = 2
 
 
 class TapoCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta):
+    def __init__(
+        self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta
+    ):
         self.api = client
         debouncer = Debouncer(
             hass, _LOGGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True

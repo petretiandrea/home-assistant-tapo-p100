@@ -27,7 +27,11 @@ PLATFORMS = ["switch", "light", "sensor", "binary_sensor"]
 CONF_HOST = "host"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_ADVANCED_SETTINGS = "advanced_settings"
 CONF_POLLING_RATE = "polling_rate"
+
+STEP_INIT = "user"
+STEP_ADVANCED_SETTINGS = "advanced_settings"
 
 DEFAULT_POLLING_RATE_MS = 30 * 1000  # 30 seconds
 
