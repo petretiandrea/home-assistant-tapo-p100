@@ -4,13 +4,13 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import CONF_SCAN_INTERVAL
 from custom_components.tapo.common_setup import (
     setup_tapo_coordinator_from_config_entry,
 )
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, DEFAULT_POLLING_RATE_S
 
-_LOGGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -32,6 +32,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return True
     except Exception as error:
         raise ConfigEntryNotReady from error
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+
+        new = {**config_entry.data, CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S}
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
