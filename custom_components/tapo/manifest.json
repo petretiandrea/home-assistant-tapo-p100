@@ -7,7 +7,7 @@
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues/",
   "requirements": [
-    "plugp100==2.2.3",
+    "plugp100==2.2.4",
     "multidict>=5.1.0"
   ],
   "dependencies": [],

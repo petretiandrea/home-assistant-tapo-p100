@@ -10,7 +10,7 @@ SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
 SUPPORTED_DEVICE_AS_LIGHT = {
     "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
-    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
+    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "l900": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
     "l630": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "l530": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
