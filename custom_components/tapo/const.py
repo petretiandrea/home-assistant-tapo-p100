@@ -4,13 +4,13 @@ from homeassistant.components.light import ColorMode
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "1.2.18"
+VERSION = "1.3.5"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
 SUPPORTED_DEVICE_AS_LIGHT = {
     "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
-    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
+    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "l900": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
     "l630": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "l530": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
@@ -30,6 +30,8 @@ CONF_PASSWORD = "password"
 CONF_POLLING_RATE = "polling_rate"
 
 DEFAULT_POLLING_RATE_MS = 30 * 1000  # 30 seconds
+
+CONF_ALTERNATIVE_IP = "ip_address"
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

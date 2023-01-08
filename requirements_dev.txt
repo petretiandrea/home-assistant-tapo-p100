@@ -1,2 +1,3 @@
-homeassistant
-plugp100==2.1.21
+homeassistant==2022.12.8
+plugp100==2.2.4
+multidict>=5.1.0

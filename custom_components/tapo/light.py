@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, Union
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.light import (
@@ -64,7 +64,7 @@ class TapoLight(TapoEntity, LightEntity):
         return self.last_state.device_on
 
     @property
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
+    def supported_color_modes(self) -> Union[set[ColorMode], set[str], None]:
         return self._color_modes
 
     @property
@@ -122,14 +122,14 @@ class TapoLight(TapoEntity, LightEntity):
 
     async def _change_brightness(self, new_brightness):
         brightness_to_set = round((new_brightness / 255) * 100)
-        _LOGGER.info("Mapped brightness: %s", str(brightness_to_set))
+        _LOGGER.debug("Change brightness to: %s", str(brightness_to_set))
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_brightness(brightness_to_set)
         )
 
     async def _change_color_temp(self, color_temp):
-        _LOGGER.info("Mapped color temp: %s", str(color_temp))
+        _LOGGER.info("Change color temp to: %s", str(color_temp))
         constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
         kelvin_color_temp = clamp(
             mired_to_kelvin(constraint_color_temp),
@@ -137,29 +137,29 @@ class TapoLight(TapoEntity, LightEntity):
             max_value=self._max_kelvin,
         )
 
-        if (
-            self.last_state.is_hardware_v2
-            and ColorMode.COLOR_TEMP in self.supported_color_modes
-        ):
-            await self._execute_with_fallback(
-                lambda: self._tapo_coordinator.api.set_hue_saturation(0, 0)
-            )
+        # if (
+        #     self.last_state.is_hardware_v2
+        #     and ColorMode.COLOR_TEMP in self.supported_color_modes
+        # ):
+        #     await self._execute_with_fallback(
+        #         lambda: self._tapo_coordinator.api.set_hue_saturation(0, 0)
+        #     )
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
         )
 
     async def _change_color(self, hs_color):
-        _LOGGER.info("Mapped colors: %s", str(hs_color))
+        _LOGGER.info("Change colors to: %s", str(hs_color))
         # L530 HW 2 device need to set color_temp to 0 before set hue and saturation.
         # When color_temp > 0 the device will ignore any hue and saturation value
-        if (
-            self.last_state.is_hardware_v2
-            and ColorMode.COLOR_TEMP in self.supported_color_modes
-        ):
-            await self._execute_with_fallback(
-                lambda: self._tapo_coordinator.api.set_color_temperature(0)
-            )
+        # if (
+        #     self.last_state.is_hardware_v2
+        #     and ColorMode.COLOR_TEMP in self.supported_color_modes
+        # ):
+        #     await self._execute_with_fallback(
+        #         lambda: self._tapo_coordinator.api.set_color_temperature(0)
+        #     )
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(

@@ -5,15 +5,15 @@
     },
     "error": {
       "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
+      "invalid_auth": "Invalid credentials",
       "unknown": "Unexpected error"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "host": "IP address or hostname of tapo device",
+          "password": "Tapo App Password",
+          "username": "Tapo App Username (email)"
         }
       }
     }

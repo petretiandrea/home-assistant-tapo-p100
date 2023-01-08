@@ -1,18 +1,25 @@
 from typing import Dict, Any
 from datetime import timedelta
 import logging
+import aiohttp
 import async_timeout
-from plugp100 import TapoApiClient, TapoApiClientConfig, TapoDeviceState
+from plugp100 import (
+    TapoApiClient,
+    TapoApiClientConfig,
+    TapoException,
+    TapoError,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from custom_components.tapo.const import (
     CONF_POLLING_RATE,
     DEFAULT_POLLING_RATE_MS,
+    CONF_ALTERNATIVE_IP,
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
@@ -25,9 +32,10 @@ _LOGGGER = logging.getLogger(__name__)
 async def setup_tapo_coordinator_from_dictionary(
     hass: HomeAssistant, entry: Dict[str, Any]
 ) -> "TapoCoordinator":
+    host = entry.get(CONF_HOST, None)
     return await setup_tapo_coordinator(
         hass,
-        entry.get(CONF_HOST),
+        host if host is not None else entry.get(CONF_ALTERNATIVE_IP),
         entry.get(CONF_USERNAME),
         entry.get(CONF_PASSWORD),
         "",
@@ -93,10 +101,8 @@ async def setup_tapo_coordinator(
 DEBOUNCER_COOLDOWN = 2
 
 
-class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
-    def __init__(
-        self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta
-    ):
+class TapoCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta):
         self.api = client
         debouncer = Debouncer(
             hass, _LOGGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True
@@ -117,10 +123,12 @@ class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
         try:
             async with async_timeout.timeout(10):
                 return await self._update_with_fallback()
+        except TapoException as error:
+            self._raise_from_tapo_exception(error)
+        except (aiohttp.ClientError) as error:
+            raise UpdateFailed(f"Error communication with API: {error}") from error
         except Exception as exception:
-            raise UpdateFailed(
-                f"Error communication with API: {exception}"
-            ) from exception
+            raise UpdateFailed(f"Unexpected exception: {exception}") from exception
 
     async def _update_with_fallback(self, retry=True):
         try:
@@ -129,3 +137,10 @@ class TapoCoordinator(DataUpdateCoordinator[TapoDeviceState]):
             if retry:
                 await self.api.login()
                 return await self._update_with_fallback(False)
+
+    def _raise_from_tapo_exception(self, exception: TapoException):
+        _LOGGGER.error("Tapo exception: %s", str(exception))
+        if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+            raise ConfigEntryAuthFailed from exception
+        else:
+            raise UpdateFailed(f"Error tapo exception: {exception}") from exception

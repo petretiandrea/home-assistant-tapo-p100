@@ -5,7 +5,7 @@
     },
     "error": {
       "cannot_connect": "Falhou ao conectar",
-      "invalid_auth": "Autenticação inválida",
+      "invalid_auth": "Credenciais inválidas",
       "unknown": "Erro inesperado"
     },
     "step": {
