@@ -102,6 +102,8 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info("Setting color_temp: %s", str(color_temp))
 
         if brightness or color or color_temp:
+            if self.is_on is False:
+                await self._execute_with_fallback(self._tapo_coordinator.api.on)
             if brightness:
                 await self._change_brightness(brightness)
             if color and ColorMode.HS in self.supported_color_modes:
