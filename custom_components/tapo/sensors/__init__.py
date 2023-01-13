@@ -78,6 +78,8 @@ class CurrentEnergySensorSource(TapoSensorSource):
     def get_value(self, state: Optional[TapoDeviceState]) -> StateType:
         if state.energy_info is not None:
             return state.energy_info.current_power / 1000
+        if state.power_info is not None:
+            return state.power_info.current_power
         return None
 
 
