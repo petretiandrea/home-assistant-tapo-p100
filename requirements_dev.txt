@@ -1,2 +1,2 @@
 homeassistant==2022.12.8
-plugp100==2.3.0
+plugp100==2.4.1

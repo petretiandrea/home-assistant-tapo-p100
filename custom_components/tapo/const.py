@@ -1,6 +1,7 @@
 """Constants for the tapo integration."""
 
 from homeassistant.components.light import ColorMode
+from plugp100 import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
@@ -17,6 +18,28 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "l520": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "l510": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+}
+
+SUPPORTED_LIGHT_EFFECTS = {
+    "l930": lambda: [
+        LightEffectPreset.aurora(),
+        LightEffectPreset.bubbling_calderon(),
+        LightEffectPreset.christmas(),
+        LightEffectPreset.candy_cane(),
+        LightEffectPreset.flicker(),
+        LightEffectPreset.christmas_light(),
+        LightEffectPreset.hanukkah(),
+        LightEffectPreset.haunted_mansion(),
+        LightEffectPreset.icicle(),
+        LightEffectPreset.lightning(),
+        LightEffectPreset.ocean(),
+        LightEffectPreset.rainbow(),
+        LightEffectPreset.raindrop(),
+        LightEffectPreset.spring(),
+        LightEffectPreset.sunrise(),
+        LightEffectPreset.sunset(),
+        LightEffectPreset.valentines(),
+    ]
 }
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
