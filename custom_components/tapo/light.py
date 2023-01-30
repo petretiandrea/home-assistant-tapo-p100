@@ -179,7 +179,9 @@ class TapoLight(TapoEntity, LightEntity):
         )
 
         await self._execute_with_fallback(
-            lambda: self._tapo_coordinator.api.set_color_temperature(kelvin_color_temp)
+            lambda: self._tapo_coordinator.api.set_color_temperature(
+                kelvin_color_temp, self.brightness
+            )
         )
 
     async def _change_color(self, hs_color):
@@ -187,6 +189,6 @@ class TapoLight(TapoEntity, LightEntity):
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
-                hs_color[0], hs_color[1]
+                hs_color[0], hs_color[1], self.brightness
             )
         )
