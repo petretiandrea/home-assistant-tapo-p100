@@ -5,7 +5,7 @@ from plugp100 import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.5.1"
+VERSION = "1.5.1"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
