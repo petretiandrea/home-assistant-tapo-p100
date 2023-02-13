@@ -7,7 +7,7 @@ NAME = "tapo"
 DOMAIN = "tapo"
 VERSION = "1.6.0"
 
-SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115"]
+SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115", "p125"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
 SUPPORTED_DEVICE_AS_LIGHT = {
     "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
@@ -41,6 +41,25 @@ SUPPORTED_LIGHT_EFFECTS = {
         LightEffectPreset.valentines(),
     ],
     "l920": lambda: [
+        LightEffectPreset.aurora(),
+        LightEffectPreset.bubbling_calderon(),
+        LightEffectPreset.christmas(),
+        LightEffectPreset.candy_cane(),
+        LightEffectPreset.flicker(),
+        LightEffectPreset.christmas_light(),
+        LightEffectPreset.hanukkah(),
+        LightEffectPreset.haunted_mansion(),
+        LightEffectPreset.icicle(),
+        LightEffectPreset.lightning(),
+        LightEffectPreset.ocean(),
+        LightEffectPreset.rainbow(),
+        LightEffectPreset.raindrop(),
+        LightEffectPreset.spring(),
+        LightEffectPreset.sunrise(),
+        LightEffectPreset.sunset(),
+        LightEffectPreset.valentines(),
+    ],
+    "l900": lambda: [
         LightEffectPreset.aurora(),
         LightEffectPreset.bubbling_calderon(),
         LightEffectPreset.christmas(),
