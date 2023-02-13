@@ -59,6 +59,25 @@ SUPPORTED_LIGHT_EFFECTS = {
         LightEffectPreset.sunset(),
         LightEffectPreset.valentines(),
     ],
+    "l900": lambda: [
+        LightEffectPreset.aurora(),
+        LightEffectPreset.bubbling_calderon(),
+        LightEffectPreset.christmas(),
+        LightEffectPreset.candy_cane(),
+        LightEffectPreset.flicker(),
+        LightEffectPreset.christmas_light(),
+        LightEffectPreset.hanukkah(),
+        LightEffectPreset.haunted_mansion(),
+        LightEffectPreset.icicle(),
+        LightEffectPreset.lightning(),
+        LightEffectPreset.ocean(),
+        LightEffectPreset.rainbow(),
+        LightEffectPreset.raindrop(),
+        LightEffectPreset.spring(),
+        LightEffectPreset.sunrise(),
+        LightEffectPreset.sunset(),
+        LightEffectPreset.valentines(),
+    ],
 }
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
