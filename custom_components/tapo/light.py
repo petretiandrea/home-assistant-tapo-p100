@@ -146,7 +146,7 @@ class TapoLight(TapoEntity, LightEntity):
             if color and ColorMode.HS in self.supported_color_modes:
                 hue = int(color[0])
                 saturation = int(color[1])
-                await self._change_color([hue, saturation])
+                await self._change_color([hue, saturation], brightness if brightness is not None else self.last_state.brightness)
             elif color_temp and ColorMode.COLOR_TEMP in self.supported_color_modes:
                 color_temp = int(color_temp)
                 await self._change_color_temp(color_temp)
@@ -184,11 +184,11 @@ class TapoLight(TapoEntity, LightEntity):
             )
         )
 
-    async def _change_color(self, hs_color):
+    async def _change_color(self, hs_color, brightness):
         _LOGGER.debug("Change colors to: %s", str(hs_color))
 
         await self._execute_with_fallback(
             lambda: self._tapo_coordinator.api.set_hue_saturation(
-                hs_color[0], hs_color[1], self.last_state.brightness
+                hs_color[0], hs_color[1], brightness
             )
         )
