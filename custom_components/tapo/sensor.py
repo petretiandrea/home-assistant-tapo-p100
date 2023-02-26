@@ -1,10 +1,13 @@
 from datetime import date, datetime
-from typing import Optional, Union
+from typing import Dict, Any, Callable, Optional, Union
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
 from homeassistant.components.sensor import SensorEntity
-from custom_components.tapo.common_setup import TapoCoordinator
+from custom_components.tapo.common_setup import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR,
@@ -42,6 +45,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
         )
 
     async_add_devices(sensors, True)
+
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    async_add_entities: Callable,
+    discovery_info=None,
+) -> None:
+    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
+
+    sensors = [TapoSensor(coordinator, SignalSensorSource())]
+
+    if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR:
+        sensors.extend(
+            [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
+        )
+
+    async_add_entities(sensors, True)
 
 
 class TapoSensor(TapoEntity, SensorEntity):
