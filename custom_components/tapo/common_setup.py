@@ -73,7 +73,7 @@ async def setup_tapo_coordinator(
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as error:
-        _LOGGGER.error("Failed to setup %s", str(error))
+        _LOGGGER.exception("Failed to setup %s", str(error))
         raise error
 
     return coordinator
@@ -96,6 +96,12 @@ class TapoCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
             request_refresh_debouncer=debouncer,
         )
+        self._include_energy = False
+        self._include_power = False
+
+    def enable_energy_monitor(self):
+        self._include_energy = True
+        self._include_power = True
 
     @property
     def tapo_client(self) -> TapoApiClient:
@@ -108,13 +114,15 @@ class TapoCoordinator(DataUpdateCoordinator):
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError) as error:
-            raise UpdateFailed(f"Error communication with API: {error}") from error
+            raise UpdateFailed(f"Error communication with API: {str(error)}") from error
         except Exception as exception:
-            raise UpdateFailed(f"Unexpected exception: {exception}") from exception
+            raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
 
     async def _update_with_fallback(self, retry=True):
         try:
-            return await self.api.get_state(include_energy=True, include_power=True)
+            return await self.api.get_state(
+                include_energy=self._include_energy, include_power=self._include_power
+            )
         except Exception:  # pylint: disable=broad-except
             if retry:
                 await self.api.login()

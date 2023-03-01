@@ -66,18 +66,18 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data[DOMAIN][f"{unique_id}_api"] = api
         except InvalidAuth as error:
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Failed to setup, invalid auth %s", str(error))
+            _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
         except CannotConnect as error:
             errors["base"] = "cannot_connect"
-            _LOGGER.error("Failed to setup cannot connect %s", str(error))
+            _LOGGER.exception("Failed to setup cannot connect %s", str(error))
         except InvalidHost as error:
             errors["base"] = "invalid_hostname"
-            _LOGGER.error("Failed to setup invalid host %s", str(error))
+            _LOGGER.exception("Failed to setup invalid host %s", str(error))
         except data_entry_flow.AbortFlow:
             return self.async_abort(reason="already_configured")
         except Exception as error:  # pylint: disable=broad-except
             errors["base"] = "unknown"
-            _LOGGER.error("Failed to setup %s", str(error))
+            _LOGGER.exception("Failed to setup %s", str(error), exc_info=True)
         else:
             return self.async_create_entry(title=unique_data["title"], data=user_input)
 

@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
 
     if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR:
+        coordinator.enable_energy_monitor()
         sensors.extend(
             [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
         )
