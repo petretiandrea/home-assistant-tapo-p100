@@ -37,6 +37,20 @@ SUPPORTED_SENSOR = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
     # get tapo helper
     coordinator: TapoCoordinator = hass.data[DOMAIN][entry.entry_id]
+    _setup_from_coordinator(coordinator, async_add_devices)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    async_add_devices: Callable,
+    discovery_info=None,
+) -> None:
+    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
+    _setup_from_coordinator(coordinator, async_add_devices)
+
+
+def _setup_from_coordinator(coordinator: TapoCoordinator, async_add_devices):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
 
     if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR:
@@ -46,25 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
         )
 
     async_add_devices(sensors, True)
-
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: Callable,
-    discovery_info=None,
-) -> None:
-    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
-
-    sensors = [TapoSensor(coordinator, SignalSensorSource())]
-
-    if coordinator.data.model.lower() in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR:
-        sensors.extend(
-            [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
-        )
-
-    async_add_entities(sensors, True)
 
 
 class TapoSensor(TapoEntity, SensorEntity):
