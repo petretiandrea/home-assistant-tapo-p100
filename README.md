@@ -40,7 +40,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 
 ## Simplest and recomended way
 This integration is part of HACS store, so you don't need anymore to add this repository as a custom repository.
-You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is requried**)
+You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is required**)
 
 ## Old way as a custom repository (not recomended, but use if you want to use beta versions)
 1. Install from HACS, add this repository as custom repository
