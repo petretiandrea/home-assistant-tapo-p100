@@ -23,7 +23,7 @@
         "title": "Advanced configuration",
         "description": "By customizing the polling rate unexpected behavior could happens. The device could even become unresponsive for a while.",
         "data": {
-          "scan_interval": "Refresh rate in milliseconds"
+          "scan_interval": "Refresh rate in seconds"
         }
       }
     }
