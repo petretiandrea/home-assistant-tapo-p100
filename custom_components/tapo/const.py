@@ -88,6 +88,12 @@ PLATFORMS = ["switch", "light", "sensor", "binary_sensor"]
 CONF_HOST = "host"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_ADVANCED_SETTINGS = "advanced_settings"
+
+STEP_INIT = "user"
+STEP_ADVANCED_SETTINGS = "advanced_config"
+
+DEFAULT_POLLING_RATE_S = 30  # 30 seconds
 
 CONF_ALTERNATIVE_IP = "ip_address"
 

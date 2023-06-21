@@ -10,10 +10,20 @@
     },
     "step": {
       "user": {
+        "title": "Add new device",
+        "description": "Enter the ip address of your tapo device and tapo app credentials.",
         "data": {
           "host": "IP address or hostname of tapo device",
           "password": "Tapo App Password",
-          "username": "Tapo App Username (email)"
+          "username": "Tapo App Username (email)",
+          "advanced_settings": "Advanced settings"
+        }
+      },
+      "advanced_config": {
+        "title": "Advanced configuration",
+        "description": "By customizing the polling rate unexpected behavior could happens. The device could even become unresponsive for a while.",
+        "data": {
+          "scan_interval": "Refresh rate in seconds"
         }
       }
     }
