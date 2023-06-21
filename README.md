@@ -27,10 +27,10 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ## Features
 
 - [x] pure async home assistant's method
-- [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`)
+- [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`)
 - [x] support for tapo light bulb with or without color (`L530`, `L510`, `L520`, `L630`, `L610`)
 - [x] support for tapo light strip with or without color (`L900`)
-- [x] partial support for tapo light strip (`L920`). Only RGB works not the addressable feature of strip.
+- [x] partial support for tapo light strip (`L920`, `L930` (including light effects)). Only RGB works not the addressable feature of strip.
 - [x] support for energy monitoring (`P110`, `P115`)
 - [x] support for additional tapo sensors: `overheat` and `wifi_signal`
 - [x] allow configuration from home assistant UI with config flow
@@ -40,7 +40,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 
 ## Simplest and recomended way
 This integration is part of HACS store, so you don't need anymore to add this repository as a custom repository.
-You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is requried**)
+You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is required**)
 
 ## Old way as a custom repository (not recomended, but use if you want to use beta versions)
 1. Install from HACS, add this repository as custom repository

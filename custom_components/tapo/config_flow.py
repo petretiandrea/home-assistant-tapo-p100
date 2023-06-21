@@ -81,40 +81,38 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if user_input is not None:
-            try:
+        try:
+            if not user_input[CONF_HOST]:
+                raise InvalidHost
+            api = await self._try_setup_api(user_input)
+            unique_data = await self._get_first_data_from_api(api)
+            unique_id = unique_data["unique_id"]
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+            self.hass.data.setdefault(DOMAIN, {})
+            self.hass.data[DOMAIN][f"{unique_id}_api"] = api
 
-                if not user_input.get(CONF_HOST):
-                    raise InvalidHost
-                api = await self._try_setup_api(user_input)
-                state = await self._get_first_data_from_api(api)
-                unique_id = state.device_id
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                self.hass.data.setdefault(DOMAIN, {})
-                self.hass.data[DOMAIN][f"{unique_id}_api"] = api
-
-                if user_input.get(CONF_ADVANCED_SETTINGS, False):
-                    self.first_step_data = FirstStepData(state, user_input)
-                    return await self.async_step_advanced_config()
-                else:
-                    return self.async_create_entry(
-                        title=state.nickname, data=user_input
-                    )
-            except InvalidAuth as error:
-                errors["base"] = "invalid_auth"
-                _LOGGER.error("Failed to setup, invalid auth %s", str(error))
-            except CannotConnect as error:
-                errors["base"] = "cannot_connect"
-                _LOGGER.error("Failed to setup cannot connect %s", str(error))
-            except InvalidHost as error:
-                errors["base"] = "invalid_hostname"
-                _LOGGER.error("Failed to setup invalid host %s", str(error))
-            except data_entry_flow.AbortFlow:
-                return self.async_abort(reason="already_configured")
-            except Exception as error:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
-                _LOGGER.error("Failed to setup %s", str(error))
+            if user_input.get(CONF_ADVANCED_SETTINGS, False):
+                self.first_step_data = FirstStepData(unique_data, user_input)
+                return await self.async_step_advanced_config()
+            else:
+                return self.async_create_entry(
+                    title=unique_data["title"], data=user_input
+                )
+        except InvalidAuth as error:
+            errors["base"] = "invalid_auth"
+            _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
+        except CannotConnect as error:
+            errors["base"] = "cannot_connect"
+            _LOGGER.exception("Failed to setup cannot connect %s", str(error))
+        except InvalidHost as error:
+            errors["base"] = "invalid_hostname"
+            _LOGGER.exception("Failed to setup invalid host %s", str(error))
+        except data_entry_flow.AbortFlow:
+            return self.async_abort(reason="already_configured")
+        except Exception as error:  # pylint: disable=broad-except
+            errors["base"] = "unknown"
+            _LOGGER.exception("Failed to setup %s", str(error), exc_info=True)
 
         return self.async_show_form(
             step_id=STEP_INIT, data_schema=STEP_USER_DATA_SCHEMA, errors=errors

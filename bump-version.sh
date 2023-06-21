@@ -17,5 +17,4 @@ git add custom_components/tapo/const.py
 git add custom_components/tapo/manifest.json
 git commit -m "bump version to $INTEGRATION_VERSION"
 
-echo "Tagging to version: $GIT_TAG_VERSION"
-git tag $1
+echo "Bump to version: $GIT_TAG_VERSION"
