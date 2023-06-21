@@ -48,7 +48,7 @@ async def async_setup_platform(
 
 
 def _setup_from_coordinator(coordinator: TapoCoordinator, async_add_devices):
-    for (model, color_modes) in SUPPORTED_DEVICE_AS_LIGHT.items():
+    for model, color_modes in SUPPORTED_DEVICE_AS_LIGHT.items():
         if model.lower() in coordinator.data.model.lower():
             light = TapoLight(
                 coordinator,
@@ -95,13 +95,13 @@ class TapoLight(TapoEntity, LightEntity):
     def hs_color(self):
         hue = self.last_state.hue
         saturation = self.last_state.saturation
-        if hue and saturation:
+        if hue is not None and saturation is not None:
             return hue, saturation
 
     @property
     def color_temp(self):
         color_temp = self.last_state.color_temp
-        if color_temp and color_temp > 0:
+        if color_temp is not None and color_temp > 0:
             return kelvin_to_mired(color_temp)
 
     @property
@@ -138,19 +138,27 @@ class TapoLight(TapoEntity, LightEntity):
         _LOGGER.info("Setting color_temp: %s", str(color_temp))
         _LOGGER.info("Setting effect: %s", str(effect))
 
-        if brightness or color or color_temp or effect:
+        if (
+            brightness is not None
+            or color is not None
+            or color_temp is not None
+            or effect is not None
+        ):
             if self.is_on is False:
                 await self._execute_with_fallback(self._tapo_coordinator.api.on)
-            if color and ColorMode.HS in self.supported_color_modes:
+            if color is not None and ColorMode.HS in self.supported_color_modes:
                 hue = int(color[0])
                 saturation = int(color[1])
                 await self._change_color([hue, saturation], None)
-            elif color_temp and ColorMode.COLOR_TEMP in self.supported_color_modes:
+            elif (
+                color_temp is not None
+                and ColorMode.COLOR_TEMP in self.supported_color_modes
+            ):
                 color_temp = int(color_temp)
                 await self._change_color_temp(color_temp)
-            if brightness:
+            if brightness is not None:
                 await self._change_brightness(brightness)
-            if effect:
+            if effect is not None:
                 await self._tapo_coordinator.api.set_light_effect(self._effects[effect])
         else:
             await self._execute_with_fallback(self._tapo_coordinator.api.on)
