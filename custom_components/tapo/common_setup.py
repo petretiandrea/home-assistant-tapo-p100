@@ -28,7 +28,6 @@ from custom_components.tapo.const import (
 
 _LOGGGER = logging.getLogger(__name__)
 
-
 async def setup_tapo_coordinator_from_dictionary(
     hass: HomeAssistant, entry: Dict[str, Any]
 ) -> "TapoCoordinator":
