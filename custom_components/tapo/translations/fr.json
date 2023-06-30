@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Appareil déjà configuré"
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter",
+      "invalid_auth": "Mauvais identifiants",
+      "unknown": "Erreur innatendue"
+    },
+    "step": {
+      "user": {
+        "title": "Ajouter un nouvel appareil",
+        "description": "Entrer l'adresse ip de votre appareil tapo et les identifiants de l'application.",
+        "data": {
+          "host": "Adresse ip ou nom d'hôte de l'appareil tapo",
+          "password": "Mot de passe de l'application Tapo",
+          "username": "Identifiant de l'application Tapo (email)",
+          "advanced_settings": "Paramètres avancés"
+        }
+      },
+      "advanced_config": {
+        "title": "Paramètres avancés",
+        "description": "En modifiant le taux de rafraichissement, un comportement innatendu peut se produire. L'appareil peut aussi ne plus répondre pendant un certain temps.",
+        "data": {
+          "scan_interval": "Taux de rafraichissement en secondes"
+        }
+      }
+    }
+  },
+  "title": "tapo_p100"
+}
