@@ -1,18 +1,21 @@
 """The tapo integration."""
+import asyncio
 from dataclasses import dataclass
 import logging
-import asyncio
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_SCAN_INTERVAL
+
 from custom_components.tapo.common_setup import (
+    DeviceNotSupported,
     setup_tapo_coordinator_from_config_entry,
 )
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.utils import value_or_raise
-from custom_components.tapo.common_setup import DeviceNotSupported
-from .const import DOMAIN, PLATFORMS, DEFAULT_POLLING_RATE_S
+
+from .const import DEFAULT_POLLING_RATE_S, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
