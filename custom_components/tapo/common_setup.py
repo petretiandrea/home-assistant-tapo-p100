@@ -1,5 +1,6 @@
 from datetime import timedelta
 import logging
+from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -27,18 +28,18 @@ class DeviceNotSupported(Exception):
         super().__init__(*args)
 
 
-# async def setup_tapo_coordinator_from_dictionary(
-#     hass: HomeAssistant, entry: Dict[str, Any]
-# ) -> Either[DataUpdateCoordinator, Exception]:
-#     host = entry.get(CONF_HOST, None)
-#     return await setup_tapo_coordinator(
-#         hass,
-#         host if host is not None else entry.get(CONF_ALTERNATIVE_IP),
-#         entry.get(CONF_USERNAME),
-#         entry.get(CONF_PASSWORD),
-#         "",
-#         timedelta(seconds=entry.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
-#     )
+async def setup_tapo_coordinator_from_dictionary(
+    hass: HomeAssistant, entry: Dict[str, Any]
+) -> Either[TapoCoordinator, Exception]:
+    host = entry.get(CONF_HOST, None)
+    return await setup_tapo_coordinator(
+        hass,
+        host if host is not None else entry.get(CONF_ALTERNATIVE_IP),
+        entry.get(CONF_USERNAME),
+        entry.get(CONF_PASSWORD),
+        "",
+        timedelta(seconds=entry.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
+    )
 
 
 async def setup_tapo_coordinator_from_config_entry(

@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,7 +21,10 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 from plugp100.responses.device_state import LedStripDeviceState, LightDeviceState
 
 from custom_components.tapo import HassTapoDeviceData
-from custom_components.tapo.common_setup import TapoCoordinator
+from custom_components.tapo.common_setup import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_LIGHT,
@@ -29,18 +32,21 @@ from custom_components.tapo.const import (
 )
 from custom_components.tapo.coordinators import LightTapoCoordinator
 from custom_components.tapo.tapo_entity import TapoEntity
-from custom_components.tapo.utils import clamp, value_or_raise, get_short_model
+from custom_components.tapo.utils import clamp, get_short_model, value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
 
-# async def async_setup_platform(
-#     hass: HomeAssistant,
-#     config: Dict[str, Any],
-#     async_add_entities: Callable,
-#     discovery_info=None,
-# ) -> None:
-#     coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
-#     _setup_from_coordinator(coordinator, async_add_entities)
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    async_add_entities: AddEntitiesCallback,
+    discovery_info=None,
+) -> None:
+    coordinator = value_or_raise(
+        await setup_tapo_coordinator_from_dictionary(hass, config)
+    )
+    _setup_from_coordinator(coordinator, async_add_entities)
 
 
 async def async_setup_entry(
@@ -56,13 +62,11 @@ def _setup_from_coordinator(
 ):
     if isinstance(coordinator, LightTapoCoordinator):
         model = get_short_model(coordinator.get_device_info().model)
-        _LOGGER.info("Model %s", str(model))
         color_modes = SUPPORTED_DEVICE_AS_LIGHT.get(model)
         effects = SUPPORTED_LIGHT_EFFECTS.get(model, [])
         light = TapoLight(
             coordinator, color_modes=color_modes, supported_effects=effects
         )
-        _LOGGER.info(color_modes)
         async_add_devices([light], True)
 
 
