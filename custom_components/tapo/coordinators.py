@@ -182,19 +182,3 @@ class LightTapoCoordinator(
 
     def get_sensor_state(self) -> SensorState:
         return SensorState(self.data.info, None, None)
-
-
-# class LedStripTapoCoordinator(TapoCoordinator[LedStripDeviceState]):
-#     def __init__(
-#         self,
-#         hass: HomeAssistant,
-#         device: LedStripDevice,
-#         polling_interval: timedelta,
-#     ):
-#         super().__init__(hass, device, polling_interval)
-
-#     def get_device_info(self) -> DeviceInfo:
-#         return self.data.info
-
-#     def get_sensor_state(self) -> SensorState:
-#         return SensorState(self.data.info, None, None)
