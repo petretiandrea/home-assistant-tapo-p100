@@ -1,91 +1,96 @@
 import logging
-from plugp100 import LightEffectPreset
-from typing import Dict, Any, Callable, Optional, Union
+from typing import Any, Dict, Optional, Union
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    SUPPORT_EFFECT,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components.light import (
-    LightEntity,
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_COLOR_TEMP,
-    ColorMode,
-    SUPPORT_EFFECT,
-    ATTR_EFFECT,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
-from custom_components.tapo.utils import clamp
+from plugp100.api.light_effect_preset import LightEffectPreset
+from plugp100.responses.device_state import LedStripDeviceState, LightDeviceState
+
+from custom_components.tapo import HassTapoDeviceData
+from custom_components.tapo.common_setup import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_LIGHT_EFFECTS,
 )
+from custom_components.tapo.coordinators import LightTapoCoordinator
 from custom_components.tapo.tapo_entity import TapoEntity
-from custom_components.tapo.common_setup import (
-    TapoCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
+from custom_components.tapo.utils import clamp, get_short_model, value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
-    # get tapo helper
-    coordinator: TapoCoordinator = hass.data[DOMAIN][entry.entry_id]
-    _setup_from_coordinator(coordinator, async_add_devices)
 
 
 async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Any],
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info=None,
 ) -> None:
-    coordinator = await setup_tapo_coordinator_from_dictionary(hass, config)
+    coordinator = value_or_raise(
+        await setup_tapo_coordinator_from_dictionary(hass, config)
+    )
     _setup_from_coordinator(coordinator, async_add_entities)
 
 
-def _setup_from_coordinator(coordinator: TapoCoordinator, async_add_devices):
-    for model, color_modes in SUPPORTED_DEVICE_AS_LIGHT.items():
-        if model.lower() in coordinator.data.model.lower():
-            light = TapoLight(
-                coordinator,
-                color_modes=color_modes,
-                supported_effects=SUPPORTED_LIGHT_EFFECTS.get(
-                    model.lower(), lambda: []
-                )(),
-            )
-            async_add_devices([light], True)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+):
+    # get tapo helper
+    data: HassTapoDeviceData = hass.data[DOMAIN][entry.entry_id]
+    _setup_from_coordinator(data.coordinator, async_add_devices)
 
 
-class TapoLight(TapoEntity, LightEntity):
+def _setup_from_coordinator(
+    coordinator: TapoCoordinator, async_add_devices: AddEntitiesCallback
+):
+    if isinstance(coordinator, LightTapoCoordinator):
+        model = get_short_model(coordinator.get_device_info().model)
+        color_modes = SUPPORTED_DEVICE_AS_LIGHT.get(model)
+        effects = SUPPORTED_LIGHT_EFFECTS.get(model, [])
+        light = TapoLight(
+            coordinator, color_modes=color_modes, supported_effects=effects
+        )
+        async_add_devices([light], True)
+
+
+class TapoLight(TapoEntity[Union[LightDeviceState, LedStripDeviceState]], LightEntity):
     def __init__(
         self,
-        coordinator,
+        coordinator: LightTapoCoordinator,
         color_modes: set[ColorMode],
         supported_effects: list[LightEffectPreset] = None,
     ):
         super().__init__(coordinator)
-        self._color_modes = color_modes
-        self._max_kelvin = 6500
-        self._min_kelvin = 2500
-        self._max_merids = kelvin_to_mired(2500)
-        self._min_merids = kelvin_to_mired(6500)
-        self._effects = {effect.name: effect.effect for effect in supported_effects}
+        self._effects = {effect.name: effect for effect in supported_effects}
+        # set homeassistant light entity attributes
+        self._attr_max_color_temp_kelvin = 6500
+        self._attr_min_color_temp_kelvin = 2500
+        self._attr_max_mireds = kelvin_to_mired(self._attr_min_color_temp_kelvin)
+        self._attr_min_mireds = kelvin_to_mired(self._attr_max_color_temp_kelvin)
+        self._attr_supported_features = SUPPORT_EFFECT if self._effects else 0
+        self._attr_supported_color_modes = color_modes
+        self._attr_effect_list = list(self._effects.keys()) if self._effects else None
 
     @property
     def is_on(self):
         return self.last_state.device_on
-
-    @property
-    def supported_features(self) -> Optional[int]:
-        return SUPPORT_EFFECT if self._effects else 0
-
-    @property
-    def supported_color_modes(self) -> Union[set[ColorMode], set[str], None]:
-        return self._color_modes
 
     @property
     def brightness(self):
@@ -95,35 +100,33 @@ class TapoLight(TapoEntity, LightEntity):
     def hs_color(self):
         hue = self.last_state.hue
         saturation = self.last_state.saturation
-        if hue is not None and saturation is not None:
-            return hue, saturation
+        color_temp = self.last_state.color_temp
+        if (
+            color_temp is None or color_temp <= 0
+        ):  ## returns None if color_temp is not set
+            if hue is not None and saturation is not None:
+                return hue, saturation
 
     @property
     def color_temp(self):
         color_temp = self.last_state.color_temp
         if color_temp is not None and color_temp > 0:
-            return kelvin_to_mired(color_temp)
-
-    @property
-    def max_mireds(self):
-        return self._max_merids
-
-    @property
-    def min_mireds(self):
-        return self._min_merids
-
-    @property
-    def effect_list(self) -> Optional[list[str]]:
-        return list(self._effects.keys()) if self._effects else None
+            return clamp(
+                kelvin_to_mired(color_temp),
+                min_value=self.min_mireds,
+                max_value=self.max_mireds,
+            )
+        else:
+            return None
 
     @property
     def effect(self) -> Optional[str]:
         if (
             self._effects
-            and self.last_state.light_effect is not None
-            and self.last_state.light_effect.enable
+            and self.last_state.lighting_effect is not None
+            and self.last_state.lighting_effect.enable
         ):
-            return self.last_state.light_effect.name.lower()
+            return self.last_state.lighting_effect.name.lower()
         else:
             return None
 
@@ -145,11 +148,13 @@ class TapoLight(TapoEntity, LightEntity):
             or effect is not None
         ):
             if self.is_on is False:
-                await self._execute_with_fallback(self._tapo_coordinator.api.on)
+                value_or_raise(
+                    await self.coordinator.device.on()
+                )  # execute with fallback?
             if color is not None and ColorMode.HS in self.supported_color_modes:
                 hue = int(color[0])
                 saturation = int(color[1])
-                await self._change_color([hue, saturation], None)
+                await self._change_color(hue, saturation)
             elif (
                 color_temp is not None
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
@@ -159,44 +164,42 @@ class TapoLight(TapoEntity, LightEntity):
             if brightness is not None:
                 await self._change_brightness(brightness)
             if effect is not None:
-                await self._tapo_coordinator.api.set_light_effect(self._effects[effect])
+                value_or_raise(
+                    await self.coordinator.device.set_light_effect(
+                        self._effects[effect].to_effect()
+                    )
+                )
         else:
-            await self._execute_with_fallback(self._tapo_coordinator.api.on)
+            value_or_raise(await self.coordinator.device.on())
 
-        await self._tapo_coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        await self._execute_with_fallback(self._tapo_coordinator.api.off)
-        await self._tapo_coordinator.async_request_refresh()
+        value_or_raise(await self.coordinator.device.off())
+        await self.coordinator.async_request_refresh()
 
     async def _change_brightness(self, new_brightness):
         brightness_to_set = round((new_brightness / 255) * 100)
         _LOGGER.debug("Change brightness to: %s", str(brightness_to_set))
 
-        await self._execute_with_fallback(
-            lambda: self._tapo_coordinator.api.set_brightness(brightness_to_set)
-        )
+        value_or_raise(await self.coordinator.device.set_brightness(brightness_to_set))
 
     async def _change_color_temp(self, color_temp):
         _LOGGER.debug("Change color temp to: %s", str(color_temp))
-        constraint_color_temp = clamp(color_temp, self._min_merids, self._max_merids)
+        constraint_color_temp = clamp(color_temp, self.min_mireds, self.max_mireds)
         kelvin_color_temp = clamp(
             mired_to_kelvin(constraint_color_temp),
-            min_value=self._min_kelvin,
-            max_value=self._max_kelvin,
+            min_value=self.min_color_temp_kelvin,
+            max_value=self.max_color_temp_kelvin,
         )
 
-        await self._execute_with_fallback(
-            lambda: self._tapo_coordinator.api.set_color_temperature(
-                kelvin_color_temp, self.last_state.brightness
-            )
+        value_or_raise(
+            await self.coordinator.device.set_color_temperature(kelvin_color_temp)
         )
 
-    async def _change_color(self, hs_color, brightness):
-        _LOGGER.debug("Change colors to: %s", str(hs_color))
+    async def _change_color(self, hue, saturation):
+        _LOGGER.debug("Change colors to: (%s, %s)", str(hue), str(saturation))
 
-        await self._execute_with_fallback(
-            lambda: self._tapo_coordinator.api.set_hue_saturation(
-                hs_color[0], hs_color[1], brightness
-            )
+        value_or_raise(
+            await self.coordinator.device.set_hue_saturation(hue, saturation)
         )

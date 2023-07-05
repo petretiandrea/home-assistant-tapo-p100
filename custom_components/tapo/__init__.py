@@ -1,16 +1,28 @@
 """The tapo integration."""
-import logging
 import asyncio
+from dataclasses import dataclass
+import logging
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_SCAN_INTERVAL
+
 from custom_components.tapo.common_setup import (
+    DeviceNotSupported,
     setup_tapo_coordinator_from_config_entry,
 )
-from .const import DOMAIN, PLATFORMS, DEFAULT_POLLING_RATE_S
+from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.utils import value_or_raise
+
+from .const import DEFAULT_POLLING_RATE_S, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class HassTapoDeviceData:
+    coordinator: TapoCoordinator
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -22,14 +34,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
     try:
-        coordinator = await setup_tapo_coordinator_from_config_entry(hass, entry)
+        coordinator = value_or_raise(
+            await setup_tapo_coordinator_from_config_entry(hass, entry)
+        )
         hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][entry.entry_id] = coordinator
+        hass.data[DOMAIN][entry.entry_id] = HassTapoDeviceData(coordinator=coordinator)
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
         return True
+    except DeviceNotSupported as error:
+        raise error
     except Exception as error:
         raise ConfigEntryNotReady from error
 
@@ -39,7 +55,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
-
         new = {**config_entry.data, CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S}
 
         config_entry.version = 2
@@ -61,6 +76,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        _LOGGER.info("Unloaded entry for %s", str(entry.entry_id))
+        hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok

@@ -1,36 +1,36 @@
-from typing import Dict, Any
 from datetime import timedelta
 import logging
-import aiohttp
-import async_timeout
-from plugp100 import (
-    TapoApiClient,
-    TapoApiClientConfig,
-    TapoException,
-    TapoError,
-)
+from typing import Any, Dict
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from plugp100.api.tapo_client import TapoClient
+from plugp100.common.functional.either import Either, Left, Right
+
 from custom_components.tapo.const import (
-    DEFAULT_POLLING_RATE_S,
     CONF_ALTERNATIVE_IP,
-    DOMAIN,
     CONF_HOST,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
+    DEFAULT_POLLING_RATE_S,
+    DOMAIN,
 )
+from custom_components.tapo.coordinators import TapoCoordinator, create_coordinator
 
 _LOGGGER = logging.getLogger(__name__)
 
+
+class DeviceNotSupported(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 async def setup_tapo_coordinator_from_dictionary(
     hass: HomeAssistant, entry: Dict[str, Any]
-) -> "TapoCoordinator":
+) -> Either[TapoCoordinator, Exception]:
     host = entry.get(CONF_HOST, None)
     return await setup_tapo_coordinator(
         hass,
@@ -44,7 +44,7 @@ async def setup_tapo_coordinator_from_dictionary(
 
 async def setup_tapo_coordinator_from_config_entry(
     hass: HomeAssistant, entry: ConfigEntry
-) -> "TapoCoordinator":
+) -> Either[TapoCoordinator, Exception]:
     return await setup_tapo_coordinator(
         hass,
         entry.data.get(CONF_HOST),
@@ -62,92 +62,30 @@ async def setup_tapo_coordinator(
     password: str,
     unique_id: str,
     polling_rate: timedelta,
-) -> "TapoCoordinator":
+) -> Either[TapoCoordinator, Exception]:
+    client = _get_or_create_api_client(hass, username, password, unique_id)
+    coordinator = await create_coordinator(hass, client, host, polling_rate)
+    if coordinator is not None:
+        try:
+            await coordinator.async_config_entry_first_refresh()
+            return Right(coordinator)
+        except ConfigEntryNotReady as error:
+            return Left(error)
+    return Left(DeviceNotSupported(f"Device {host} not supported!"))
+
+
+def _get_or_create_api_client(
+    hass: HomeAssistant, username: str, password: str, unique_id: str
+) -> TapoClient:
     api = (
         hass.data[DOMAIN][f"{unique_id}_api"]
         if f"{unique_id}_api" in hass.data[DOMAIN]
         else None
     )
     if api is not None:
-        _LOGGGER.debug(
-            "Re-using setup API to create a coordinator, polling rate %s",
-            str(polling_rate),
-        )
-        coordinator = TapoCoordinator(hass, client=api, polling_interval=polling_rate)
+        _LOGGGER.debug("Re-using setup API to create a coordinator")
     else:
-        _LOGGGER.debug(
-            "Creating new API to create a coordinator, polling rate %s",
-            str(polling_rate),
-        )
+        _LOGGGER.debug("Creating new API to create a coordinator")
         session = async_get_clientsession(hass)
-        config = TapoApiClientConfig(host, username, password, session)
-        client = TapoApiClient.from_config(config)
-        coordinator = TapoCoordinator(
-            hass, client=client, polling_interval=polling_rate
-        )
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as error:
-        _LOGGGER.exception("Failed to setup %s", str(error))
-        raise error
-
-    return coordinator
-
-
-DEBOUNCER_COOLDOWN = 2
-
-
-class TapoCoordinator(DataUpdateCoordinator):
-    def __init__(
-        self, hass: HomeAssistant, client: TapoApiClient, polling_interval: timedelta
-    ):
-        self.api = client
-        debouncer = Debouncer(
-            hass, _LOGGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True
-        )
-        super().__init__(
-            hass,
-            _LOGGGER,
-            name=DOMAIN,
-            update_interval=polling_interval,
-            request_refresh_debouncer=debouncer,
-        )
-        self._include_energy = False
-        self._include_power = False
-
-    def enable_energy_monitor(self):
-        self._include_energy = True
-        self._include_power = True
-
-    @property
-    def tapo_client(self) -> TapoApiClient:
-        return self.api
-
-    async def _async_update_data(self):
-        try:
-            async with async_timeout.timeout(10):
-                return await self._update_with_fallback()
-        except TapoException as error:
-            self._raise_from_tapo_exception(error)
-        except (aiohttp.ClientError) as error:
-            raise UpdateFailed(f"Error communication with API: {str(error)}") from error
-        except Exception as exception:
-            raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
-
-    async def _update_with_fallback(self, retry=True):
-        try:
-            return await self.api.get_state(
-                include_energy=self._include_energy, include_power=self._include_power
-            )
-        except Exception:  # pylint: disable=broad-except
-            if retry:
-                await self.api.login()
-                return await self._update_with_fallback(False)
-
-    def _raise_from_tapo_exception(self, exception: TapoException):
-        _LOGGGER.error("Tapo exception: %s", str(exception))
-        if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
-            raise ConfigEntryAuthFailed from exception
-        else:
-            raise UpdateFailed(f"Error tapo exception: {exception}") from exception
+        api = TapoClient(username, password, session)
+    return api

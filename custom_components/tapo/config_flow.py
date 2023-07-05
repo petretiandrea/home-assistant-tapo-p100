@@ -10,14 +10,12 @@ from homeassistant import config_entries, exceptions
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_SCAN_INTERVAL
-from plugp100 import (
-    TapoApiClient,
-    TapoApiClientConfig,
-    TapoDeviceState,
-    TapoException,
-    TapoError,
-)
+from plugp100.responses.device_state import DeviceInfo
+from plugp100.api.tapo_client import TapoClient
+from plugp100.responses.tapo_exception import TapoException, TapoError
+from custom_components.tapo.utils import value_or_raise
 from custom_components.tapo.const import (
+    CONF_DEVICE_TYPE,
     DEFAULT_POLLING_RATE_S,
     DOMAIN,
     CONF_HOST,
@@ -59,7 +57,7 @@ STEP_ADVANCED_CONFIGURATION = vol.Schema(
 
 @dataclasses.dataclass(frozen=False)
 class FirstStepData:
-    state: Optional[TapoDeviceState]
+    state: Optional[DeviceInfo]
     user_input: Optional[dict[str, Any]]
 
 
@@ -98,7 +96,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_advanced_config()
                 else:
                     return self.async_create_entry(
-                        title=unique_data.nickname, data=user_input
+                        title=unique_data.nickname,
+                        data=user_input,
                     )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
@@ -139,9 +138,11 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-    async def _get_first_data_from_api(self, api: TapoApiClient) -> TapoDeviceState:
+    async def _get_first_data_from_api(self, api: TapoClient) -> DeviceInfo:
         try:
-            return await api.get_state()
+            return value_or_raise(
+                (await api.get_device_info()).map(lambda x: DeviceInfo(**x))
+            )
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:
@@ -149,18 +150,15 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_setup_api(
         self, user_input: Optional[dict[str, Any]] = None
-    ) -> TapoApiClient:
+    ) -> TapoClient:
         try:
             session = async_create_clientsession(self.hass)
-            config = TapoApiClientConfig(
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                session,
+            client = TapoClient(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
             )
-            client = TapoApiClient.from_config(config)
-            await client.login()
-            return client
+            return value_or_raise(
+                (await client.login(user_input[CONF_HOST])).map(lambda _: client)
+            )
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:

@@ -1,11 +1,11 @@
 """Constants for the tapo integration."""
 
 from homeassistant.components.light import ColorMode
-from plugp100 import LightEffectPreset
+from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "1.7.1"
+VERSION = "2.0.0"
 
 SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115", "p125", "p125m"]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115"]
@@ -19,76 +19,30 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "l510": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
 }
+SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
 SUPPORTED_LIGHT_EFFECTS = {
-    "l930": lambda: [
-        LightEffectPreset.aurora(),
-        LightEffectPreset.bubbling_calderon(),
-        LightEffectPreset.christmas(),
-        LightEffectPreset.candy_cane(),
-        LightEffectPreset.flicker(),
-        LightEffectPreset.christmas_light(),
-        LightEffectPreset.hanukkah(),
-        LightEffectPreset.haunted_mansion(),
-        LightEffectPreset.icicle(),
-        LightEffectPreset.lightning(),
-        LightEffectPreset.ocean(),
-        LightEffectPreset.rainbow(),
-        LightEffectPreset.raindrop(),
-        LightEffectPreset.spring(),
-        LightEffectPreset.sunrise(),
-        LightEffectPreset.sunset(),
-        LightEffectPreset.valentines(),
-    ],
-    "l920": lambda: [
-        LightEffectPreset.aurora(),
-        LightEffectPreset.bubbling_calderon(),
-        LightEffectPreset.christmas(),
-        LightEffectPreset.candy_cane(),
-        LightEffectPreset.flicker(),
-        LightEffectPreset.christmas_light(),
-        LightEffectPreset.hanukkah(),
-        LightEffectPreset.haunted_mansion(),
-        LightEffectPreset.icicle(),
-        LightEffectPreset.lightning(),
-        LightEffectPreset.ocean(),
-        LightEffectPreset.rainbow(),
-        LightEffectPreset.raindrop(),
-        LightEffectPreset.spring(),
-        LightEffectPreset.sunrise(),
-        LightEffectPreset.sunset(),
-        LightEffectPreset.valentines(),
-    ],
-    "l900": lambda: [
-        LightEffectPreset.aurora(),
-        LightEffectPreset.bubbling_calderon(),
-        LightEffectPreset.christmas(),
-        LightEffectPreset.candy_cane(),
-        LightEffectPreset.flicker(),
-        LightEffectPreset.christmas_light(),
-        LightEffectPreset.hanukkah(),
-        LightEffectPreset.haunted_mansion(),
-        LightEffectPreset.icicle(),
-        LightEffectPreset.lightning(),
-        LightEffectPreset.ocean(),
-        LightEffectPreset.rainbow(),
-        LightEffectPreset.raindrop(),
-        LightEffectPreset.spring(),
-        LightEffectPreset.sunrise(),
-        LightEffectPreset.sunset(),
-        LightEffectPreset.valentines(),
-    ],
+    "l930": LightEffectPreset,
+    "l920": LightEffectPreset,
+    "l900": LightEffectPreset,
 }
 
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
-PLATFORMS = ["switch", "light", "sensor", "binary_sensor"]
+PLATFORMS = [
+    "switch",
+    "sensor",
+    "binary_sensor",
+    "light",
+]
 
 CONF_HOST = "host"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_ADVANCED_SETTINGS = "advanced_settings"
+
+CONF_DEVICE_TYPE = "device_type"
 
 STEP_INIT = "user"
 STEP_ADVANCED_SETTINGS = "advanced_config"
