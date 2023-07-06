@@ -139,7 +139,7 @@ class PlugTapoCoordinator(TapoCoordinator[PlugDeviceState]):
         polling_interval: timedelta,
     ):
         super().__init__(hass, device, polling_interval)
-        self.has_power_monitor = False
+        self.has_power_monitor = True
         self.power_info = None
         self.energy_info = None
 
