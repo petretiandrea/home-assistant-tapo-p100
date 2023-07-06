@@ -70,6 +70,7 @@ def _setup_from_coordinator(
             get_short_model(coordinator.get_device_info().model)
             in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
         ):
+            coordinator.enable_power_monitor()
             sensors.extend(
                 [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
             )
