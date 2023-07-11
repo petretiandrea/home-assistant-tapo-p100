@@ -68,7 +68,6 @@ async def setup_tapo_coordinator(
 ) -> Either[TapoCoordinator, Exception]:
     client = _get_or_create_api_client(hass, username, password, unique_id)
     coordinator = await create_coordinator(hass, client, host, polling_rate)
-    print("pLIGIGN RATEE %s" % str(polling_rate))
     if coordinator is not None:
         try:
             await coordinator.async_config_entry_first_refresh()

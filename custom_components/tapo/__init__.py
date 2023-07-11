@@ -55,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
-    print("On reladddddd %s", str(config_entry.as_dict()))
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
