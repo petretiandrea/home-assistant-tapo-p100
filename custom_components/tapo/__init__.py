@@ -39,6 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][entry.entry_id] = HassTapoDeviceData(coordinator=coordinator)
+        hass.data[DOMAIN][f"{entry.entry_id}_unsub"] = entry.add_update_listener(
+            on_options_update_listener
+        )
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
@@ -48,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise error
     except Exception as error:
         raise ConfigEntryNotReady from error
+
+
+async def on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    print("On reladddddd %s", str(config_entry.as_dict()))
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -78,5 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         _LOGGER.info("Unloaded entry for %s", str(entry.entry_id))
         hass.data[DOMAIN].pop(entry.entry_id, None)
+        if unsub := hass.data[DOMAIN].pop(f"{entry.entry_id}_unsub", None):
+            unsub()
 
     return unload_ok
