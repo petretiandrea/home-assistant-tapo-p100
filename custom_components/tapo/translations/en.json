@@ -28,5 +28,22 @@
       }
     }
   },
+  "options": {
+    "error": {
+      "invalid_path": "The path provided is not valid. Should be in the format `user/repo-name` and should be a valid github repository."
+    },
+    "step": {
+      "init": {
+        "title": "Configure Tapo Device",
+        "description": "By customizing the polling rate unexpected behavior could happens. The device could even become unresponsive for a while.",
+        "data": {
+          "host": "IP address or hostname of tapo device",
+          "password": "Tapo App Password",
+          "username": "Tapo App Username (email)",
+          "scan_interval": "Refresh rate in seconds"
+        }
+      }
+    }
+  },
   "title": "tapo_p100"
 }

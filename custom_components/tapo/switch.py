@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     # get tapo helper
-    data: HassTapoDeviceData = hass.data[DOMAIN][entry.entry_id]
+    data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     _setup_from_coordinator(data.coordinator, async_add_devices)
 
 

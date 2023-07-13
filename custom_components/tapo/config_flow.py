@@ -2,30 +2,30 @@
 import dataclasses
 import logging
 from typing import Any, Optional
-import aiohttp
 
+import aiohttp
+from homeassistant import config_entries, data_entry_flow, exceptions
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from plugp100.api.tapo_client import TapoClient
+from plugp100.responses.device_state import DeviceInfo
+from plugp100.responses.tapo_exception import TapoError, TapoException
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant import data_entry_flow
-from homeassistant.const import CONF_SCAN_INTERVAL
-from plugp100.responses.device_state import DeviceInfo
-from plugp100.api.tapo_client import TapoClient
-from plugp100.responses.tapo_exception import TapoException, TapoError
-from custom_components.tapo.utils import value_or_raise
-from custom_components.tapo.const import (
+from custom_components.tapo.const import (  # pylint:disable=unused-import
+    CONF_ADVANCED_SETTINGS,
     CONF_DEVICE_TYPE,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     DEFAULT_POLLING_RATE_S,
     DOMAIN,
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_ADVANCED_SETTINGS,
-    STEP_INIT,
     STEP_ADVANCED_SETTINGS,
-)  # pylint:disable=unused-import
-
+    STEP_INIT,
+)
+from custom_components.tapo.options_flow_handler import OptionsFlowHandler
+from custom_components.tapo.utils import value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +117,14 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=STEP_INIT, data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        _LOGGER.info(config_entry)
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_advanced_config(
         self, user_input: Optional[dict[str, Any]] = None

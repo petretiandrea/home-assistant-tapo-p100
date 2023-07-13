@@ -19,6 +19,7 @@ from custom_components.tapo.const import (
     DOMAIN,
 )
 from custom_components.tapo.coordinators import TapoCoordinator, create_coordinator
+from custom_components.tapo.utils import get_entry_data
 
 _LOGGGER = logging.getLogger(__name__)
 
@@ -45,13 +46,15 @@ async def setup_tapo_coordinator_from_dictionary(
 async def setup_tapo_coordinator_from_config_entry(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> Either[TapoCoordinator, Exception]:
+    # Update our config to include new settings
+    data = get_entry_data(entry)
     return await setup_tapo_coordinator(
         hass,
-        entry.data.get(CONF_HOST),
-        entry.data.get(CONF_USERNAME),
-        entry.data.get(CONF_PASSWORD),
+        data.get(CONF_HOST),
+        data.get(CONF_USERNAME),
+        data.get(CONF_PASSWORD),
         entry.unique_id,
-        timedelta(seconds=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
+        timedelta(seconds=data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)),
     )
 
 
