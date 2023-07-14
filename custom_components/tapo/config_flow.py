@@ -4,7 +4,7 @@ import logging
 from typing import Any, Optional
 
 import aiohttp
-from homeassistant import config_entries, data_entry_flow, exceptions
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -23,9 +23,11 @@ from custom_components.tapo.const import (  # pylint:disable=unused-import
     DOMAIN,
     STEP_ADVANCED_SETTINGS,
     STEP_INIT,
+    SUPPORTED_HUB_DEVICE_MODEL,
 )
+from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHost
+from custom_components.tapo.helpers import get_short_model, value_or_raise
 from custom_components.tapo.options_flow_handler import OptionsFlowHandler
-from custom_components.tapo.utils import value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +78,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[dict[str, Any]] = None
     ) -> data_entry_flow.FlowResult:
         """Handle the initial step."""
+        self.hass.data.setdefault(DOMAIN, {})
 
         errors = {}
 
@@ -88,10 +91,14 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 unique_id = unique_data.device_id
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                self.hass.data.setdefault(DOMAIN, {})
                 self.hass.data[DOMAIN][f"{unique_id}_api"] = api
 
-                if user_input.get(CONF_ADVANCED_SETTINGS, False):
+                if get_short_model(unique_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
+                    return self.async_create_entry(
+                        title=f"Tapo Hub {unique_data.nickname}",
+                        data={"is_hub": True, **user_input},
+                    )
+                elif user_input.get(CONF_ADVANCED_SETTINGS, False):
                     self.first_step_data = FirstStepData(unique_data, user_input)
                     return await self.async_step_advanced_config()
                 else:
@@ -178,15 +185,3 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise InvalidAuth from exception
         else:
             raise CannotConnect from exception
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid hostname."""

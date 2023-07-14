@@ -6,10 +6,11 @@ from typing import Optional, TypeVar, Union
 
 import aiohttp
 import async_timeout
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
 from plugp100.api.plug_device import EnergyInfo, PlugDevice, PowerInfo
@@ -29,13 +30,19 @@ from custom_components.tapo.const import (
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_DEVICE_AS_SWITCH,
 )
-from custom_components.tapo.utils import get_short_model, value_or_raise
+from custom_components.tapo.helpers import get_short_model, value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
 
-TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice]
+TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice]
 
 DEBOUNCER_COOLDOWN = 2
+
+
+@dataclass
+class HassTapoDeviceData:
+    coordinator: "TapoCoordinator"
+    config_entry_update_unsub: CALLBACK_TYPE
 
 
 async def create_coordinator(

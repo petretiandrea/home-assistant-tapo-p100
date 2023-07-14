@@ -8,7 +8,9 @@ from custom_components.tapo.const import (
     CONF_PASSWORD,
     DEFAULT_POLLING_RATE_S,
 )
-from custom_components.tapo.utils import get_entry_data  # pylint:disable=unused-import
+from custom_components.tapo.helpers import (
+    merge_data_options,
+)  # pylint:disable=unused-import
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -20,7 +22,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Manage the options."""
-        entry_data = get_entry_data(self.config_entry)
+        entry_data = merge_data_options(self.config_entry)
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
         schema = vol.Schema(

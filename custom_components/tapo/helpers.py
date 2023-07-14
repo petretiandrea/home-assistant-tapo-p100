@@ -23,7 +23,7 @@ def get_short_model(model: str) -> str:
     return model.lower().split(maxsplit=1)[0]
 
 
-def get_entry_data(entry: ConfigEntry) -> dict[str, Any]:
+def merge_data_options(entry: ConfigEntry) -> dict[str, Any]:
     data = dict(entry.data)
     if entry.options:
         data.update(entry.options)

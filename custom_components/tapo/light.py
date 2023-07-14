@@ -20,19 +20,18 @@ from homeassistant.util.color import (
 from plugp100.api.light_effect_preset import LightEffectPreset
 from plugp100.responses.device_state import LedStripDeviceState, LightDeviceState
 
-from custom_components.tapo import HassTapoDeviceData
-from custom_components.tapo.common_setup import (
-    TapoCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_LIGHT_EFFECTS,
 )
-from custom_components.tapo.coordinators import LightTapoCoordinator
-from custom_components.tapo.tapo_entity import TapoEntity
-from custom_components.tapo.utils import clamp, get_short_model, value_or_raise
+from custom_components.tapo.coordinators import HassTapoDeviceData, LightTapoCoordinator
+from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.helpers import clamp, get_short_model, value_or_raise
+from custom_components.tapo.setup_helpers import (
+    TapoCoordinator,
+    setup_tapo_coordinator_from_dictionary,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +69,9 @@ def _setup_from_coordinator(
         async_add_devices([light], True)
 
 
-class TapoLight(TapoEntity[Union[LightDeviceState, LedStripDeviceState]], LightEntity):
+class TapoLight(
+    BaseTapoEntity[Union[LightDeviceState, LedStripDeviceState]], LightEntity
+):
     def __init__(
         self,
         coordinator: LightTapoCoordinator,

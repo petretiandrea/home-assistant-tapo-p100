@@ -9,6 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.either import Either, Left, Right
+from plugp100.api.hub.hub_device import HubDevice
 
 from custom_components.tapo.const import (
     CONF_ALTERNATIVE_IP,
@@ -19,14 +20,10 @@ from custom_components.tapo.const import (
     DOMAIN,
 )
 from custom_components.tapo.coordinators import TapoCoordinator, create_coordinator
-from custom_components.tapo.utils import get_entry_data
+from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.helpers import merge_data_options
 
 _LOGGGER = logging.getLogger(__name__)
-
-
-class DeviceNotSupported(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 
 
 async def setup_tapo_coordinator_from_dictionary(
@@ -47,7 +44,7 @@ async def setup_tapo_coordinator_from_config_entry(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> Either[TapoCoordinator, Exception]:
     # Update our config to include new settings
-    data = get_entry_data(entry)
+    data = merge_data_options(entry)
     return await setup_tapo_coordinator(
         hass,
         data.get(CONF_HOST),
@@ -75,6 +72,17 @@ async def setup_tapo_coordinator(
         except ConfigEntryNotReady as error:
             return Left(error)
     return Left(DeviceNotSupported(f"Device {host} not supported!"))
+
+
+def setup_tapo_hub(hass: HomeAssistant, config: ConfigEntry) -> HubDevice:
+    api = _get_or_create_api_client(
+        hass,
+        config.data.get(CONF_USERNAME),
+        config.data.get(CONF_PASSWORD),
+        config.unique_id,
+    )
+    hub = HubDevice(api, config.data.get(CONF_HOST))
+    return hub
 
 
 def _get_or_create_api_client(

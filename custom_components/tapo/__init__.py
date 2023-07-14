@@ -6,25 +6,21 @@ from typing import Optional, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from custom_components.tapo.common_setup import (
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoCoordinator
+from custom_components.tapo.helpers import value_or_raise
+from custom_components.tapo.hub.tapo_hub import TapoHub
+from custom_components.tapo.setup_helpers import (
     DeviceNotSupported,
     setup_tapo_coordinator_from_config_entry,
+    setup_tapo_hub,
 )
-from custom_components.tapo.coordinators import TapoCoordinator
-from custom_components.tapo.utils import value_or_raise
 
 from .const import DEFAULT_POLLING_RATE_S, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class HassTapoDeviceData:
-    coordinator: TapoCoordinator
-    config_entry_update_unsub: CALLBACK_TYPE
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -35,21 +31,22 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     try:
-        coordinator = value_or_raise(
-            await setup_tapo_coordinator_from_config_entry(hass, entry)
-        )
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][entry.entry_id] = HassTapoDeviceData(
-            coordinator=coordinator,
-            config_entry_update_unsub=entry.add_update_listener(
-                on_options_update_listener
-            ),
-        )
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
+        if entry.data.get("is_hub", False):
+            hub = TapoHub(entry, setup_tapo_hub(hass, entry))
+            return await hub.initialize_hub(hass)
+        else:
+            coordinator = value_or_raise(
+                await setup_tapo_coordinator_from_config_entry(hass, entry)
             )
+            hass.data[DOMAIN][entry.entry_id] = HassTapoDeviceData(
+                coordinator=coordinator,
+                config_entry_update_unsub=entry.add_update_listener(
+                    on_options_update_listener
+                ),
+            )
+            await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         return True
     except DeviceNotSupported as error:
         raise error

@@ -7,16 +7,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from custom_components.tapo import HassTapoDeviceData
-from custom_components.tapo.common_setup import (
-    TapoCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR,
 )
-from custom_components.tapo.coordinators import PlugTapoCoordinator, TapoCoordinator
+from custom_components.tapo.coordinators import (
+    HassTapoDeviceData,
+    PlugTapoCoordinator,
+    TapoCoordinator,
+)
+from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.helpers import get_short_model, value_or_raise
 from custom_components.tapo.sensors import (
     CurrentEnergySensorSource,
     MonthEnergySensorSource,
@@ -26,8 +27,7 @@ from custom_components.tapo.sensors import (
     TodayRuntimeSensorSource,
 )
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.tapo_entity import TapoEntity
-from custom_components.tapo.utils import get_short_model, value_or_raise
+from custom_components.tapo.setup_helpers import setup_tapo_coordinator_from_dictionary
 
 ### Supported sensors: Today energy and current power
 SUPPORTED_SENSOR = [
@@ -78,7 +78,7 @@ def _setup_from_coordinator(
     async_add_devices(sensors, True)
 
 
-class TapoSensor(TapoEntity[Any], SensorEntity):
+class TapoSensor(BaseTapoEntity[Any], SensorEntity):
     def __init__(
         self,
         coordinator: TapoCoordinator[Any],

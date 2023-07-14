@@ -1,8 +1,10 @@
 import logging
-from typing import Callable, Awaitable, TypeVar
+from typing import Awaitable, Callable, TypeVar
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import TapoCoordinator
 
@@ -11,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 State = TypeVar("State")
 
 
-class TapoEntity(CoordinatorEntity[TapoCoordinator[State]]):
+class BaseTapoEntity(CoordinatorEntity[TapoCoordinator[State]]):
     def __init__(self, coordinator: TapoCoordinator[State]):
         super().__init__(coordinator)
         self._base_data = coordinator.get_device_info()
