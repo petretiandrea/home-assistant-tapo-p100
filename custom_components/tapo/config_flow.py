@@ -13,9 +13,8 @@ from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.tapo_exception import TapoError, TapoException
 import voluptuous as vol
 
-from custom_components.tapo.const import (  # pylint:disable=unused-import
+from custom_components.tapo.const import (
     CONF_ADVANCED_SETTINGS,
-    CONF_DEVICE_TYPE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -26,8 +25,11 @@ from custom_components.tapo.const import (  # pylint:disable=unused-import
     SUPPORTED_HUB_DEVICE_MODEL,
 )
 from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHost
-from custom_components.tapo.helpers import get_short_model, value_or_raise
-from custom_components.tapo.options_flow_handler import OptionsFlowHandler
+from custom_components.tapo.helpers import (
+    get_short_model,
+    merge_data_options,
+    value_or_raise,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,3 +187,31 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise InvalidAuth from exception
         else:
             raise CannotConnect from exception
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Manage the options."""
+        entry_data = merge_data_options(self.config_entry)
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
+                    default=entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+        )

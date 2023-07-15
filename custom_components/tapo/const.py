@@ -1,6 +1,7 @@
 """Constants for the tapo integration."""
 
 from homeassistant.components.light import ColorMode
+from homeassistant.const import Platform
 from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
@@ -31,12 +32,9 @@ SUPPORTED_LIGHT_EFFECTS = {
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
-PLATFORMS = [
-    "switch",
-    "sensor",
-    "binary_sensor",
-    "light",
-]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LIGHT]
+
+HUB_PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_HOST = "host"
 CONF_USERNAME = "username"

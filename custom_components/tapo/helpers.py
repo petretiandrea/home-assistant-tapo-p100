@@ -3,11 +3,6 @@ from typing import Any, TypeVar, Union
 from homeassistant.config_entries import ConfigEntry
 from plugp100.common.functional.either import Either
 
-
-def clamp(value, min_value, max_value):
-    return max(min(value, max_value), min_value)
-
-
 T = TypeVar("T")
 
 
@@ -17,6 +12,10 @@ def value_or_raise(either: Either[T, Exception]) -> T:
         raise value_or_error
     else:
         return value_or_error
+
+
+def clamp(value, min_value, max_value):
+    return max(min(value, max_value), min_value)
 
 
 def get_short_model(model: str) -> str:

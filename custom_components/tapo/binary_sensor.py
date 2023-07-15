@@ -7,7 +7,6 @@ from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.sensor import TapoSensor
 from custom_components.tapo.sensors import OverheatSensorSource
-from custom_components.tapo.setup_helpers import TapoCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
