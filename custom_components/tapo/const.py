@@ -34,7 +34,7 @@ ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 # list the platforms that you want to support.
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LIGHT]
 
-HUB_PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR, Platform.SENSOR]
+HUB_PLATFORMS = [Platform.SIREN, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_HOST = "host"
 CONF_USERNAME = "username"
