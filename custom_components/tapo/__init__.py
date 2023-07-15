@@ -6,25 +6,18 @@ from typing import Optional, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from custom_components.tapo.common_setup import (
-    DeviceNotSupported,
-    setup_tapo_coordinator_from_config_entry,
-)
-from custom_components.tapo.coordinators import TapoCoordinator
-from custom_components.tapo.utils import value_or_raise
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.hub.tapo_hub import TapoHub
+from custom_components.tapo.setup_helpers import setup_tapo_device, setup_tapo_hub
+from custom_components.tapo.tapo_device import TapoDevice
 
-from .const import DEFAULT_POLLING_RATE_S, DOMAIN, PLATFORMS
+from .const import DEFAULT_POLLING_RATE_S, DOMAIN, HUB_PLATFORMS, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class HassTapoDeviceData:
-    coordinator: TapoCoordinator
-    config_entry_update_unsub: CALLBACK_TYPE
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -35,31 +28,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     try:
-        coordinator = value_or_raise(
-            await setup_tapo_coordinator_from_config_entry(hass, entry)
-        )
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][entry.entry_id] = HassTapoDeviceData(
-            coordinator=coordinator,
-            config_entry_update_unsub=entry.add_update_listener(
-                on_options_update_listener
-            ),
-        )
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-        return True
+        if entry.data.get("is_hub", False):
+            hub = TapoHub(entry, setup_tapo_hub(hass, entry))
+            return await hub.initialize_hub(hass)
+        else:
+            device = setup_tapo_device(hass, entry)
+            return await device.initialize_device(hass)
     except DeviceNotSupported as error:
         raise error
     except Exception as error:
         raise ConfigEntryNotReady from error
-
-
-async def on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -79,11 +59,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    platform_to_unload = (
+        PLATFORMS if not entry.data.get("is_hub", False) else HUB_PLATFORMS
+    )
     unload_ok = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in platform_to_unload
             ]
         )
     )

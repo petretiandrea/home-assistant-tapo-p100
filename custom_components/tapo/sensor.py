@@ -7,16 +7,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from custom_components.tapo import HassTapoDeviceData
-from custom_components.tapo.common_setup import (
-    TapoCoordinator,
-    setup_tapo_coordinator_from_dictionary,
-)
 from custom_components.tapo.const import (
     DOMAIN,
     SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR,
 )
-from custom_components.tapo.coordinators import PlugTapoCoordinator, TapoCoordinator
+from custom_components.tapo.coordinators import (
+    HassTapoDeviceData,
+    PlugTapoCoordinator,
+    TapoCoordinator,
+)
+from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.helpers import get_short_model
 from custom_components.tapo.sensors import (
     CurrentEnergySensorSource,
     MonthEnergySensorSource,
@@ -26,8 +27,7 @@ from custom_components.tapo.sensors import (
     TodayRuntimeSensorSource,
 )
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.tapo_entity import TapoEntity
-from custom_components.tapo.utils import get_short_model, value_or_raise
+from custom_components.tapo.setup_helpers import setup_from_platform_config
 
 ### Supported sensors: Today energy and current power
 SUPPORTED_SENSOR = [
@@ -46,22 +46,22 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info=None,
 ) -> None:
-    coordinator = value_or_raise(
-        await setup_tapo_coordinator_from_dictionary(hass, config)
-    )
-    _setup_from_coordinator(coordinator, async_add_entities)
+    coordinator = await setup_from_platform_config(hass, config)
+    _setup_from_coordinator(hass, coordinator, async_add_entities)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    _setup_from_coordinator(data.coordinator, async_add_devices)
+    _setup_from_coordinator(hass, data.coordinator, async_add_entities)
 
 
 def _setup_from_coordinator(
-    coordinator: TapoCoordinator, async_add_devices: AddEntitiesCallback
+    hass: HomeAssistant,
+    coordinator: TapoCoordinator,
+    async_add_entities: AddEntitiesCallback,
 ):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
 
@@ -75,10 +75,10 @@ def _setup_from_coordinator(
                 [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
             )
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
-class TapoSensor(TapoEntity[Any], SensorEntity):
+class TapoSensor(BaseTapoEntity[Any], SensorEntity):
     def __init__(
         self,
         coordinator: TapoCoordinator[Any],

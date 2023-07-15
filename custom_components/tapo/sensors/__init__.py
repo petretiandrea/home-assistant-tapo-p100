@@ -1,5 +1,5 @@
 from typing import Optional
-from homeassistant.helpers.typing import StateType
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -7,17 +7,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    POWER_WATT,
-    ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TIME_MINUTES,
 )
+from homeassistant.helpers.typing import StateType
+
+from custom_components.tapo.coordinators import SensorState
 from custom_components.tapo.sensors.sensor_config import SensorConfig
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.coordinators import SensorState
 
 
 class TodayEnergySensorSource(TapoSensorSource):
