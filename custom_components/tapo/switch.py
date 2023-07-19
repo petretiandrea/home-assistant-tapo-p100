@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional, cast
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -50,6 +50,8 @@ async def async_setup_device_switch(
 
 
 class TapoPlugEntity(BaseTapoEntity[PlugDeviceState], SwitchEntity):
+    _attr_device_class = SwitchDeviceClass.OUTLET
+
     def __init__(self, coordinator: PlugTapoCoordinator):
         super().__init__(coordinator)
         self.device: PlugDevice = coordinator.device
