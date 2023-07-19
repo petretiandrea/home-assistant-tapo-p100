@@ -91,6 +91,7 @@ class OverheatSensorSource(TapoSensorSource):
             device_class="heat",
             state_class=None,
             unit_measure=None,
+            is_diagnostic=True,
         )
 
     def get_value(self, state: Optional[SensorState]) -> StateType:
@@ -106,6 +107,7 @@ class SignalSensorSource(TapoSensorSource):
             device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
             state_class=None,
             unit_measure=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            is_diagnostic=True,
         )
 
     def get_value(self, state: Optional[SensorState]) -> StateType:
