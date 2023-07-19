@@ -1,26 +1,31 @@
 from math import floor
 from typing import Any, Optional, cast
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+    SirenEntity,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.components.siren import ATTR_VOLUME_LEVEL
+from plugp100.requests.set_device_info.play_alarm_params import PlayAlarmParams
+
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.helpers import clamp, value_or_raise
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
-
-from plugp100.requests.set_device_info.play_alarm_params import PlayAlarmParams
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    async_add_devices([HubSiren(data.coordinator)], True)
+    available_tones = (await data.coordinator.device.get_supported_alarm_tones()).tones
+    async_add_devices([HubSiren(data.coordinator, available_tones)], True)
 
 
 class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
@@ -28,10 +33,14 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.VOLUME_SET
+        | SirenEntityFeature.TONES
     )
 
-    def __init__(self, coordinator: TapoHubCoordinator, context: Any = None) -> None:
+    def __init__(
+        self, coordinator: TapoHubCoordinator, tones: list[str], context: Any = None
+    ) -> None:
         super().__init__(coordinator, context)
+        self._attr_available_tones = tones
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -57,7 +66,8 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
         volume = _map_volume_to_discrete_values(
             kwargs.get(ATTR_VOLUME_LEVEL, 1.0), "mute", ["low", "normal", "high"]
         )
-        play_alarm = PlayAlarmParams(alarm_volume=volume)
+        tone = kwargs.get(ATTR_TONE, None)
+        play_alarm = PlayAlarmParams(alarm_volume=volume, alarm_type=tone)
         value_or_raise(await self.coordinator.device.turn_alarm_on(play_alarm))
         await self.coordinator.async_request_refresh()
 
