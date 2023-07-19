@@ -79,6 +79,8 @@ def _setup_from_coordinator(
 
 
 class TapoSensor(BaseTapoEntity[Any], SensorEntity):
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: TapoCoordinator[Any],
@@ -94,7 +96,7 @@ class TapoSensor(BaseTapoEntity[Any], SensorEntity):
 
     @property
     def name(self):
-        return super().name + " " + self._sensor_config.name
+        return self._sensor_config.name
 
     @property
     def device_class(self) -> Optional[str]:
