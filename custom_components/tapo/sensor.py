@@ -100,7 +100,7 @@ class TapoSensor(BaseTapoEntity[Any], SensorEntity):
 
     @property
     def name(self):
-        return self._sensor_config.name
+        return self._sensor_config.name.strip().title()
 
     @property
     def device_class(self) -> Optional[str]:
