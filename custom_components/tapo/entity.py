@@ -15,6 +15,7 @@ State = TypeVar("State")
 
 class BaseTapoEntity(CoordinatorEntity[TapoCoordinator[State]]):
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: TapoCoordinator[State]):
         super().__init__(coordinator)
@@ -35,10 +36,6 @@ class BaseTapoEntity(CoordinatorEntity[TapoCoordinator[State]]):
     @property
     def unique_id(self):
         return self._base_data and self._base_data.device_id
-
-    @property
-    def name(self):
-        return self._base_data and self._base_data.nickname
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -29,6 +29,7 @@ async def async_setup_entry(
 
 
 class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
+    _attr_has_entity_name = True
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
@@ -52,7 +53,7 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
 
     @property
     def name(self):
-        return self.coordinator.data and f"{self.coordinator.data.info.nickname} Siren"
+        return "Siren"
 
     @property
     def device_info(self) -> DeviceInfo | None:
