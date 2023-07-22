@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union, cast
 
 import aiohttp
 import async_timeout
@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
+from plugp100.api.power_strip_device import PowerStripDevice
+from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.api.plug_device import EnergyInfo, PlugDevice, PowerInfo
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.either import Either
@@ -30,11 +32,12 @@ from custom_components.tapo.const import (
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_DEVICE_AS_SWITCH,
 )
+from custom_components.tapo.coordinators import TapoDevice
 from custom_components.tapo.helpers import get_short_model, value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
 
-TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice]
+TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice, PowerStripDevice]
 
 DEBOUNCER_COOLDOWN = 2
 
@@ -189,3 +192,24 @@ class LightTapoCoordinator(
 
     def get_sensor_state(self) -> SensorState:
         return SensorState(self.data.info, None, None)
+
+
+class PowerStripCoordinator(TapoCoordinator[PlugDeviceState]):
+    def __init__(
+        self, hass: HomeAssistant, device: PowerStripDevice, polling_interval: timedelta
+    ):
+        super().__init__(hass, device, polling_interval)
+        self._children_state = None
+
+    def get_device_info(self) -> DeviceInfo:
+        return self.data.info
+
+    async def _get_state_from_device(self) -> Either[PlugDeviceState, Exception]:
+        children_state = value_or_raise(
+            await cast(PowerStripDevice, self.device).get_children()
+        ).get_children(lambda x: PowerStripChild.try_from_json(**x))
+        self._children_state = {child.device_id: child for child in children_state}
+        return await cast(PowerStripDevice, self.device).get_state()
+
+    def get_child_state(self, device_id: str) -> PowerStripChild:
+        return self._children_state.get(device_id)
