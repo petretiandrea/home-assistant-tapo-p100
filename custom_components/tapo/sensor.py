@@ -93,14 +93,11 @@ class TapoSensor(BaseTapoEntity[Any], SensorEntity):
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if self._sensor_config.is_diagnostic else None
         )
+        self._attr_name = self._sensor_config.name.strip().title()
 
     @property
     def unique_id(self):
         return super().unique_id + "_" + self._sensor_config.name.replace(" ", "_")
-
-    @property
-    def name(self):
-        return self._sensor_config.name.strip().title()
 
     @property
     def device_class(self) -> Optional[str]:
