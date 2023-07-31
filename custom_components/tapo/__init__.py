@@ -13,7 +13,6 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hub.tapo_hub import TapoHub
 from custom_components.tapo.setup_helpers import setup_tapo_device, setup_tapo_hub
-from custom_components.tapo.tapo_device import TapoDevice
 
 from .const import DEFAULT_POLLING_RATE_S, DOMAIN, HUB_PLATFORMS, PLATFORMS
 
@@ -51,6 +50,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=new)
+    elif config_entry.version == 2:
+        new_data = {**config_entry.data}
+        scan_interval = new_data.pop(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+        config_entry.version = 3
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options={CONF_SCAN_INTERVAL: scan_interval}
+        )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

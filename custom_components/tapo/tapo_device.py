@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -24,7 +23,7 @@ class TapoDevice:
 
     async def initialize_device(self, hass: HomeAssistant) -> bool:
         polling_rate = timedelta(
-            seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+            seconds=self.entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
         host = self.entry.data.get(CONF_HOST)
         coordinator = await create_coordinator(hass, self.client, host, polling_rate)
