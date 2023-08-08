@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -37,8 +38,8 @@ class TapoDevice:
             )
             await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
             return True
-        elif isinstance(coordinator, Left):
-            raise coordinator.error
+        else:
+            raise cast(Left, coordinator).error
 
 
 async def _on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):

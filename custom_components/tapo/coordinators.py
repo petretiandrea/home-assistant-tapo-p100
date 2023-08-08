@@ -60,14 +60,18 @@ async def create_coordinator(
 
     if isinstance(model_or_error, Right):
         if model_or_error.value in SUPPORTED_DEVICE_AS_SWITCH:
-            return PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
+            return Right(
+                PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
+            )
         elif model_or_error.value in SUPPORTED_DEVICE_AS_LED_STRIP:
-            return LightTapoCoordinator(
-                hass, LedStripDevice(client, host), polling_interval
+            return Right(
+                LightTapoCoordinator(
+                    hass, LedStripDevice(client, host), polling_interval
+                )
             )
         elif model_or_error.value in SUPPORTED_DEVICE_AS_LIGHT:
-            return LightTapoCoordinator(
-                hass, LightDevice(client, host), polling_interval
+            return Right(
+                LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
             )
         else:
             return Left(DeviceNotSupported(f"Device {host} not supported!"))

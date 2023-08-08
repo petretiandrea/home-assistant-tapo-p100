@@ -80,7 +80,7 @@ class TapoLight(
         supported_effects: list[LightEffectPreset] = None,
     ):
         super().__init__(coordinator)
-        self._effects = {effect.name: effect for effect in supported_effects}
+        self._effects = {effect.name.lower(): effect for effect in supported_effects}
         # set homeassistant light entity attributes
         self._attr_max_color_temp_kelvin = 6500
         self._attr_min_color_temp_kelvin = 2500
@@ -96,7 +96,10 @@ class TapoLight(
 
     @property
     def brightness(self):
-        return round((self.coordinator.data.brightness * 255) / 100)
+        if self._effects and self.coordinator.data.lighting_effect is not None:
+            return round((self.coordinator.data.lighting_effect.brightness * 255) / 100)
+        else:
+            return round((self.coordinator.data.brightness * 255) / 100)
 
     @property
     def hs_color(self):
@@ -183,8 +186,16 @@ class TapoLight(
     async def _change_brightness(self, new_brightness):
         brightness_to_set = round((new_brightness / 255) * 100)
         _LOGGER.debug("Change brightness to: %s", str(brightness_to_set))
-
-        value_or_raise(await self.coordinator.device.set_brightness(brightness_to_set))
+        if self.effect is not None:
+            value_or_raise(
+                await self.coordinator.device.set_light_effect_brightness(
+                    self._effects[self.effect].to_effect(), brightness_to_set
+                )
+            )
+        else:
+            value_or_raise(
+                await self.coordinator.device.set_brightness(brightness_to_set)
+            )
 
     async def _change_color_temp(self, color_temp):
         _LOGGER.debug("Change color temp to: %s", str(color_temp))
@@ -201,7 +212,6 @@ class TapoLight(
 
     async def _change_color(self, hue, saturation):
         _LOGGER.debug("Change colors to: (%s, %s)", str(hue), str(saturation))
-
         value_or_raise(
             await self.coordinator.device.set_hue_saturation(hue, saturation)
         )
