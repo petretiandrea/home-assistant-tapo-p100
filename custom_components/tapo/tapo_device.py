@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from plugp100.api.tapo_client import TapoClient
+from plugp100.common.functional.either import Right, Left
 
 from custom_components.tapo.const import (
     CONF_HOST,
@@ -13,7 +15,6 @@ from custom_components.tapo.const import (
     PLATFORMS,
 )
 from custom_components.tapo.coordinators import HassTapoDeviceData, create_coordinator
-from custom_components.tapo.errors import DeviceNotSupported
 
 
 @dataclass
@@ -27,18 +28,18 @@ class TapoDevice:
         )
         host = self.entry.data.get(CONF_HOST)
         coordinator = await create_coordinator(hass, self.client, host, polling_rate)
-        if coordinator is None:
-            raise DeviceNotSupported(f"Device {host} not supported!")
-        else:
-            await coordinator.async_config_entry_first_refresh()  # could raise ConfigEntryNotReady
+        if isinstance(coordinator, Right):
+            await coordinator.value.async_config_entry_first_refresh()  # could raise ConfigEntryNotReady
             hass.data[DOMAIN][self.entry.entry_id] = HassTapoDeviceData(
-                coordinator=coordinator,
+                coordinator=coordinator.value,
                 config_entry_update_unsub=self.entry.add_update_listener(
                     _on_options_update_listener
                 ),
             )
             await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
             return True
+        else:
+            raise cast(Left, coordinator).error
 
 
 async def _on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):

@@ -15,7 +15,7 @@ from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
 from plugp100.api.plug_device import EnergyInfo, PlugDevice, PowerInfo
 from plugp100.api.tapo_client import TapoClient
-from plugp100.common.functional.either import Either
+from plugp100.common.functional.either import Either, Right, Left
 from plugp100.responses.device_state import (
     DeviceInfo,
     LedStripDeviceState,
@@ -30,6 +30,7 @@ from custom_components.tapo.const import (
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_DEVICE_AS_SWITCH,
 )
+from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.helpers import get_short_model, value_or_raise
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,25 +48,35 @@ class HassTapoDeviceData:
 
 async def create_coordinator(
     hass: HomeAssistant, client: TapoClient, host: str, polling_interval: timedelta
-) -> Optional["TapoCoordinator"]:
+) -> Either["TapoCoordinator", Exception]:
     logged_in = await client.login(host)
     _LOGGER.info("Login to %s, success: %s", str(host), str(logged_in))
-    model = (
+    model_or_error = (
         (await client.get_device_info())
         .map(lambda x: DeviceInfo(**x))
-        .fold(lambda info: get_short_model(info.model), lambda _: None)
+        .map(lambda info: get_short_model(info.model))
     )
-    _LOGGER.info("Detected model of %s: %s", str(host), str(model))
+    _LOGGER.info("Detected model of %s: %s", str(host), str(model_or_error))
 
-    if model in SUPPORTED_DEVICE_AS_SWITCH:
-        return PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
-    elif model in SUPPORTED_DEVICE_AS_LED_STRIP:
-        return LightTapoCoordinator(
-            hass, LedStripDevice(client, host), polling_interval
-        )
-    elif model in SUPPORTED_DEVICE_AS_LIGHT:
-        return LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
-    return None
+    if isinstance(model_or_error, Right):
+        if model_or_error.value in SUPPORTED_DEVICE_AS_SWITCH:
+            return Right(
+                PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
+            )
+        elif model_or_error.value in SUPPORTED_DEVICE_AS_LED_STRIP:
+            return Right(
+                LightTapoCoordinator(
+                    hass, LedStripDevice(client, host), polling_interval
+                )
+            )
+        elif model_or_error.value in SUPPORTED_DEVICE_AS_LIGHT:
+            return Right(
+                LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
+            )
+        else:
+            return Left(DeviceNotSupported(f"Device {host} not supported!"))
+
+    return model_or_error
 
 
 @dataclass
