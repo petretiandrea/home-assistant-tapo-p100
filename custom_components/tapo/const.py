@@ -20,6 +20,8 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "l520": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "l510": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "tl33": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
+    "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
 }
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
