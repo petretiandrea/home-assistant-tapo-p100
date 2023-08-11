@@ -2,12 +2,12 @@
   "domain": "tapo",
   "name": "TP-Link Tapo",
   "config_flow": true,
-  "version": "2.3.0",
+  "version": "2.4.0",
   "iot_class": "local_polling",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
   "requirements": [
-    "plugp100==3.2.0"
+    "plugp100==3.6.0"
   ],
   "dependencies": [],
   "integration_type": "hub",

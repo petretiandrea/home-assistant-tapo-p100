@@ -24,7 +24,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    available_tones = (await data.coordinator.device.get_supported_alarm_tones()).tones
+    available_tones = value_or_raise(
+        await data.coordinator.device.get_supported_alarm_tones()
+    ).tones
     async_add_devices([HubSiren(data.coordinator, available_tones)], True)
 
 

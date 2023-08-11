@@ -21,7 +21,7 @@ class TapoHub:
 
     async def initialize_hub(self, hass: HomeAssistant):
         polling_rate = timedelta(
-            seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+            seconds=self.entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
         value_or_raise(await self.hub.login())
         hub_coordinator = TapoHubCoordinator(hass, self.hub, polling_rate)

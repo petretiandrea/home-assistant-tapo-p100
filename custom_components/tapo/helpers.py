@@ -1,6 +1,5 @@
-from typing import Any, TypeVar, Union
+from typing import TypeVar, Union
 
-from homeassistant.config_entries import ConfigEntry
 from plugp100.common.functional.either import Either
 
 T = TypeVar("T")
@@ -20,10 +19,3 @@ def clamp(value, min_value, max_value):
 
 def get_short_model(model: str) -> str:
     return model.lower().split(maxsplit=1)[0]
-
-
-def merge_data_options(entry: ConfigEntry) -> dict[str, Any]:
-    data = dict(entry.data)
-    if entry.options:
-        data.update(entry.options)
-    return data
