@@ -61,7 +61,6 @@ async def setup_from_platform_config(
         polling_rate,
     )
 
-
 def _get_or_create_api_client(
     hass: HomeAssistant, username: str, password: str, unique_id: str
 ) -> TapoClient:
