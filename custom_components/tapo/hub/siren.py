@@ -13,10 +13,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.requests.set_device_info.play_alarm_params import PlayAlarmParams
+from plugp100.responses.device_state import HubDeviceState
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.helpers import clamp, value_or_raise
+from custom_components.tapo.helpers import value_or_raise
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 
 
@@ -51,7 +52,7 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
 
     @property
     def unique_id(self):
-        return self.coordinator.data and self.coordinator.data.info.device_id
+        return self.coordinator.device_info and self.coordinator.device_info.device_id
 
     @property
     def name(self):
@@ -59,11 +60,13 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        return DeviceInfo(identifiers={(DOMAIN, self.coordinator.data.info.device_id)})
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.device_info.device_id)}
+        )
 
     @property
     def is_on(self) -> Optional[bool]:
-        return self.coordinator.data and self.coordinator.data.in_alarm
+        return self.coordinator.get_state_of(HubDeviceState).in_alarm
 
     async def async_turn_on(self, **kwargs):
         volume = _map_volume_to_discrete_values(

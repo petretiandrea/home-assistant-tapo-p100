@@ -7,6 +7,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from plugp100.responses.device_state import DeviceInfo
 
 from custom_components.tapo.const import (
     DOMAIN,
@@ -68,7 +69,7 @@ def _setup_from_coordinator(
 
     if isinstance(coordinator, PlugTapoCoordinator):
         if (
-            get_short_model(coordinator.get_device_info().model)
+            get_short_model(coordinator.device_info.model)
             in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
         ):
             coordinator.enable_power_monitor()
@@ -79,12 +80,12 @@ def _setup_from_coordinator(
     async_add_entities(sensors, True)
 
 
-class TapoSensor(BaseTapoEntity[Any], SensorEntity):
+class TapoSensor(BaseTapoEntity[TapoCoordinator], SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TapoCoordinator[Any],
+        coordinator: TapoCoordinator,
         sensor_source: TapoSensorSource,
     ):
         super().__init__(coordinator)
@@ -113,4 +114,4 @@ class TapoSensor(BaseTapoEntity[Any], SensorEntity):
 
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
-        return self._sensor_source.get_value(self.coordinator.get_sensor_state())
+        return self._sensor_source.get_value(self.coordinator)

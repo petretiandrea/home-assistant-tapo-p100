@@ -18,6 +18,7 @@ from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.api.plug_device import EnergyInfo, PlugDevice, PowerInfo
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.either import Either, Right, Left
+from typing import Type, TypeVar, Dict, List, cast
 from plugp100.responses.device_state import (
     DeviceInfo,
     LedStripDeviceState,
@@ -31,10 +32,15 @@ from custom_components.tapo.const import (
     SUPPORTED_DEVICE_AS_LED_STRIP,
     SUPPORTED_DEVICE_AS_LIGHT,
     SUPPORTED_DEVICE_AS_SWITCH,
+    SUPPORTED_POWER_STRIP_DEVICE_MODEL,
 )
-from custom_components.tapo.coordinators import TapoDevice
+
 from custom_components.tapo.errors import DeviceNotSupported
-from custom_components.tapo.helpers import get_short_model, value_or_raise
+from custom_components.tapo.helpers import (
+    get_short_model,
+    value_optional,
+    value_or_raise,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,23 +82,24 @@ async def create_coordinator(
             return Right(
                 LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
             )
+        # elif model_or_error.value == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
+        #     return Right(
+        #         PowerStripCoordinator(
+        #             hass, PowerStripDevice(client, host), polling_interval
+        #         )
+        #     )
         else:
             return Left(DeviceNotSupported(f"Device {host} not supported!"))
 
     return model_or_error
 
 
-@dataclass
-class SensorState:
-    info: DeviceInfo
-    power_info: Optional[PowerInfo]
-    energy_info: Optional[EnergyInfo]
+T = TypeVar("T")
+
+StateMap = Dict[Type[T], T]
 
 
-State = TypeVar("State")
-
-
-class TapoCoordinator(ABC, DataUpdateCoordinator[State]):
+class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -109,26 +116,35 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[State]):
                 hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=True
             ),
         )
+        self._states: StateMap = {}
 
     @property
     def device(self) -> TapoDevice:
         return self._device
 
-    @abstractmethod
-    def get_device_info(self) -> DeviceInfo:
-        pass
+    def has_capability(self, target_type: Type[T]) -> bool:
+        return target_type in self._states
+
+    def get_state_of(self, target_type: Type[T]) -> T:
+        return self._states.get(target_type)
+
+    def update_state_of(self, target_type: Type[T], state: Optional[T]) -> StateMap:
+        if target_type is not None and state is not None:
+            self._states[target_type] = state
+        return self._states
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return self.get_state_of(DeviceInfo)
 
     @abstractmethod
-    def get_sensor_state(self) -> SensorState:
+    async def _update_state(self) -> None:
         pass
 
-    async def _get_state_from_device(self) -> Either[State, Exception]:
-        return await self._device.get_state()
-
-    async def _async_update_data(self) -> State:
+    async def _async_update_data(self) -> StateMap:
         try:
             async with async_timeout.timeout(10):
-                return await self._update_with_fallback()
+                return await self._update_with_fallback(retry=True)
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except aiohttp.ClientError as error:
@@ -138,7 +154,7 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[State]):
 
     async def _update_with_fallback(self, retry=True):
         try:
-            return value_or_raise(await self._get_state_from_device())
+            return await self._update_state()
         except Exception:  # pylint: disable=broad-except
             if retry:
                 value_or_raise(await self._device.login())
@@ -152,7 +168,7 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[State]):
             raise UpdateFailed(f"Error tapo exception: {exception}") from exception
 
 
-class PlugTapoCoordinator(TapoCoordinator[PlugDeviceState]):
+class PlugTapoCoordinator(TapoCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -161,35 +177,23 @@ class PlugTapoCoordinator(TapoCoordinator[PlugDeviceState]):
     ):
         super().__init__(hass, device, polling_interval)
         self.has_power_monitor = False
-        self.power_info = None
-        self.energy_info = None
 
     def enable_power_monitor(self):
         self.has_power_monitor = True
 
-    def get_device_info(self) -> DeviceInfo:
-        return self.data.info
-
-    def get_sensor_state(self) -> SensorState:
-        return SensorState(self.data.info, self.power_info, self.energy_info)
-
-    async def _get_state_from_device(self) -> Either[PlugDeviceState, Exception]:
-        self.power_info = (
-            (await self.device.get_current_power()).fold(lambda x: x, lambda _: None)
-            if self.has_power_monitor
-            else None
-        )
-        self.energy_info = (
-            (await self.device.get_energy_usage()).fold(lambda x: x, lambda _: None)
-            if self.has_power_monitor
-            else None
-        )
-        return await self.device.get_state()
+    async def _update_state(self):
+        plug = cast(PlugDevice, self.device)
+        plug_state = value_or_raise(await plug.get_state())
+        self.update_state_of(PlugDeviceState, plug_state)
+        self.update_state_of(DeviceInfo, plug_state.info)
+        if self.has_power_monitor:
+            power_info = value_optional(await plug.get_current_power())
+            energy_usage = value_optional(await plug.get_energy_usage())
+            self.update_state_of(PowerInfo, power_info)
+            self.update_state_of(EnergyInfo, energy_usage)
 
 
-class LightTapoCoordinator(
-    TapoCoordinator[Union[LightDeviceState, LedStripDeviceState]]
-):
+class LightTapoCoordinator(TapoCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -198,29 +202,51 @@ class LightTapoCoordinator(
     ):
         super().__init__(hass, device, polling_interval)
 
-    def get_device_info(self) -> DeviceInfo:
-        return self.data.info
+    async def _update_state(self):
+        state = value_or_raise(await self.device.get_state())
+        self.update_state_of(DeviceInfo, state.info)
+        if isinstance(self.device, LightDevice):
+            self.update_state_of(LightDeviceState, state)
+        elif isinstance(self.device, LedStripDevice):
+            self.update_state_of(LedStripDeviceState, state)
 
-    def get_sensor_state(self) -> SensorState:
-        return SensorState(self.data.info, None, None)
+    @property
+    def light_state(self):
+        return (
+            self.get_state_of(LightDeviceState)
+            if self.has_capability(LightDeviceState)
+            else self.get_state_of(LedStripDeviceState)
+        )
 
 
-class PowerStripCoordinator(TapoCoordinator[PlugDeviceState]):
+@dataclass
+class PowerStripState:
+    device_info: DeviceInfo
+    children_state: dict[str, PowerStripChild]
+
+
+class PowerStripCoordinator(TapoCoordinator[PowerStripState]):
     def __init__(
         self, hass: HomeAssistant, device: PowerStripDevice, polling_interval: timedelta
     ):
         super().__init__(hass, device, polling_interval)
-        self._children_state = None
 
     def get_device_info(self) -> DeviceInfo:
-        return self.data.info
+        return self.data.device_info
 
-    async def _get_state_from_device(self) -> Either[PlugDeviceState, Exception]:
+    def get_children(self) -> list[PowerStripChild]:
+        return self.data.children_state
+
+    async def _get_state_from_device(self) -> Either[PowerStripState, Exception]:
         children_state = value_or_raise(
             await cast(PowerStripDevice, self.device).get_children()
         ).get_children(lambda x: PowerStripChild.try_from_json(**x))
-        self._children_state = {child.device_id: child for child in children_state}
-        return await cast(PowerStripDevice, self.device).get_state()
+        return PowerStripState(
+            device_info=value_or_raise(
+                await cast(PowerStripDevice, self.device).get_state()
+            ).info,
+            children_state={child.device_id: child for child in children_state},
+        )
 
     def get_child_state(self, device_id: str) -> PowerStripChild:
-        return self._children_state.get(device_id)
+        return self.data.children_state.get(device_id)
