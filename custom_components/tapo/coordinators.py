@@ -159,8 +159,8 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     async def _update_with_fallback(self, retry=True):
         try:
             return await self._update_state()
-        except Exception as error:  # pylint: disable=broad-except
-            logging.error(error)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error during update state, will retry %r", retry)
             if retry:
                 value_or_raise(await self._device.login())
                 return await self._update_with_fallback(False)
