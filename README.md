@@ -27,6 +27,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ## Features
 
 - [x] pure async home assistant's method
+- [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`)
 - [x] support for tapo light bulb with or without color (`L530`, `L510`, `L520`, `L630`, `L610`)
 - [x] support for tapo light strip with or without color (`L900`)
