@@ -1,12 +1,11 @@
 """Constants for the tapo integration."""
-
 from homeassistant.components.light import ColorMode
 from homeassistant.const import Platform
 from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.5.0"
+VERSION = "2.6.0"
 
 SUPPORTED_HUB_DEVICE_MODEL = "h100"
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
