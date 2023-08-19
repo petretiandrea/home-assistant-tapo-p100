@@ -6,12 +6,8 @@
   "iot_class": "local_polling",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
-  "requirements": [
-    "plugp100==3.6.0"
-  ],
+  "requirements": ["plugp100==3.7.1"],
   "dependencies": [],
   "integration_type": "hub",
-  "codeowners": [
-    "@petretiandrea"
-  ]
+  "codeowners": ["@petretiandrea"]
 }

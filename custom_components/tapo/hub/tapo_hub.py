@@ -1,17 +1,18 @@
 from dataclasses import dataclass
 from datetime import timedelta
 
+from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.const import HUB_PLATFORMS
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.helpers import value_or_raise
+from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.api.hub.hub_device import HubDevice
-
-from custom_components.tapo.const import DEFAULT_POLLING_RATE_S, DOMAIN, HUB_PLATFORMS
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.helpers import value_or_raise
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 
 
 @dataclass
@@ -32,7 +33,7 @@ class TapoHub:
             config_entry_id=self.entry.entry_id,
             connections={(device_registry.CONNECTION_NETWORK_MAC, hub_data.info.mac)},
             identifiers={(DOMAIN, hub_data.info.device_id)},
-            name=hub_data.info.nickname,
+            name=hub_data.info.friendly_name,
             model=hub_data.info.model,
             manufacturer="TP-Link",
             sw_version=hub_data.info.firmware_version,

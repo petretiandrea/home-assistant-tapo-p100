@@ -61,7 +61,7 @@ def _setup_from_coordinator(
     async_add_entities: AddEntitiesCallback,
 ):
     if isinstance(coordinator, LightTapoCoordinator):
-        model = get_short_model(coordinator.get_device_info().model)
+        model = get_short_model(coordinator.device_info.model)
         color_modes = SUPPORTED_DEVICE_AS_LIGHT.get(model)
         effects = SUPPORTED_LIGHT_EFFECTS.get(model, [])
         light = TapoLight(
@@ -70,9 +70,7 @@ def _setup_from_coordinator(
         async_add_entities([light], True)
 
 
-class TapoLight(
-    BaseTapoEntity[Union[LightDeviceState, LedStripDeviceState]], LightEntity
-):
+class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
     def __init__(
         self,
         coordinator: LightTapoCoordinator,
@@ -92,20 +90,22 @@ class TapoLight(
 
     @property
     def is_on(self):
-        return self.coordinator.data.device_on
+        return self.coordinator.light_state.device_on
 
     @property
     def brightness(self):
-        if self._effects and self.coordinator.data.lighting_effect is not None:
-            return round((self.coordinator.data.lighting_effect.brightness * 255) / 100)
+        if self._effects and self.coordinator.light_state.lighting_effect is not None:
+            return round(
+                (self.coordinator.light_state.lighting_effect.brightness * 255) / 100
+            )
         else:
-            return round((self.coordinator.data.brightness * 255) / 100)
+            return round((self.coordinator.light_state.brightness * 255) / 100)
 
     @property
     def hs_color(self):
-        hue = self.coordinator.data.hue
-        saturation = self.coordinator.data.saturation
-        color_temp = self.coordinator.data.color_temp
+        hue = self.coordinator.light_state.hue
+        saturation = self.coordinator.light_state.saturation
+        color_temp = self.coordinator.light_state.color_temp
         if (
             color_temp is None or color_temp <= 0
         ):  ## returns None if color_temp is not set
@@ -114,7 +114,7 @@ class TapoLight(
 
     @property
     def color_temp(self):
-        color_temp = self.coordinator.data.color_temp
+        color_temp = self.coordinator.light_state.color_temp
         if color_temp is not None and color_temp > 0:
             return clamp(
                 kelvin_to_mired(color_temp),
@@ -128,10 +128,10 @@ class TapoLight(
     def effect(self) -> Optional[str]:
         if (
             self._effects
-            and self.coordinator.data.lighting_effect is not None
-            and self.coordinator.data.lighting_effect.enable
+            and self.coordinator.light_state.lighting_effect is not None
+            and self.coordinator.light_state.lighting_effect.enable
         ):
-            return self.coordinator.data.lighting_effect.name.lower()
+            return self.coordinator.light_state.lighting_effect.name.lower()
         else:
             return None
 

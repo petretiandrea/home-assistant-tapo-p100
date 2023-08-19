@@ -1,49 +1,48 @@
 import logging
-from typing import Awaitable, Callable, TypeVar
-
-from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from typing import Awaitable
+from typing import Callable
+from typing import TypeVar
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import TapoCoordinator
+from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-State = TypeVar("State")
+T = TypeVar("T")
+C = TypeVar("C", bound=TapoCoordinator)
 
 
-class BaseTapoEntity(CoordinatorEntity[TapoCoordinator[State]]):
+class BaseTapoEntity(CoordinatorEntity[C]):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: TapoCoordinator[State]):
+    def __init__(self, coordinator: C):
         super().__init__(coordinator)
-        self._base_data = coordinator.get_device_info()
-        self._data = coordinator.data
+        self._base_data = self.coordinator.get_state_of(TapoDeviceInfo)
 
     @property
     def device_info(self) -> DeviceInfo:
         return {
             "identifiers": {(DOMAIN, self._base_data.device_id)},
-            "name": self._base_data.nickname,
+            "name": self._base_data.friendly_name,
             "model": self._base_data.model,
             "manufacturer": "TP-Link",
-            "sw_version": self._base_data and self._base_data.firmware_version,
-            "hw_version": self._base_data and self._base_data.hardware_version,
+            "sw_version": self._base_data.firmware_version,
+            "hw_version": self._base_data.hardware_version,
         }
 
     @property
     def unique_id(self):
-        return self._base_data and self._base_data.device_id
+        return self._base_data.device_id
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._data = self.coordinator.data
-        self._base_data = self.coordinator.get_device_info()
+        self._base_data = self.coordinator.get_state_of(TapoDeviceInfo)
         self.async_write_ha_state()
-
-    T = TypeVar("T")
 
     async def _execute_with_fallback(
         self, function: Callable[[], Awaitable[T]], retry=True

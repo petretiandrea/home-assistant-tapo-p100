@@ -1,4 +1,4 @@
-from typing import TypeVar, Union
+from typing import Optional, TypeVar, Union
 
 from plugp100.common.functional.either import Either
 
@@ -11,6 +11,10 @@ def value_or_raise(either: Either[T, Exception]) -> T:
         raise value_or_error
     else:
         return value_or_error
+
+
+def value_optional(either: Either[T, Exception]) -> Optional[T]:
+    return either.fold(lambda x: x, lambda _: None)
 
 
 def clamp(value, min_value, max_value):
