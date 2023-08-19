@@ -1,9 +1,14 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-  "image": "mcr.microsoft.com/devcontainers/python:1-3.10-bullseye",
+  //"image": "mcr.microsoft.com/devcontainers/python:1-3.11-bullseye",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "name": "tapo integration development",
   "appPort": ["9123:8123"],
+  "containerUser": "root",
   "postCreateCommand": "pip install -r requirements_dev.txt",
+  "containerEnv": { "DEVCONTAINER": "1" },
   "customizations": {
     "vscode": {
       "extensions": [
