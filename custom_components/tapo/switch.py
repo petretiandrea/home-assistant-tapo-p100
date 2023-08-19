@@ -1,23 +1,27 @@
-from typing import Any, Dict, Optional, cast
-
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.api.plug_device import PlugDevice
+from typing import Any
+from typing import cast
+from typing import Dict
+from typing import Optional
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import (
-    HassTapoDeviceData,
-    PlugDeviceState,
-    PlugTapoCoordinator,
-)
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.coordinators import PlugDeviceState
+from custom_components.tapo.coordinators import PlugTapoCoordinator
+from custom_components.tapo.coordinators import PowerStripCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
 from custom_components.tapo.helpers import value_or_raise
 from custom_components.tapo.hub.switch import (
     async_setup_entry as async_setup_hub_switch,
 )
 from custom_components.tapo.setup_helpers import setup_from_platform_config
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
 async def async_setup_platform(
@@ -47,6 +51,14 @@ async def async_setup_device_switch(
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     if isinstance(data.coordinator, PlugTapoCoordinator):
         async_add_devices([TapoPlugEntity(data.coordinator)], True)
+    elif isinstance(data.coordinator, PowerStripCoordinator):
+        async_add_devices(
+            [
+                StripPlugEntity(data.coordinator, child.device_id)
+                for child in data.coordinator.get_children()
+            ],
+            True,
+        )
 
 
 class TapoPlugEntity(BaseTapoEntity[PlugTapoCoordinator], SwitchEntity):
@@ -68,27 +80,42 @@ class TapoPlugEntity(BaseTapoEntity[PlugTapoCoordinator], SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-# class TapoSubPlugEntity(BaseTapoEntity[PlugDeviceState], SwitchEntity):
-#     _attr_has_entity_name = True
-#     _attr_device_class = SwitchDeviceClass.OUTLET
+class StripPlugEntity(CoordinatorEntity[PowerStripCoordinator], SwitchEntity):
+    _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_has_entity_name = True
 
-#     def __init__(self, coordinator: PowerStripCoordinator, device_id: str):
-#         super().__init__(coordinator)
-#         self._device_id = device_id
-#         self._attr_name = coordinator.get_child_state(device_id).nickname
+    def __init__(self, coordinator: PowerStripCoordinator, device_id: str) -> None:
+        super().__init__(coordinator)
+        self.device_id = device_id
+        self._attr_name = f"{coordinator.get_child_state(device_id=device_id).nickname}"
 
-#     @property
-#     def is_on(self) -> Optional[bool]:
-#         return (
-#             cast(PowerStripCoordinator, self.coordinator)
-#             .get_child_state(self._device_id)
-#             .device_on
-#         )
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.device_info.device_id)},
+            "name": self.coordinator.device_info.model,
+            "model": self.coordinator.device_info.model,
+            "manufacturer": "TP-Link",
+            "sw_version": self.coordinator.device_info.firmware_version,
+            "hw_version": self.coordinator.device_info.hardware_version,
+        }
 
-#     async def async_turn_on(self, **kwargs):
-#         value_or_raise(await self.coordinator.on())
-#         await self.coordinator.async_request_refresh()
+    @property
+    def unique_id(self):
+        return self.device_id
 
-#     async def async_turn_off(self, **kwargs):
-#         value_or_raise(await self.device.off())
-#         await self.coordinator.async_request_refresh()
+    @property
+    def is_on(self) -> Optional[bool]:
+        return self.coordinator.get_child_state(self.device_id).device_on
+
+    async def async_turn_on(self, **kwargs):
+        value_or_raise(await self.coordinator.device.on(self.device_id))
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs):
+        value_or_raise(await self.coordinator.device.off(self.device_id))
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self.async_write_ha_state()

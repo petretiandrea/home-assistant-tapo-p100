@@ -1,2 +1,5 @@
-homeassistant==2022.12.8
-plugp100==3.6.0
+homeassistant==2023.6.2
+plugp100==3.7.1
+pre-commit==3.3.3
+reorder-python-imports==3.10.0
+flake8==6.1.0

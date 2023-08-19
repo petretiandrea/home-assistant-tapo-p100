@@ -1,13 +1,14 @@
 import logging
-from typing import Awaitable, Callable, TypeVar
-from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
+from typing import Awaitable
+from typing import Callable
+from typing import TypeVar
 
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.coordinators import TapoCoordinator
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import StateMap, TapoCoordinator
+from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class BaseTapoEntity(CoordinatorEntity[C]):
     def device_info(self) -> DeviceInfo:
         return {
             "identifiers": {(DOMAIN, self._base_data.device_id)},
-            "name": self._base_data.nickname,
+            "name": self._base_data.friendly_name,
             "model": self._base_data.model,
             "manufacturer": "TP-Link",
             "sw_version": self._base_data.firmware_version,

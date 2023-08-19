@@ -1,46 +1,50 @@
-from abc import ABC, abstractmethod
+import logging
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing import Optional, TypeVar, Union, cast
+from typing import cast
+from typing import Dict
+from typing import Optional
+from typing import Type
+from typing import TypeVar
+from typing import Union
 
 import aiohttp
 import async_timeout
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LED_STRIP
+from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LIGHT
+from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH
+from custom_components.tapo.const import SUPPORTED_POWER_STRIP_DEVICE_MODEL
+from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.helpers import value_optional
+from custom_components.tapo.helpers import value_or_raise
+from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
+from plugp100.api.plug_device import EnergyInfo
+from plugp100.api.plug_device import PlugDevice
+from plugp100.api.plug_device import PowerInfo
 from plugp100.api.power_strip_device import PowerStripDevice
-from plugp100.responses.child_device_list import PowerStripChild
-from plugp100.api.plug_device import EnergyInfo, PlugDevice, PowerInfo
 from plugp100.api.tapo_client import TapoClient
-from plugp100.common.functional.either import Either, Right, Left
-from typing import Type, TypeVar, Dict, List, cast
-from plugp100.responses.device_state import (
-    DeviceInfo,
-    LedStripDeviceState,
-    LightDeviceState,
-    PlugDeviceState,
-)
-from plugp100.responses.tapo_exception import TapoError, TapoException
-
-from custom_components.tapo.const import (
-    DOMAIN,
-    SUPPORTED_DEVICE_AS_LED_STRIP,
-    SUPPORTED_DEVICE_AS_LIGHT,
-    SUPPORTED_DEVICE_AS_SWITCH,
-    SUPPORTED_POWER_STRIP_DEVICE_MODEL,
-)
-
-from custom_components.tapo.errors import DeviceNotSupported
-from custom_components.tapo.helpers import (
-    get_short_model,
-    value_optional,
-    value_or_raise,
-)
+from plugp100.common.functional.either import Either
+from plugp100.common.functional.either import Left
+from plugp100.common.functional.either import Right
+from plugp100.responses.child_device_list import PowerStripChild
+from plugp100.responses.device_state import DeviceInfo
+from plugp100.responses.device_state import LedStripDeviceState
+from plugp100.responses.device_state import LightDeviceState
+from plugp100.responses.device_state import PlugDeviceState
+from plugp100.responses.tapo_exception import TapoError
+from plugp100.responses.tapo_exception import TapoException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,12 +86,12 @@ async def create_coordinator(
             return Right(
                 LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
             )
-        # elif model_or_error.value == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
-        #     return Right(
-        #         PowerStripCoordinator(
-        #             hass, PowerStripDevice(client, host), polling_interval
-        #         )
-        #     )
+        elif model_or_error.value == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
+            return Right(
+                PowerStripCoordinator(
+                    hass, PowerStripDevice(client, host), polling_interval
+                )
+            )
         else:
             return Left(DeviceNotSupported(f"Device {host} not supported!"))
 
@@ -155,7 +159,8 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     async def _update_with_fallback(self, retry=True):
         try:
             return await self._update_state()
-        except Exception:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except
+            logging.error(error)
             if retry:
                 value_or_raise(await self._device.login())
                 return await self._update_with_fallback(False)
@@ -219,34 +224,23 @@ class LightTapoCoordinator(TapoCoordinator):
         )
 
 
-@dataclass
-class PowerStripState:
-    device_info: DeviceInfo
-    children_state: dict[str, PowerStripChild]
+PowerStripChildrenState = dict[str, PowerStripChild]
 
 
-class PowerStripCoordinator(TapoCoordinator[PowerStripState]):
+class PowerStripCoordinator(TapoCoordinator):
     def __init__(
         self, hass: HomeAssistant, device: PowerStripDevice, polling_interval: timedelta
     ):
         super().__init__(hass, device, polling_interval)
 
-    def get_device_info(self) -> DeviceInfo:
-        return self.data.device_info
+    async def _update_state(self):
+        strip_state = value_or_raise(await self.device.get_state())
+        children_state = value_or_raise(await self.device.get_children())
+        self.update_state_of(DeviceInfo, strip_state.info)
+        self.update_state_of(PowerStripChildrenState, children_state)
 
     def get_children(self) -> list[PowerStripChild]:
-        return self.data.children_state
-
-    async def _get_state_from_device(self) -> Either[PowerStripState, Exception]:
-        children_state = value_or_raise(
-            await cast(PowerStripDevice, self.device).get_children()
-        ).get_children(lambda x: PowerStripChild.try_from_json(**x))
-        return PowerStripState(
-            device_info=value_or_raise(
-                await cast(PowerStripDevice, self.device).get_state()
-            ).info,
-            children_state={child.device_id: child for child in children_state},
-        )
+        return list(self.get_state_of(PowerStripChildrenState).values())
 
     def get_child_state(self, device_id: str) -> PowerStripChild:
-        return self.data.children_state.get(device_id)
+        return self.get_state_of(PowerStripChildrenState).get(device_id)
