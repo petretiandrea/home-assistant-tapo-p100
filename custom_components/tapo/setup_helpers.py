@@ -1,24 +1,23 @@
-from datetime import timedelta
-from typing import Dict, Any
 import logging
+from datetime import timedelta
+from typing import Any
+from typing import Dict
 
+from custom_components.tapo.const import CONF_ALTERNATIVE_IP
+from custom_components.tapo.const import CONF_HOST
+from custom_components.tapo.const import CONF_PASSWORD
+from custom_components.tapo.const import CONF_USERNAME
+from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.coordinators import create_coordinator
+from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.tapo_device import TapoDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.tapo_client import TapoClient
-
-from custom_components.tapo.const import (
-    CONF_ALTERNATIVE_IP,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-    DEFAULT_POLLING_RATE_S,
-)
-from custom_components.tapo.tapo_device import TapoDevice
-from custom_components.tapo.coordinators import TapoCoordinator, create_coordinator
 
 _LOGGGER = logging.getLogger(__name__)
 
@@ -75,5 +74,5 @@ def _get_or_create_api_client(
     else:
         _LOGGGER.debug(f"Creating new API to create a coordinator for {unique_id}")
         session = async_get_clientsession(hass)
-        api = TapoClient(username, password, session)
+        api = TapoClient(username, password, session, auto_recover_expired_session=True)
     return api

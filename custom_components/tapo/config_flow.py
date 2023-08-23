@@ -171,7 +171,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             session = async_create_clientsession(self.hass)
             client = TapoClient(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session,
+                auto_recover_expired_session=True,
             )
             return (
                 (await client.login(user_input[CONF_HOST]))
