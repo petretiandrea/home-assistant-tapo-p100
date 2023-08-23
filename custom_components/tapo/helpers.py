@@ -1,20 +1,13 @@
-from typing import Optional, TypeVar, Union
+from typing import Optional
+from typing import TypeVar
 
-from plugp100.common.functional.either import Either
+from plugp100.common.functional.tri import Try
 
 T = TypeVar("T")
 
 
-def value_or_raise(either: Either[T, Exception]) -> T:
-    value_or_error: Union[T, Exception] = either.fold(lambda x: x, lambda y: y)
-    if isinstance(value_or_error, Exception):
-        raise value_or_error
-    else:
-        return value_or_error
-
-
-def value_optional(either: Either[T, Exception]) -> Optional[T]:
-    return either.fold(lambda x: x, lambda _: None)
+def value_optional(tri: Try[T]) -> Optional[T]:
+    return tri.get() if tri.is_success() else None
 
 
 def clamp(value, min_value, max_value):

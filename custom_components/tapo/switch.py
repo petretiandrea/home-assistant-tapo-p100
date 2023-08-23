@@ -9,7 +9,6 @@ from custom_components.tapo.coordinators import PlugDeviceState
 from custom_components.tapo.coordinators import PlugTapoCoordinator
 from custom_components.tapo.coordinators import PowerStripCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
-from custom_components.tapo.helpers import value_or_raise
 from custom_components.tapo.hub.switch import (
     async_setup_entry as async_setup_hub_switch,
 )
@@ -72,11 +71,11 @@ class TapoPlugEntity(BaseTapoEntity[PlugTapoCoordinator], SwitchEntity):
         return self.coordinator.get_state_of(PlugDeviceState).device_on
 
     async def async_turn_on(self, **kwargs):
-        value_or_raise(await self.coordinator.device.on())
+        (await self.coordinator.device.on()).get_or_raise()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        value_or_raise(await self.coordinator.device.off())
+        (await self.coordinator.device.off()).get_or_raise()
         await self.coordinator.async_request_refresh()
 
 
@@ -109,11 +108,11 @@ class StripPlugEntity(CoordinatorEntity[PowerStripCoordinator], SwitchEntity):
         return self.coordinator.get_child_state(self.device_id).device_on
 
     async def async_turn_on(self, **kwargs):
-        value_or_raise(await self.coordinator.device.on(self.device_id))
+        (await self.coordinator.device.on(self.device_id)).get_or_raise()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        value_or_raise(await self.coordinator.device.off(self.device_id))
+        (await self.coordinator.device.off(self.device_id)).get_or_raise()
         await self.coordinator.async_request_refresh()
 
     @callback

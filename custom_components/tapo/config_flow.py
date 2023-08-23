@@ -19,7 +19,6 @@ from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
 from custom_components.tapo.helpers import get_short_model
-from custom_components.tapo.helpers import value_or_raise
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -154,8 +153,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_first_data_from_api(self, api: TapoClient) -> DeviceInfo:
         try:
-            return value_or_raise(
-                (await api.get_device_info()).map(lambda x: DeviceInfo(**x))
+            return (
+                (await api.get_device_info())
+                .map(lambda x: DeviceInfo(**x))
+                .get_or_raise()
             )
         except TapoException as error:
             self._raise_from_tapo_exception(error)
@@ -172,8 +173,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = TapoClient(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
             )
-            return value_or_raise(
-                (await client.login(user_input[CONF_HOST])).map(lambda _: client)
+            return (
+                (await client.login(user_input[CONF_HOST]))
+                .map(lambda _: client)
+                .get_or_raise()
             )
         except TapoException as error:
             self._raise_from_tapo_exception(error)
