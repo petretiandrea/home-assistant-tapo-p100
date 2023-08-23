@@ -71,21 +71,21 @@ async def create_coordinator(
 
     if model_or_error.is_success():
         if model_or_error.get() in SUPPORTED_DEVICE_AS_SWITCH:
-            return Try(
+            return Try.of(
                 PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
             )
         elif model_or_error.get() in SUPPORTED_DEVICE_AS_LED_STRIP:
-            return Try(
+            return Try.of(
                 LightTapoCoordinator(
                     hass, LedStripDevice(client, host), polling_interval
                 )
             )
         elif model_or_error.get() in SUPPORTED_DEVICE_AS_LIGHT:
-            return Try(
+            return Try.of(
                 LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
             )
         elif model_or_error.get() == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
-            return Try(
+            return Try.of(
                 PowerStripCoordinator(
                     hass, PowerStripDevice(client, host), polling_interval
                 )
