@@ -60,40 +60,30 @@ class HassTapoDeviceData:
 async def create_coordinator(
     hass: HomeAssistant, client: TapoClient, host: str, polling_interval: timedelta
 ) -> Try["TapoCoordinator"]:
-    logged_in = await client.login(host)
-    _LOGGER.info("Login to %s, success: %s", str(host), str(logged_in))
-    model_or_error = (
-        (await client.get_device_info())
-        .map(lambda x: DeviceInfo(**x))
-        .map(lambda info: get_short_model(info.model))
-    )
-    _LOGGER.info("Detected model of %s: %s", str(host), str(model_or_error))
-
-    if model_or_error.is_success():
-        if model_or_error.get() in SUPPORTED_DEVICE_AS_SWITCH:
+    device_info = (await client.get_device_info()).map(lambda x: DeviceInfo(**x))
+    if device_info.is_success():
+        model = get_short_model(device_info.get().model)
+        _LOGGER.info("Detected model of %s: %s", str(host), str(model))
+        if model in SUPPORTED_DEVICE_AS_SWITCH:
             return Try.of(
-                PlugTapoCoordinator(hass, PlugDevice(client, host), polling_interval)
+                PlugTapoCoordinator(hass, PlugDevice(client), polling_interval)
             )
-        elif model_or_error.get() in SUPPORTED_DEVICE_AS_LED_STRIP:
+        elif model in SUPPORTED_DEVICE_AS_LED_STRIP:
             return Try.of(
-                LightTapoCoordinator(
-                    hass, LedStripDevice(client, host), polling_interval
-                )
+                LightTapoCoordinator(hass, LedStripDevice(client), polling_interval)
             )
-        elif model_or_error.get() in SUPPORTED_DEVICE_AS_LIGHT:
+        elif model in SUPPORTED_DEVICE_AS_LIGHT:
             return Try.of(
-                LightTapoCoordinator(hass, LightDevice(client, host), polling_interval)
+                LightTapoCoordinator(hass, LightDevice(client), polling_interval)
             )
-        elif model_or_error.get() == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
+        elif model == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
             return Try.of(
-                PowerStripCoordinator(
-                    hass, PowerStripDevice(client, host), polling_interval
-                )
+                PowerStripCoordinator(hass, PowerStripDevice(client), polling_interval)
             )
         else:
             return Failure(DeviceNotSupported(f"Device {host} not supported!"))
 
-    return model_or_error
+    return device_info
 
 
 T = TypeVar("T")
@@ -146,22 +136,13 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     async def _async_update_data(self) -> StateMap:
         try:
             async with async_timeout.timeout(10):
-                return await self._update_with_fallback(retry=True)
+                return await self._update_state()
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error communication with API: {str(error)}") from error
         except Exception as exception:
             raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
-
-    async def _update_with_fallback(self, retry=True):
-        try:
-            return await self._update_state()
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error during update state, will retry %r", retry)
-            if retry:
-                (await self._device.login()).get_or_raise()
-                return await self._update_with_fallback(False)
 
     def _raise_from_tapo_exception(self, exception: TapoException):
         _LOGGER.error("Tapo exception: %s", str(exception))

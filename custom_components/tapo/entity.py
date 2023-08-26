@@ -1,6 +1,4 @@
 import logging
-from typing import Awaitable
-from typing import Callable
 from typing import TypeVar
 
 from custom_components.tapo.const import DOMAIN
@@ -43,14 +41,3 @@ class BaseTapoEntity(CoordinatorEntity[C]):
     def _handle_coordinator_update(self) -> None:
         self._base_data = self.coordinator.get_state_of(TapoDeviceInfo)
         self.async_write_ha_state()
-
-    async def _execute_with_fallback(
-        self, function: Callable[[], Awaitable[T]], retry=True
-    ) -> T:
-        try:
-            return await function()
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.error("Error during command execution %s", str(error))
-            if retry:
-                await self.coordinator.device.login()
-                return await self._execute_with_fallback(function, False)

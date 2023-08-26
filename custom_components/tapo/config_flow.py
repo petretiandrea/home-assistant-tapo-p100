@@ -25,6 +25,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from plugp100.api.tapo_client import TapoClient
+from plugp100.common.credentials import AuthCredential
 from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.tapo_exception import TapoError
 from plugp100.responses.tapo_exception import TapoException
@@ -84,17 +85,17 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                api = await self._try_setup_api(user_input)
-                device_data = await self._get_first_data_from_api(api)
+                tapo_client = await self._try_setup_api(user_input)
+                device_data = await self._get_first_data_from_api(tapo_client)
                 device_id = device_data.device_id
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
-                self.hass.data[DOMAIN][f"{device_id}_api"] = api
+                self.hass.data[DOMAIN][f"{device_id}_api"] = tapo_client
 
                 if get_short_model(device_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
                     return self.async_create_entry(
                         title=f"Tapo Hub {device_data.friendly_name}",
-                        data={"is_hub": True, **user_input},
+                        data={"is_hub": True, "mac": device_data.mac, **user_input},
                         options={CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S},
                     )
                 elif user_input.get(CONF_ADVANCED_SETTINGS, False):
@@ -103,7 +104,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     return self.async_create_entry(
                         title=device_data.friendly_name,
-                        data=user_input,
+                        data={**user_input, "mac": device_data.mac},
                         options={CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S},
                     )
             except InvalidAuth as error:
@@ -151,10 +152,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-    async def _get_first_data_from_api(self, api: TapoClient) -> DeviceInfo:
+    async def _get_first_data_from_api(self, tapo_client: TapoClient) -> DeviceInfo:
         try:
             return (
-                (await api.get_device_info())
+                (await tapo_client.get_device_info())
                 .map(lambda x: DeviceInfo(**x))
                 .get_or_raise()
             )
@@ -170,17 +171,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise InvalidHost
         try:
             session = async_create_clientsession(self.hass)
-            client = TapoClient(
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                session,
-                auto_recover_expired_session=True,
+            credential = AuthCredential(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
-            return (
-                (await client.login(user_input[CONF_HOST]))
-                .map(lambda _: client)
-                .get_or_raise()
-            )
+            return await TapoClient.connect(credential, user_input[CONF_HOST], session)
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:
