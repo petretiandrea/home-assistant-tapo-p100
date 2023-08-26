@@ -24,7 +24,6 @@ class TapoHub:
         polling_rate = timedelta(
             seconds=self.entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
-        (await self.hub.login()).get_or_raise()
         hub_coordinator = TapoHubCoordinator(hass, self.hub, polling_rate)
         await hub_coordinator.async_config_entry_first_refresh()
         device_info = hub_coordinator.get_state_of(DeviceInfo)

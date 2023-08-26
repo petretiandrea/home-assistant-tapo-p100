@@ -1,20 +1,23 @@
 """The tapo integration."""
 import asyncio
-from dataclasses import dataclass
 import logging
-from typing import Optional, cast
+from typing import cast
+from typing import Optional
 
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.hub.tapo_hub import TapoHub
+from custom_components.tapo.setup_helpers import setup_tapo_device
+from custom_components.tapo.setup_helpers import setup_tapo_hub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.errors import DeviceNotSupported
-from custom_components.tapo.hub.tapo_hub import TapoHub
-from custom_components.tapo.setup_helpers import setup_tapo_device, setup_tapo_hub
-
-from .const import DEFAULT_POLLING_RATE_S, DOMAIN, HUB_PLATFORMS, PLATFORMS
+from .const import DEFAULT_POLLING_RATE_S
+from .const import DOMAIN
+from .const import HUB_PLATFORMS
+from .const import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     try:
         if entry.data.get("is_hub", False):
-            hub = TapoHub(entry, setup_tapo_hub(hass, entry))
+            hub = TapoHub(entry, await setup_tapo_hub(hass, entry))
             return await hub.initialize_hub(hass)
         else:
-            device = setup_tapo_device(hass, entry)
+            device = await setup_tapo_device(hass, entry)
             return await device.initialize_device(hass)
     except DeviceNotSupported as error:
         raise error
