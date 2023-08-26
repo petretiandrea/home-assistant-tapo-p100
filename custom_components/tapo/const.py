@@ -5,7 +5,7 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.6.1"
+VERSION = "2.7.0"
 
 SUPPORTED_HUB_DEVICE_MODEL = "h100"
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
