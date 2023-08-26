@@ -3,6 +3,7 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import cached_property
 from typing import cast
 from typing import Dict
 from typing import Optional
@@ -16,6 +17,7 @@ from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LED_STRIP
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LIGHT
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH
+from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
 from custom_components.tapo.const import SUPPORTED_POWER_STRIP_DEVICE_MODEL
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.helpers import get_short_model
@@ -160,10 +162,13 @@ class PlugTapoCoordinator(TapoCoordinator):
         polling_interval: timedelta,
     ):
         super().__init__(hass, device, polling_interval)
-        self.has_power_monitor = False
 
-    def enable_power_monitor(self):
-        self.has_power_monitor = True
+    @cached_property
+    def has_power_monitor(self) -> bool:
+        return (
+            get_short_model(self.get_state_of(DeviceInfo).model)
+            in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
+        )
 
     async def _update_state(self):
         plug = cast(PlugDevice, self.device)

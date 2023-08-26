@@ -1,37 +1,32 @@
-from datetime import date, datetime
-from typing import Any, Dict, Optional, Union, cast
+from datetime import date
+from datetime import datetime
+from typing import Any
+from typing import cast
+from typing import Dict
+from typing import Optional
+from typing import Union
 
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.coordinators import PlugTapoCoordinator
+from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.sensors import CurrentEnergySensorSource
+from custom_components.tapo.sensors import MonthEnergySensorSource
+from custom_components.tapo.sensors import MonthRuntimeSensorSource
+from custom_components.tapo.sensors import SignalSensorSource
+from custom_components.tapo.sensors import TodayEnergySensorSource
+from custom_components.tapo.sensors import TodayRuntimeSensorSource
+from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
+from custom_components.tapo.setup_helpers import setup_from_platform_config
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.responses.device_state import DeviceInfo
 
-from custom_components.tapo.const import (
-    DOMAIN,
-    SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR,
-)
-from custom_components.tapo.coordinators import (
-    HassTapoDeviceData,
-    PlugTapoCoordinator,
-    TapoCoordinator,
-)
-from custom_components.tapo.entity import BaseTapoEntity
-from custom_components.tapo.helpers import get_short_model
-from custom_components.tapo.sensors import (
-    CurrentEnergySensorSource,
-    MonthEnergySensorSource,
-    MonthRuntimeSensorSource,
-    SignalSensorSource,
-    TodayEnergySensorSource,
-    TodayRuntimeSensorSource,
-)
-from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.setup_helpers import setup_from_platform_config
-
-### Supported sensors: Today energy and current power
+# Supported sensors: Today energy and current power
 SUPPORTED_SENSOR = [
     CurrentEnergySensorSource,
     TodayEnergySensorSource,
@@ -66,17 +61,10 @@ def _setup_from_coordinator(
     async_add_entities: AddEntitiesCallback,
 ):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
-
-    if isinstance(coordinator, PlugTapoCoordinator):
-        if (
-            get_short_model(coordinator.device_info.model)
-            in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
-        ):
-            coordinator.enable_power_monitor()
-            sensors.extend(
-                [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
-            )
-
+    if isinstance(coordinator, PlugTapoCoordinator) and coordinator.has_power_monitor:
+        sensors.extend(
+            [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
+        )
     async_add_entities(sensors, True)
 
 
