@@ -5,13 +5,18 @@ from typing import Dict
 
 from custom_components.tapo.const import CONF_ALTERNATIVE_IP
 from custom_components.tapo.const import CONF_HOST
+from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import CONF_PASSWORD
+from custom_components.tapo.const import CONF_TRACK_DEVICE
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import create_coordinator
 from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.helpers import find_adapter_for
+from custom_components.tapo.helpers import get_network_of
 from custom_components.tapo.tapo_device import TapoDevice
+from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -19,52 +24,64 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
+from plugp100.discovery.local_device_finder import LocalDeviceFinder
 
 _LOGGGER = logging.getLogger(__name__)
 
 
 async def setup_tapo_hub(hass: HomeAssistant, config: ConfigEntry) -> HubDevice:
-    credential = AuthCredential(
-        config.data.get(CONF_USERNAME), config.data.get(CONF_PASSWORD)
-    )
-    api = await connect_tapo_client(
-        hass,
-        credential,
-        config.data.get(CONF_HOST),
-        config.unique_id,
-    )
+    api = await setup_tapo_api(hass, config)
     hub = HubDevice(api)
     return hub
 
 
 async def setup_tapo_device(hass: HomeAssistant, config: ConfigEntry) -> TapoDevice:
+    api = await setup_tapo_api(hass, config)
+    return TapoDevice(config, api)
+
+
+async def setup_tapo_api(hass: HomeAssistant, config: ConfigEntry) -> TapoClient:
     credential = AuthCredential(
         config.data.get(CONF_USERNAME), config.data.get(CONF_PASSWORD)
     )
-    api = await connect_tapo_client(
+    if config.data.get(CONF_TRACK_DEVICE, False):
+        address = await try_track_ip_address(
+            hass, config.data.get(CONF_MAC), config.data.get(CONF_HOST)
+        )
+    else:
+        address = config.data.get(CONF_HOST)
+
+    return await connect_tapo_client(
         hass,
         credential,
-        config.data.get(CONF_HOST),
+        address,
         config.unique_id,
     )
-    return TapoDevice(config, api)
 
 
 async def setup_from_platform_config(
     hass: HomeAssistant, config: Dict[str, Any]
 ) -> TapoCoordinator:
-    host = config.get(CONF_HOST, None)
-    polling_rate = timedelta(
-        seconds=config.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+    temporary_entry = ConfigEntry(
+        version=1,
+        domain="",
+        title="",
+        source="config_yaml",
+        data={
+            CONF_HOST: config.get(CONF_HOST, config.get(CONF_ALTERNATIVE_IP, None)),
+            CONF_USERNAME: config.get(CONF_USERNAME),
+            CONF_PASSWORD: config.get(CONF_PASSWORD),
+        },
+        options={CONF_TRACK_DEVICE: config.get(CONF_TRACK_DEVICE, False)},
     )
-    credential = AuthCredential(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    ip_address = host if host is not None else config.get(CONF_ALTERNATIVE_IP)
-    client = await connect_tapo_client(hass, credential, ip_address, "")
+    client = await setup_tapo_api(hass, temporary_entry)
     return await create_coordinator(
         hass,
         client,
-        ip_address,
-        polling_rate,
+        temporary_entry.data.get(CONF_HOST),
+        polling_interval=timedelta(
+            seconds=config.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+        ),
     )
 
 
@@ -83,3 +100,28 @@ async def connect_tapo_client(
         session = async_get_clientsession(hass)
         api = await TapoClient.connect(credentials, ip_address, session)
     return api
+
+
+async def try_track_ip_address(
+    hass: HomeAssistant, mac: str, last_known_ip: str
+) -> str:
+    _LOGGGER.info(
+        "Trying to track ip address of %s, last known ip is %s", mac, last_known_ip
+    )
+    adapters = await network.async_get_adapters(hass)
+    adapter = await find_adapter_for(adapters, last_known_ip)
+    try:
+        if adapter is not None:
+            target_network = get_network_of(adapter)
+            device = await LocalDeviceFinder.scan_one(
+                mac.replace("-", ":"), target_network, timeout=5
+            )
+            return device.get_or_else(last_known_ip)
+        else:
+            _LOGGGER.warning(
+                "No adapter found for %s with last ip %s", mac, last_known_ip
+            )
+    except PermissionError:
+        _LOGGGER.warning("No permission to scan network")
+
+    return last_known_ip

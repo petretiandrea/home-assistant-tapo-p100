@@ -16,6 +16,7 @@
           "host": "IP address or hostname of tapo device",
           "password": "Tapo App Password",
           "username": "Tapo App Username (email)",
+          "track_device_mac": "Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
           "advanced_settings": "Advanced settings"
         }
       },
@@ -40,6 +41,7 @@
           "host": "IP address or hostname of tapo device",
           "password": "Tapo App Password",
           "username": "Tapo App Username (email)",
+          "track_device_mac": "Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
           "scan_interval": "Refresh rate in seconds"
         }
       }

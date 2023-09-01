@@ -39,9 +39,11 @@ PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.
 HUB_PLATFORMS = [Platform.SIREN, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_HOST = "host"
+CONF_MAC = "mac"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_ADVANCED_SETTINGS = "advanced_settings"
+CONF_TRACK_DEVICE = "track_device_mac"
 
 CONF_DEVICE_TYPE = "device_type"
 
