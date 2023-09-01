@@ -96,7 +96,7 @@ async def connect_tapo_client(
     if api is not None:
         _LOGGGER.debug("Re-using setup API to create a coordinator")
     else:
-        _LOGGGER.debug(f"Creating new API to create a coordinator for {unique_id}")
+        _LOGGGER.debug("Creating new API to create a coordinator for %s", unique_id)
         session = async_get_clientsession(hass)
         api = await TapoClient.connect(credentials, ip_address, session)
     return api
