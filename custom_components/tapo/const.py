@@ -5,7 +5,7 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.7.0"
+VERSION = "2.8.0"
 
 SUPPORTED_HUB_DEVICE_MODEL = "h100"
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
@@ -22,7 +22,7 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "tl33": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
-    "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS]
+    "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
 }
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
