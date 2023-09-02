@@ -4,11 +4,11 @@ import logging
 from typing import cast
 from typing import Optional
 
-from custom_components.migrations import migrate_entry_to_v3
-from custom_components.migrations import migrate_entry_to_v4
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hub.tapo_hub import TapoHub
+from custom_components.tapo.migrations import migrate_entry_to_v3
+from custom_components.tapo.migrations import migrate_entry_to_v4
 from custom_components.tapo.setup_helpers import setup_tapo_device
 from custom_components.tapo.setup_helpers import setup_tapo_hub
 from homeassistant.config_entries import ConfigEntry
