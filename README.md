@@ -33,6 +33,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 - [x] support for tapo light strip with or without color (`L900`)
 - [x] partial support for tapo light strip (`L920`, `L930` (including light effects)). Only RGB works not the addressable feature of strip.
 - [x] support for energy monitoring (`P110`, `P115`)
+- [x] support for tapo light switches with or without the dimmer (`S500`, `S500d`)
 - [x] support for additional tapo sensors: `overheat` and `wifi_signal`
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
