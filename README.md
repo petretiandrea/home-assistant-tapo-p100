@@ -7,7 +7,6 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 <!-- [![GitHub Release][releases-shield]][releases] -->
 <!--- [![GitHub Activity][commits-shield]][commits] -->
 
-
 <!--- [![pre-commit][pre-commit-shield]][pre-commit] -->
 <!--- [![Black][black-shield]][black] -->
 
@@ -18,13 +17,16 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 ## Warning!!!
+
 Although the integration works using LAN, the tapo device needs internet access to synchronize with tapo cloud, especially for credentials, a missing internet access could lead into "Invalida authentication error". Also a static IP must be set for device.
 
 ## Warning!!!
+
 For some unknown reason email with capital letter thrown an "Invalid authentication" error. So before open an new issue check your email address on Tapo App Settings. If contains capital letter, the integration won't work. I've opened an issue that explain this [#122](https://github.com/petretiandrea/home-assistant-tapo-p100/issues/122), I will fix asap. As workaround you can create a new account using all lower-case in your email address.
 
-
 ## Features
+
+### Supported devices
 
 - [x] pure async home assistant's method
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
@@ -38,13 +40,21 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
 
+### Additional features
+
+- [x] tracking of ip address. Cause Tapo local discovery isn't working for a lot of Tapo devices, this integration can try to track ip address changes by reling on MAC address.
+      This requires Home Assistant to runs on the same devices network and the capability to send ARP and broadcast packets.
+- [x] manually change ip address. Now you can change the ip address of a tapo device wihtout removing and re-adding it.
+
 # How to install
 
 ## Simplest and recomended way
+
 This integration is part of HACS store, so you don't need anymore to add this repository as a custom repository.
 You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is required**)
 
 ## Old way as a custom repository (not recomended, but use if you want to use beta versions)
+
 1. Install from HACS, add this repository as custom repository
 2. Search into HACS store the tapo integration and install
 3. Full restart of home assistant is recomended
@@ -54,6 +64,7 @@ This video show installation steps:
 [![Install Steps](http://img.youtube.com/vi/KSYldphgE5A/0.jpg)](https://youtu.be/KSYldphgE5A)
 
 ## "Manual" way
+
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
 3. In the `custom_components` directory (folder) create a new folder called `tapo`.
@@ -62,8 +73,8 @@ This video show installation steps:
 6. Restart Home Assistant
 7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "tapo"
 
-
 # How to add a Tapo device (after installing the integration)
+
 ## Using UI
 
 1. Be sure the integration is installed successfully
@@ -75,9 +86,11 @@ This video show installation steps:
 <!---->
 
 ## Configuration by configuration.yaml
+
 Domain can be `switch`, `light` or `sensor`.
 
 An example with switch:
+
 ```yaml
 switch:
   platform: tapo
