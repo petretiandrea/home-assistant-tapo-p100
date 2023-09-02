@@ -65,6 +65,28 @@ STEP_ADVANCED_CONFIGURATION = vol.Schema(
 )
 
 
+def step_options(entry: config_entries.ConfigEntry) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_HOST,
+                description="The IP address of your tapo device (must be static)",
+                default=entry.data.get(CONF_HOST),
+            ): str,
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
+                default=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S),
+            ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
+            vol.Optional(
+                CONF_TRACK_DEVICE,
+                description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
+                default=entry.data.get(CONF_TRACK_DEVICE, False),
+            ): bool,
+        }
+    )
+
+
 @dataclasses.dataclass(frozen=False)
 class FirstStepData:
     state: Optional[DeviceInfo]
@@ -102,9 +124,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 config_entry_data = user_input | {
                     CONF_MAC: device_data.mac,
                     CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                    CONF_TRACK_DEVICE: user_input.pop(
-                        CONF_TRACK_DEVICE
-                    ),  # put into options
+                    CONF_TRACK_DEVICE: user_input.pop(CONF_TRACK_DEVICE),
                 }
 
                 if get_short_model(device_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
@@ -215,24 +235,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.config_entry, data=self.config_entry.data | user_input
             )
             return self.async_create_entry(title="", data={})
-        schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
-                    default=self.config_entry.data.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S
-                    ),
-                ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
-                vol.Optional(
-                    CONF_TRACK_DEVICE,
-                    description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
-                    default=self.config_entry.data.get(CONF_TRACK_DEVICE, False),
-                ): bool,
-            }
-        )
-
         return self.async_show_form(
             step_id="init",
-            data_schema=schema,
+            data_schema=step_options(self.config_entry),
         )
