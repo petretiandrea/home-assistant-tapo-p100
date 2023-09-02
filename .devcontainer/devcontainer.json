@@ -9,6 +9,8 @@
   "containerUser": "root",
   "postCreateCommand": "pip install -r requirements_dev.txt",
   "containerEnv": { "DEVCONTAINER": "1" },
+  "capAdd": ["CAP_NET_RAW", "CAP_NET_BROADCAST", "CAP_NET_BIND_SERVICE"],
+  "runArgs": ["--network=bridge"],
   "customizations": {
     "vscode": {
       "extensions": [

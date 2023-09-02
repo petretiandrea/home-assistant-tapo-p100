@@ -8,7 +8,9 @@ import aiohttp
 import voluptuous as vol
 from custom_components.tapo.const import CONF_ADVANCED_SETTINGS
 from custom_components.tapo.const import CONF_HOST
+from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import CONF_PASSWORD
+from custom_components.tapo.const import CONF_TRACK_DEVICE
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
@@ -43,6 +45,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
         ): str,
         vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
+        vol.Optional(
+            CONF_TRACK_DEVICE,
+            description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
+            default=True,
+        ): bool,
         vol.Optional(CONF_ADVANCED_SETTINGS, description="Advanced settings"): bool,
     }
 )
@@ -92,11 +99,18 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 self.hass.data[DOMAIN][f"{device_id}_api"] = tapo_client
 
+                config_entry_data = user_input | {
+                    CONF_MAC: device_data.mac,
+                    CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
+                    CONF_TRACK_DEVICE: user_input.pop(
+                        CONF_TRACK_DEVICE
+                    ),  # put into options
+                }
+
                 if get_short_model(device_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
                     return self.async_create_entry(
                         title=f"Tapo Hub {device_data.friendly_name}",
-                        data={"is_hub": True, "mac": device_data.mac, **user_input},
-                        options={CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S},
+                        data={"is_hub": True, **config_entry_data},
                     )
                 elif user_input.get(CONF_ADVANCED_SETTINGS, False):
                     self.first_step_data = FirstStepData(device_data, user_input)
@@ -104,8 +118,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     return self.async_create_entry(
                         title=device_data.friendly_name,
-                        data={**user_input, "mac": device_data.mac},
-                        options={CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S},
+                        data=config_entry_data,
                     )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
@@ -142,8 +155,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             polling_rate = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
             return self.async_create_entry(
                 title=self.first_step_data.state.friendly_name,
-                data=self.first_step_data.user_input,
-                options={CONF_SCAN_INTERVAL: polling_rate},
+                data=self.first_step_data.user_input
+                | {CONF_SCAN_INTERVAL: polling_rate},
             )
         else:
             return self.async_show_form(
@@ -198,16 +211,24 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> data_entry_flow.FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=self.config_entry.data | user_input
+            )
+            return self.async_create_entry(title="", data={})
         schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
-                    default=self.config_entry.options.get(
+                    default=self.config_entry.data.get(
                         CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S
                     ),
                 ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
+                vol.Optional(
+                    CONF_TRACK_DEVICE,
+                    description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
+                    default=self.config_entry.data.get(CONF_TRACK_DEVICE, False),
+                ): bool,
             }
         )
 

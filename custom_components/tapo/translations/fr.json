@@ -1,32 +1,51 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Appareil déjà configuré"
+      "already_configured": "Appareil est déjà configuré"
     },
     "error": {
-      "cannot_connect": "Impossible de se connecter",
-      "invalid_auth": "Mauvais identifiants",
-      "unknown": "Erreur innatendue"
+      "cannot_connect": "Échec de la connexion",
+      "invalid_auth": "Identifiants invalides",
+      "unknown": "Erreur inattendue"
     },
     "step": {
       "user": {
         "title": "Ajouter un nouvel appareil",
-        "description": "Entrer l'adresse ip de votre appareil tapo et les identifiants de l'application.",
+        "description": "Entrez l'adresse IP de votre appareil Tapo et les informations d'authentification de l'application Tapo.",
         "data": {
-          "host": "Adresse ip ou nom d'hôte de l'appareil tapo",
+          "host": "Adresse IP ou nom d'hôte de l'appareil Tapo",
           "password": "Mot de passe de l'application Tapo",
-          "username": "Identifiant de l'application Tapo (email)",
+          "username": "Nom d'utilisateur de l'application Tapo (e-mail)",
+          "track_device_mac": "Essayer de suivre l'adresse IP dynamique de l'appareil en utilisant l'adresse MAC. (Votre HA doit pouvoir accéder au même réseau que l'appareil)",
           "advanced_settings": "Paramètres avancés"
         }
       },
       "advanced_config": {
-        "title": "Paramètres avancés",
-        "description": "En modifiant le taux de rafraichissement, un comportement innatendu peut se produire. L'appareil peut aussi ne plus répondre pendant un certain temps.",
+        "title": "Configuration avancée",
+        "description": "En personnalisant le taux de rafraîchissement, un comportement inattendu peut se produire. L'appareil peut même devenir non réactif pendant un certain temps.",
         "data": {
-          "scan_interval": "Taux de rafraichissement en secondes"
+          "scan_interval": "Taux de rafraîchissement en secondes"
         }
       }
     }
   },
-  "title": "tapo_p100"
+  "options": {
+    "error": {
+      "invalid_path": "Le chemin fourni n'est pas valide. Il doit être au format `utilisateur/nom-du-dépôt` et doit être un référentiel GitHub valide."
+    },
+    "step": {
+      "init": {
+        "title": "Configurer l'appareil Tapo",
+        "description": "En personnalisant le taux de rafraîchissement, un comportement inattendu peut se produire. L'appareil peut même devenir non réactif pendant un certain temps.",
+        "data": {
+          "host": "Adresse IP ou nom d'hôte de l'appareil Tapo",
+          "password": "Mot de passe de l'application Tapo",
+          "username": "Nom d'utilisateur de l'application Tapo (e-mail)",
+          "track_device_mac": "Essayer de suivre l'adresse IP dynamique de l'appareil en utilisant l'adresse MAC. (Votre HA doit pouvoir accéder au même réseau que l'appareil)",
+          "scan_interval": "Taux de rafraîchissement en secondes"
+        }
+      }
+    }
+  },
+  "title": "TP-Link Tapo"
 }

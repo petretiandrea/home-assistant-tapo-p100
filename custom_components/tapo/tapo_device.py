@@ -20,7 +20,7 @@ class TapoDevice:
 
     async def initialize_device(self, hass: HomeAssistant) -> bool:
         polling_rate = timedelta(
-            seconds=self.entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+            seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
         host = self.entry.data.get(CONF_HOST)
         coordinator = (

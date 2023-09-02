@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Il dispositivo è già configurato"
+    },
+    "error": {
+      "cannot_connect": "Connessione non riuscita",
+      "invalid_auth": "Credenziali non valide",
+      "unknown": "Errore imprevisto"
+    },
+    "step": {
+      "user": {
+        "title": "Aggiungi nuovo dispositivo",
+        "description": "Inserisci l'indirizzo IP del tuo dispositivo Tapo e le credenziali dell'app Tapo.",
+        "data": {
+          "host": "Indirizzo IP o nome host del dispositivo Tapo",
+          "password": "Password dell'app Tapo",
+          "username": "Nome utente dell'app Tapo (e-mail)",
+          "track_device_mac": "Prova a tracciare l'indirizzo IP dinamico del dispositivo utilizzando l'indirizzo MAC. (Il tuo HA deve essere in grado di accedere alla stessa rete del dispositivo)",
+          "advanced_settings": "Impostazioni avanzate"
+        }
+      },
+      "advanced_config": {
+        "title": "Configurazione avanzata",
+        "description": "Personalizzando il tasso di aggiornamento, possono verificarsi comportamenti imprevisti. Il dispositivo potrebbe diventare non reattivo per un po'.",
+        "data": {
+          "scan_interval": "Tasso di aggiornamento in secondi"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {},
+    "step": {
+      "init": {
+        "title": "Configura il dispositivo Tapo",
+        "description": "Personalizzando il tasso di aggiornamento, possono verificarsi comportamenti imprevisti. Il dispositivo potrebbe diventare non reattivo per un po'.",
+        "data": {
+          "host": "Indirizzo IP o nome host del dispositivo Tapo",
+          "password": "Password dell'app Tapo",
+          "username": "Nome utente dell'app Tapo (e-mail)",
+          "track_device_mac": "Prova a tracciare l'indirizzo IP dinamico del dispositivo utilizzando l'indirizzo MAC. (Il tuo HA deve essere in grado di accedere alla stessa rete del dispositivo)",
+          "scan_interval": "Tasso di aggiornamento in secondi"
+        }
+      }
+    }
+  },
+  "title": "TP-Link Tapo"
+}

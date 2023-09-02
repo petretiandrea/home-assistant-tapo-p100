@@ -4,17 +4,17 @@ import logging
 from typing import cast
 from typing import Optional
 
+from custom_components.migrations import migrate_entry_to_v3
+from custom_components.migrations import migrate_entry_to_v4
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hub.tapo_hub import TapoHub
 from custom_components.tapo.setup_helpers import setup_tapo_device
 from custom_components.tapo.setup_helpers import setup_tapo_hub
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_POLLING_RATE_S
 from .const import DOMAIN
 from .const import HUB_PLATFORMS
 from .const import PLATFORMS
@@ -48,18 +48,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version == 1:
-        new = {**config_entry.data, CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S}
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
-    elif config_entry.version == 2:
-        new_data = {**config_entry.data}
-        scan_interval = new_data.pop(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options={CONF_SCAN_INTERVAL: scan_interval}
-        )
+    if config_entry.version == 3:  # migrate to add mac address
+        migrate_entry_to_v4(hass, config_entry)
+    elif config_entry.version >= 1:
+        migrate_entry_to_v3(hass, config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

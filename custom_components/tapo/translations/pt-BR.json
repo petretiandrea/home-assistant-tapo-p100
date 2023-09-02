@@ -4,19 +4,48 @@
       "already_configured": "O dispositivo já está configurado"
     },
     "error": {
-      "cannot_connect": "Falhou ao conectar",
+      "cannot_connect": "Falha na conexão",
       "invalid_auth": "Credenciais inválidas",
       "unknown": "Erro inesperado"
     },
     "step": {
       "user": {
+        "title": "Adicionar novo dispositivo",
+        "description": "Digite o endereço IP do seu dispositivo Tapo e as credenciais do aplicativo Tapo.",
         "data": {
-          "host": "Endereço IP",
-          "password": "Senha",
-          "username": "Usuário"
+          "host": "Endereço IP ou nome de host do dispositivo Tapo",
+          "password": "Senha do aplicativo Tapo",
+          "username": "Nome de usuário do aplicativo Tapo (e-mail)",
+          "track_device_mac": "Tentar rastrear o IP dinâmico do dispositivo usando o endereço MAC. (Seu HA deve estar na mesma rede do dispositivo)",
+          "advanced_settings": "Configurações avançadas"
+        }
+      },
+      "advanced_config": {
+        "title": "Configuração avançada",
+        "description": "Ao personalizar a taxa de atualização, comportamentos inesperados podem ocorrer. O dispositivo pode até ficar sem resposta por um tempo.",
+        "data": {
+          "scan_interval": "Taxa de atualização em segundos"
         }
       }
     }
   },
-  "title": "tapo_p100"
+  "options": {
+    "error": {
+      "invalid_path": "O caminho fornecido não é válido. Deve estar no formato `usuário/nome-do-repositório` e deve ser um repositório GitHub válido."
+    },
+    "step": {
+      "init": {
+        "title": "Configurar Dispositivo Tapo",
+        "description": "Ao personalizar a taxa de atualização, comportamentos inesperados podem ocorrer. O dispositivo pode até ficar sem resposta por um tempo.",
+        "data": {
+          "host": "Endereço IP ou nome de host do dispositivo Tapo",
+          "password": "Senha do aplicativo Tapo",
+          "username": "Nome de usuário do aplicativo Tapo (e-mail)",
+          "track_device_mac": "Tentar rastrear o IP dinâmico do dispositivo usando o endereço MAC. (Seu HA deve estar na mesma rede do dispositivo)",
+          "scan_interval": "Taxa de atualização em segundos"
+        }
+      }
+    }
+  },
+  "title": "TP-Link Tapo"
 }
