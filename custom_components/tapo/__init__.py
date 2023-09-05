@@ -6,18 +6,21 @@ from typing import Optional
 
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.helpers import get_short_model
 from custom_components.tapo.hub.tapo_hub import TapoHub
-from custom_components.tapo.migrations import migrate_entry_to_v3
-from custom_components.tapo.migrations import migrate_entry_to_v4
-from custom_components.tapo.setup_helpers import setup_tapo_device
-from custom_components.tapo.setup_helpers import setup_tapo_hub
+from custom_components.tapo.migrations import migrate_entry_to_v5
+from custom_components.tapo.setup_helpers import setup_tapo_api
+from custom_components.tapo.tapo_device import TapoDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from plugp100.api.hub.hub_device import HubDevice
+from plugp100.responses.device_state import DeviceInfo
 
 from .const import DOMAIN
 from .const import HUB_PLATFORMS
 from .const import PLATFORMS
+from .const import SUPPORTED_HUB_DEVICE_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +35,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        if entry.data.get("is_hub", False):
-            hub = TapoHub(entry, await setup_tapo_hub(hass, entry))
+        api = await setup_tapo_api(hass, entry)
+        state = (
+            (await api.get_device_info()).map(lambda x: DeviceInfo(**x)).get_or_raise()
+        )
+        if get_short_model(state.model) == SUPPORTED_HUB_DEVICE_MODEL:
+            hub = TapoHub(entry, HubDevice(api))
             return await hub.initialize_hub(hass)
         else:
-            device = await setup_tapo_device(hass, entry)
+            device = TapoDevice(entry, api)
             return await device.initialize_device(hass)
     except DeviceNotSupported as error:
         raise error
@@ -48,10 +55,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version == 3:  # migrate to add mac address
-        migrate_entry_to_v4(hass, config_entry)
-    elif config_entry.version >= 1:
-        migrate_entry_to_v3(hass, config_entry)
+    if config_entry.version != 5:
+        migrate_entry_to_v5(hass, config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

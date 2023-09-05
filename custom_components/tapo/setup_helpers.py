@@ -15,13 +15,11 @@ from custom_components.tapo.coordinators import create_coordinator
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.helpers import find_adapter_for
 from custom_components.tapo.helpers import get_network_of
-from custom_components.tapo.tapo_device import TapoDevice
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
 from plugp100.discovery.local_device_finder import LocalDeviceFinder
@@ -29,25 +27,23 @@ from plugp100.discovery.local_device_finder import LocalDeviceFinder
 _LOGGGER = logging.getLogger(__name__)
 
 
-async def setup_tapo_hub(hass: HomeAssistant, config: ConfigEntry) -> HubDevice:
-    api = await setup_tapo_api(hass, config)
-    hub = HubDevice(api)
-    return hub
-
-
-async def setup_tapo_device(hass: HomeAssistant, config: ConfigEntry) -> TapoDevice:
-    api = await setup_tapo_api(hass, config)
-    return TapoDevice(config, api)
-
-
 async def setup_tapo_api(hass: HomeAssistant, config: ConfigEntry) -> TapoClient:
     credential = AuthCredential(
         config.data.get(CONF_USERNAME), config.data.get(CONF_PASSWORD)
     )
-    if config.data.get(CONF_TRACK_DEVICE, False):
-        address = await try_track_ip_address(
-            hass, config.data.get(CONF_MAC), config.data.get(CONF_HOST)
-        )
+    if (
+        config.data.get(CONF_TRACK_DEVICE, False)
+        and config.data.get(CONF_MAC, None) is not None
+    ):
+        if config.data.get(CONF_MAC, None) is not None:
+            address = await try_track_ip_address(
+                hass, config.data.get(CONF_MAC), config.data.get(CONF_HOST)
+            )
+        else:
+            logging.warning(
+                "Tracking mac address enabled, but no MAC address found on config entry"
+            )
+            address = config.data.get(CONF_HOST)
     else:
         address = config.data.get(CONF_HOST)
 
