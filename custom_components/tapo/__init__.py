@@ -56,7 +56,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version != 5:
-        migrate_entry_to_v5(hass, config_entry)
+        await migrate_entry_to_v5(hass, config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
