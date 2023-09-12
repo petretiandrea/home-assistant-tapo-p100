@@ -1,0 +1,52 @@
+{
+    "config": {
+      "abort": {
+        "already_configured": "Gerät ist bereits konfiguriert"
+      },
+      "error": {
+        "cannot_connect": "Verbindung fehlgeschlagen",
+        "invalid_auth": "Ungültige Anmeldeinformationen",
+        "unknown": "Unerwarteter Fehler"
+      },
+      "step": {
+        "user": {
+          "title": "Neues Gerät hinzufügen",
+          "description": "Geben Sie die IP-Adresse Ihres Tapo-Geräts und die Tapo-App-Anmeldeinformationen ein.",
+          "data": {
+            "host": "IP-Adresse oder Hostname des Tapo-Geräts",
+            "password": "Tapo App Passwort",
+            "username": "Tapo App Benutzername (E-Mail)",
+            "track_device_mac": "Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
+            "advanced_settings": "Erweiterte Einstellungen"
+          }
+        },
+        "advanced_config": {
+          "title": "Erweiterte Konfiguration",
+          "description": "Durch Anpassen der Abfragehäufigkeit können unerwartete Verhaltensweisen auftreten. Das Gerät kann sogar vorübergehend nicht reagieren.",
+          "data": {
+            "scan_interval": "Aktualisierungsfrequenz in Sekunden"
+          }
+        }
+      }
+    },
+    "options": {
+      "error": {
+        "invalid_path": "Der angegebene Pfad ist ungültig. Sollte im Format `Benutzer/Repo-Name` sein und muss ein gültiges GitHub-Repository sein."
+      },
+      "step": {
+        "init": {
+          "title": "Tapo-Gerät konfigurieren",
+          "description": "Durch Anpassen der Abfragehäufigkeit können unerwartete Verhaltensweisen auftreten. Das Gerät kann sogar vorübergehend nicht reagieren.",
+          "data": {
+            "host": "IP-Adresse oder Hostname des Tapo-Geräts",
+            "password": "Tapo App Passwort",
+            "username": "Tapo App Benutzername (E-Mail)",
+            "track_device_mac": "Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
+            "scan_interval": "Aktualisierungsfrequenz in Sekunden"
+          }
+        }
+      }
+    },
+    "title": "TP-Link Tapo"
+  }
+  
