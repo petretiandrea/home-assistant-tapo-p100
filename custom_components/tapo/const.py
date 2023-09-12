@@ -5,11 +5,21 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.8.1"
+VERSION = "2.8.2"
 
 SUPPORTED_HUB_DEVICE_MODEL = "h100"
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
-SUPPORTED_DEVICE_AS_SWITCH = ["p100", "p105", "p110", "p115", "p125", "p125m", "s500", "p110m", "tp15"]
+SUPPORTED_DEVICE_AS_SWITCH = [
+    "p100",
+    "p105",
+    "p110",
+    "p115",
+    "p125",
+    "p125m",
+    "s500",
+    "p110m",
+    "tp15",
+]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115", "p110m"]
 SUPPORTED_DEVICE_AS_LIGHT = {
     "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
