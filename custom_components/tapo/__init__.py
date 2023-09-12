@@ -8,7 +8,7 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.helpers import get_short_model
 from custom_components.tapo.hub.tapo_hub import TapoHub
-from custom_components.tapo.migrations import migrate_entry_to_v5
+from custom_components.tapo.migrations import migrate_entry_to_v6
 from custom_components.tapo.setup_helpers import setup_tapo_api
 from custom_components.tapo.tapo_device import TapoDevice
 from homeassistant.config_entries import ConfigEntry
@@ -55,8 +55,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version != 5:
-        await migrate_entry_to_v5(hass, config_entry)
+    if config_entry.version != 6:
+        await migrate_entry_to_v6(hass, config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

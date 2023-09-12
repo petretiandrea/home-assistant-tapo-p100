@@ -124,7 +124,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 config_entry_data = user_input | {
                     CONF_MAC: device_data.mac,
                     CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                    CONF_TRACK_DEVICE: user_input.pop(CONF_TRACK_DEVICE),
+                    CONF_TRACK_DEVICE: user_input.pop(CONF_TRACK_DEVICE, False),
                 }
 
                 if get_short_model(device_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
