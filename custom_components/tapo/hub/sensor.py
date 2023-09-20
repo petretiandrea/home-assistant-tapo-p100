@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
 from plugp100.responses.hub_childs.t31x_device_state import TemperatureUnit
@@ -114,7 +115,7 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
 class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
-        self._attr_name = "Report Intervals"
+        self._attr_name = "Report Interval"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
@@ -146,4 +147,5 @@ SENSOR_MAPPING = {
     T31Device: [HumitidySensor, TemperatureSensor, ReportIntervalDiagnostic],
     T110SmartDoor: [ReportIntervalDiagnostic],
     S200ButtonDevice: [ReportIntervalDiagnostic],
+    T100MotionSensor: [ReportIntervalDiagnostic],
 }

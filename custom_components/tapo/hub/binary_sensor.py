@@ -1,24 +1,19 @@
-import datetime
-from datetime import date
 from typing import cast
 from typing import Optional
-from typing import Union
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
 from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-)
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
 
@@ -34,7 +29,7 @@ async def async_setup_entry(
         )
 
 
-class SmartDoorSensor(BaseTapoHubChildEntity, SensorEntity):
+class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
 
@@ -44,18 +39,10 @@ class SmartDoorSensor(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def device_class(self) -> Optional[str]:
-        return "door"
+        return BinarySensorDeviceClass.DOOR
 
     @property
-    def state_class(self) -> Optional[str]:
-        return None
-
-    @property
-    def native_unit_of_measurement(self) -> Optional[str]:
-        return None
-
-    @property
-    def native_value(self) -> Union[StateType, date, datetime]:
+    def is_on(self) -> bool:
         return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
@@ -63,7 +50,28 @@ class SmartDoorSensor(BaseTapoHubChildEntity, SensorEntity):
         )
 
 
-class LowBatterySensor(BaseTapoHubChildEntity, SensorEntity):
+class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
+    def __init__(self, coordinator: TapoCoordinator):
+        super().__init__(coordinator)
+
+    @property
+    def unique_id(self):
+        return super().unique_id + "_" + self._attr_name.replace(" ", "_")
+
+    @property
+    def device_class(self) -> Optional[str]:
+        return BinarySensorDeviceClass.MOTION
+
+    @property
+    def is_on(self) -> bool:
+        return (
+            cast(TapoCoordinator, self.coordinator)
+            .get_state_of(HubChildCommonState)
+            .detected
+        )
+
+
+class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Battery Low"
@@ -75,18 +83,10 @@ class LowBatterySensor(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def device_class(self) -> Optional[str]:
-        return SensorDeviceClass.BATTERY
+        return BinarySensorDeviceClass.BATTERY
 
     @property
-    def state_class(self) -> Optional[str]:
-        return None
-
-    @property
-    def native_unit_of_measurement(self) -> Optional[str]:
-        return None
-
-    @property
-    def native_value(self) -> Union[StateType, date, datetime]:
+    def is_on(self) -> bool:
         return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
@@ -98,4 +98,5 @@ SENSOR_MAPPING = {
     T31Device: [LowBatterySensor],
     T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
     S200ButtonDevice: [LowBatterySensor],
+    T100MotionSensor: [LowBatterySensor],
 }
