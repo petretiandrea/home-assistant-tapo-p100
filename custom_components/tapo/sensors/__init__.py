@@ -1,25 +1,21 @@
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_MINUTES,
-)
-from homeassistant.helpers.typing import StateType
-from plugp100.api.plug_device import EnergyInfo, PowerInfo
-from plugp100.responses.device_state import DeviceInfo
-
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.sensors.sensor_config import SensorConfig
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
+from homeassistant.const import DEVICE_CLASS_ENERGY
+from homeassistant.const import DEVICE_CLASS_POWER
+from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import POWER_WATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import TIME_MINUTES
+from homeassistant.helpers.typing import StateType
+from plugp100.api.plug_device import EnergyInfo
+from plugp100.api.plug_device import PowerInfo
+from plugp100.responses.device_state import DeviceInfo
 
 
 class TodayEnergySensorSource(TapoSensorSource):
