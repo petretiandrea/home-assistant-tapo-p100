@@ -35,13 +35,13 @@ template: |
 version-resolver:
   major:
     labels:
-      - 'breaking'
+      - "breaking"
   minor:
     labels:
-      - 'enhancement'
+      - "enhancement"
   patch:
     labels:
-      - 'bug'
-      - 'refactoring'
-      - 'dependencies'
+      - "bug"
+      - "refactoring"
+      - "dependencies"
   default: patch

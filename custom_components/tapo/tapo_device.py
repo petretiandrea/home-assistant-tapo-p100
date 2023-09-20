@@ -32,6 +32,7 @@ class TapoDevice:
             config_entry_update_unsub=self.entry.add_update_listener(
                 _on_options_update_listener
             ),
+            child_coordinators=[],
         )
         await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         return True

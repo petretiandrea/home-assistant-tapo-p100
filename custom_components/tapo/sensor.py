@@ -11,6 +11,10 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import PlugTapoCoordinator
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.hub.sensor import (
+    async_setup_entry as async_setup_hub_sensors,
+)
+from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from custom_components.tapo.sensors import CurrentEnergySensorSource
 from custom_components.tapo.sensors import MonthEnergySensorSource
 from custom_components.tapo.sensors import MonthRuntimeSensorSource
@@ -53,6 +57,8 @@ async def async_setup_entry(
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     _setup_from_coordinator(hass, data.coordinator, async_add_entities)
+    if isinstance(data.coordinator, TapoHubCoordinator):
+        await async_setup_hub_sensors(hass, entry, async_add_entities)
 
 
 def _setup_from_coordinator(

@@ -12,7 +12,7 @@ debugpy:
   wait: false
 
 scene:
-  - id: '1677657730214'
+  - id: "1677657730214"
     name: L530
     entities:
       light.lampadina_smart:
@@ -21,25 +21,25 @@ scene:
         min_mireds: 153
         max_mireds: 400
         supported_color_modes:
-        - brightness
-        - color_temp
-        - hs
-        - onoff
+          - brightness
+          - color_temp
+          - hs
+          - onoff
         color_mode: hs
         brightness: 255
         hs_color:
-        - 120
-        - 85
+          - 120
+          - 85
         rgb_color:
-        - 38
-        - 255
-        - 38
+          - 38
+          - 255
+          - 38
         xy_color:
-        - 0.182
-        - 0.721
+          - 0.182
+          - 0.721
         friendly_name: Luce Camera Andrea
         supported_features: 0
-        state: 'on'
+        state: "on"
     metadata:
       light.lampadina_smart:
         entity_only: true

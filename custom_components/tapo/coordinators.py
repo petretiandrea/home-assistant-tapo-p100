@@ -6,6 +6,7 @@ from datetime import timedelta
 from functools import cached_property
 from typing import cast
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Type
 from typing import TypeVar
@@ -57,6 +58,7 @@ DEBOUNCER_COOLDOWN = 2
 class HassTapoDeviceData:
     coordinator: "TapoCoordinator"
     config_entry_update_unsub: CALLBACK_TYPE
+    child_coordinators: List["TapoCoordinator"]
 
 
 async def create_coordinator(

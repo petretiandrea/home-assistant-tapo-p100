@@ -1,8 +1,7 @@
+from custom_components.tapo.hub.siren import async_setup_entry as async_setup_hub_siren
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from custom_components.tapo.hub.siren import async_setup_entry as async_setup_hub_siren
 
 
 async def async_setup_entry(

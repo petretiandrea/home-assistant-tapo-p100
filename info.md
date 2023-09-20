@@ -1,5 +1,7 @@
 {% if prerelease %}
+
 ### NB!: This is a Beta version!
+
 {% endif %}
 
 # Home Assistant Tapo Integration
@@ -23,13 +25,14 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 ## Features
 
 - [x] pure async home assistant's method
-- [x] support for tapo switch (`P100`, `P110`, `P105`) 
+- [x] support for tapo switch (`P100`, `P110`, `P105`)
 - [x] support for tapo light bulb with or without color (`L530`, `L510`)
-- [x] support for P110 energy monitoring 
+- [x] support for P110 energy monitoring
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
 
 ## Installation
+
 Recomended way:
 
 1. Install from HACS, add this repository as custom repository
@@ -59,9 +62,11 @@ This video show installation steps:
 <!---->
 
 ## Configuration by configuration.yaml
+
 Domain can be `switch`, `light` or `sensor`.
 
 An example with switch:
+
 ```yaml
 switch:
   platform: tapo
