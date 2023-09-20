@@ -48,7 +48,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_TRACK_DEVICE,
             description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
-            default=True,
+            default=False,
         ): bool,
         vol.Optional(CONF_ADVANCED_SETTINGS, description="Advanced settings"): bool,
     }
