@@ -1,40 +1,15 @@
-name: Release
-
+name: Draft a release note
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
-  workflow_dispatch:
-
   push:
     branches:
       - main
-    paths-ignore:
-      - "CODEOWNERS"
-      - "**.md"
-      - ".**"
-
+      - master
 jobs:
-  release:
-    name: Release
+  draft_release:
+    name: Release Drafter
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab #v3
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-      - name: Install dependencies
-        run: npm install @semantic-release/github @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git semantic-release-github-pullrequest @semantic-release/exec -D
-      - name: Launch semantic
-        run: npx semantic-release
+      - name: Run release-drafter
+        uses: release-drafter/release-drafter@v5.24.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN_RELEASE: ${{ secrets.GH_TOKEN_RELEASE }}
-          COMMIT_BRANCH: ${{ github.ref }}
