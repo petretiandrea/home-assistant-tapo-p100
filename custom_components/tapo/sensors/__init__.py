@@ -80,20 +80,6 @@ class CurrentEnergySensorSource(TapoSensorSource):
         return None
 
 
-class OverheatSensorSource(TapoSensorSource):
-    def get_config(self) -> SensorConfig:
-        return SensorConfig(
-            name="overheat",
-            device_class="heat",
-            state_class=None,
-            unit_measure=None,
-            is_diagnostic=True,
-        )
-
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
-        return coordinator.get_state_of(DeviceInfo).overheated
-
-
 class SignalSensorSource(TapoSensorSource):
     def get_config(self) -> SensorConfig:
         return SensorConfig(
