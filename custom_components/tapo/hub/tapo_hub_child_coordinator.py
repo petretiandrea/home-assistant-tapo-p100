@@ -10,14 +10,19 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.api.hub.s200b_device import S200BDeviceState
 from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
+from plugp100.api.hub.t100_device import T100MotionSensorState
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t110_device import T110SmartDoorState
 from plugp100.api.hub.t31x_device import T31Device
 from plugp100.api.hub.t31x_device import T31DeviceState
 from plugp100.api.hub.t31x_device import TemperatureHumidityRecordsRaw
 
-HubChildDevice = T31Device | T100MotionSensor | T110SmartDoor | S200ButtonDevice
-HubChildCommonState = T31DeviceState | T110SmartDoorState | S200BDeviceState
+HubChildDevice = (
+    T31Device | T100MotionSensor | T110SmartDoor | S200ButtonDevice | T100MotionSensor
+)
+HubChildCommonState = (
+    T31DeviceState | T110SmartDoorState | S200BDeviceState | T100MotionSensorState
+)
 
 
 class TapoHubChildCoordinator(TapoCoordinator):
@@ -42,6 +47,9 @@ class TapoHubChildCoordinator(TapoCoordinator):
             self.update_state_of(HubChildCommonState, base_state)
         elif isinstance(self.device, S200ButtonDevice):
             base_state = (await self.device.get_device_info()).get_or_raise()
+            self.update_state_of(HubChildCommonState, base_state)
+        elif isinstance(self.device, T100MotionSensor):
+            base_state = (await self.device.get_device_state()).get_or_raise()
             self.update_state_of(HubChildCommonState, base_state)
 
 
