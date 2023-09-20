@@ -16,7 +16,7 @@
           "host": "IP-Adresse oder Hostname des Tapo-Geräts",
           "password": "Tapo App Passwort",
           "username": "Tapo App Benutzername (E-Mail)",
-          "track_device_mac": "Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
+          "track_device_mac": "Experimentell: Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
           "advanced_settings": "Erweiterte Einstellungen"
         }
       },
@@ -41,7 +41,7 @@
           "host": "IP-Adresse oder Hostname des Tapo-Geräts",
           "password": "Tapo App Passwort",
           "username": "Tapo App Benutzername (E-Mail)",
-          "track_device_mac": "Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
+          "track_device_mac": "Experimentell: Versuchen Sie, die dynamische IP-Adresse des Geräts mithilfe der MAC-Adresse zu verfolgen. (Ihr HA muss Zugriff auf dasselbe Netzwerk wie das Geräts haben)",
           "scan_interval": "Aktualisierungsfrequenz in Sekunden"
         }
       }
