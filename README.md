@@ -29,6 +29,11 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ### Supported devices
 
 - [x] pure async home assistant's method
+- [x] support for tapo `H100` hub (`H200` is coming)
+- [x] support for `T31x` temperature and humidity sensor hub's device
+- [x] support for `T100` motion sensor hub's device
+- [x] support for `T110` smart door hub's device
+- [x] partial support for `S200B` button hub's device (actually no events are reported to HA)
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`, `P110M`)
 - [x] support for tapo light bulb with or without color (`L530`, `L510`, `L520`, `L630`, `L610`)
