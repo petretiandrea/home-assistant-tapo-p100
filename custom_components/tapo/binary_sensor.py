@@ -29,6 +29,7 @@ class OverheatSensor(BaseTapoEntity[TapoCoordinator], BinarySensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Overheat"
+        self._attr_icon = "mdi:fire-alert"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property

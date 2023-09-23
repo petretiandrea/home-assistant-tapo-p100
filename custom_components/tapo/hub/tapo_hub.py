@@ -21,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
 from plugp100.responses.device_state import DeviceInfo
@@ -126,6 +127,8 @@ def _create_child_device(child_state: dict[str, Any], hub: HubDevice):
         return T110SmartDoor(hub, device_id)
     elif "s200" in model:
         return S200ButtonDevice(hub, device_id)
+    elif "t100" in model:
+        return T100MotionSensor(hub, device_id)
     return None
 
 

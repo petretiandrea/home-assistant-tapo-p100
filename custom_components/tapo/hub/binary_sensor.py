@@ -34,10 +34,6 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
     @property
-    def unique_id(self):
-        return super().unique_id + "_" + self._attr_name.replace(" ", "_")
-
-    @property
     def device_class(self) -> Optional[str]:
         return BinarySensorDeviceClass.DOOR
 
@@ -53,10 +49,6 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
-
-    @property
-    def unique_id(self):
-        return super().unique_id + "_" + self._attr_name.replace(" ", "_")
 
     @property
     def device_class(self) -> Optional[str]:
@@ -98,5 +90,5 @@ SENSOR_MAPPING = {
     T31Device: [LowBatterySensor],
     T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
     S200ButtonDevice: [LowBatterySensor],
-    T100MotionSensor: [LowBatterySensor],
+    T100MotionSensor: [MotionSensor, LowBatterySensor],
 }
