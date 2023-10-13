@@ -1,5 +1,5 @@
 homeassistant==2023.8.3
-plugp100==3.10.3
+plugp100==3.11.0
 pre-commit==3.3.3
 reorder-python-imports==3.10.0
 flake8==6.1.0
