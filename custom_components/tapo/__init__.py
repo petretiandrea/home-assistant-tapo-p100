@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         state = (
             (await api.get_device_info()).map(lambda x: DeviceInfo(**x)).get_or_raise()
         )
-        if get_short_model(state.model) == SUPPORTED_HUB_DEVICE_MODEL:
+        if get_short_model(state.model) in SUPPORTED_HUB_DEVICE_MODEL:
             hub = TapoHub(entry, HubDevice(api))
             return await hub.initialize_hub(hass)
         else:
