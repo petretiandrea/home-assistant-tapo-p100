@@ -82,7 +82,7 @@ class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
         return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
-            .at_low_battery
+            .base_info.at_low_battery
         )
 
 

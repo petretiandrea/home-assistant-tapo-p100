@@ -66,11 +66,11 @@ class BaseTapoHubChildEntity(CoordinatorEntity[C]):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        return DeviceInfo(identifiers={(DOMAIN, self._base_data.device_id)})
+        return DeviceInfo(identifiers={(DOMAIN, self._base_data.base_info.device_id)})
 
     @property
     def unique_id(self):
-        return self._base_data.device_id
+        return self._base_data.base_info.device_id
 
     @callback
     def _handle_coordinator_update(self) -> None:
