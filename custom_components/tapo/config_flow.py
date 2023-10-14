@@ -127,7 +127,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TRACK_DEVICE: user_input.pop(CONF_TRACK_DEVICE, False),
                 }
 
-                if get_short_model(device_data.model) == SUPPORTED_HUB_DEVICE_MODEL:
+                if get_short_model(device_data.model) in SUPPORTED_HUB_DEVICE_MODEL:
                     return self.async_create_entry(
                         title=f"Tapo Hub {device_data.friendly_name}",
                         data={"is_hub": True, **config_entry_data},
