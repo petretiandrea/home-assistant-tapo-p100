@@ -13,6 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
@@ -82,7 +83,7 @@ class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
         return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
-            .at_low_battery
+            .base_info.at_low_battery
         )
 
 
@@ -91,4 +92,5 @@ SENSOR_MAPPING = {
     T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
     S200ButtonDevice: [LowBatterySensor],
     T100MotionSensor: [MotionSensor, LowBatterySensor],
+    SwitchChildDevice: [LowBatterySensor],
 }

@@ -5,9 +5,10 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.9.0"
+VERSION = "2.10.0"
 
-SUPPORTED_HUB_DEVICE_MODEL = "h100"
+SUPPORTED_HUB_DEVICE_MODEL = ["h100", "h200"]
+SUPPORTED_HUB_ALARM = "h100"
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
 SUPPORTED_DEVICE_AS_SWITCH = [
     "p100",
@@ -33,6 +34,7 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "tl33": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
     "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "s500": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "ts15": [ColorMode.ONOFF],
     "l535": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
 }
@@ -49,7 +51,12 @@ ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 # list the platforms that you want to support.
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LIGHT]
 
-HUB_PLATFORMS = [Platform.SIREN, Platform.BINARY_SENSOR, Platform.SENSOR]
+HUB_PLATFORMS = [
+    Platform.SIREN,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONF_HOST = "host"
 CONF_MAC = "mac"
