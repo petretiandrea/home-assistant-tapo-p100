@@ -9,6 +9,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.api.hub.s200b_device import S200BDeviceState
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDeviceState
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t100_device import T100MotionSensorState
 from plugp100.api.hub.t110_device import T110SmartDoor
@@ -18,10 +20,19 @@ from plugp100.api.hub.t31x_device import T31DeviceState
 from plugp100.api.hub.t31x_device import TemperatureHumidityRecordsRaw
 
 HubChildDevice = (
-    T31Device | T100MotionSensor | T110SmartDoor | S200ButtonDevice | T100MotionSensor
+    T31Device
+    | T100MotionSensor
+    | T110SmartDoor
+    | S200ButtonDevice
+    | T100MotionSensor
+    | SwitchChildDevice
 )
 HubChildCommonState = (
-    T31DeviceState | T110SmartDoorState | S200BDeviceState | T100MotionSensorState
+    T31DeviceState
+    | T110SmartDoorState
+    | S200BDeviceState
+    | T100MotionSensorState
+    | SwitchChildDeviceState
 )
 
 
@@ -51,6 +62,9 @@ class TapoHubChildCoordinator(TapoCoordinator):
         elif isinstance(self.device, T100MotionSensor):
             base_state = (await self.device.get_device_state()).get_or_raise()
             self.update_state_of(HubChildCommonState, base_state)
+        elif isinstance(self.device, SwitchChildDevice):
+            base_state = (await self.device.get_device_info()).get_or_raise()
+            self.update_state_of(HubChildCommonState, base_state)
 
 
 C = TypeVar("C", bound=TapoCoordinator)
@@ -66,11 +80,11 @@ class BaseTapoHubChildEntity(CoordinatorEntity[C]):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        return DeviceInfo(identifiers={(DOMAIN, self._base_data.device_id)})
+        return DeviceInfo(identifiers={(DOMAIN, self._base_data.base_info.device_id)})
 
     @property
     def unique_id(self):
-        return self._base_data.device_id
+        return self._base_data.base_info.device_id
 
     @callback
     def _handle_coordinator_update(self) -> None:

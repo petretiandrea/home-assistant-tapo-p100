@@ -1,7 +1,5 @@
-import base64
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 from typing import List
 
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
@@ -21,10 +19,12 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
 from plugp100.responses.device_state import DeviceInfo
+from plugp100.responses.hub_childs.hub_child_base_info import HubChildBaseInfo
 
 
 @dataclass
@@ -53,7 +53,7 @@ class TapoHub:
 
         # TODO: TIPS: attach to hub coordinator to handle device removal
         device_list = (
-            (await self.hub.get_children()).get_or_else([]).get_children(lambda x: x)
+            (await self.hub.get_children()).get_or_else([]).get_children_base_info()
         )
         await self.setup_child_devices(hass, registry, device_list)
         child_coordinators = await self.setup_child_coordinators(
@@ -73,7 +73,7 @@ class TapoHub:
         self,
         hass: HomeAssistant,
         registry: DeviceRegistry,
-        device_list: list[dict[str, Any]],
+        device_list: list[HubChildBaseInfo],
     ):
         knwon_children = [
             self.add_child_device(registry, device_state)
@@ -89,7 +89,7 @@ class TapoHub:
     async def setup_child_coordinators(
         self,
         hass: HomeAssistant,
-        device_list: list[dict[str, Any]],
+        device_list: list[HubChildBaseInfo],
         polling_rate: timedelta,
     ) -> List[TapoHubChildCoordinator]:
         child_coordinators = []
@@ -105,22 +105,22 @@ class TapoHub:
         return child_coordinators
 
     def add_child_device(
-        self, registry: DeviceRegistry, device_state: dict[str, Any]
+        self, registry: DeviceRegistry, device_state: HubChildBaseInfo
     ) -> DeviceEntry:
         return registry.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            identifiers={(DOMAIN, device_state["device_id"])},
-            model=device_state["model"],
-            name=base64.b64decode(device_state["nickname"]).decode("UTF-8"),
+            identifiers={(DOMAIN, device_state.device_id)},
+            model=device_state.model,
+            name=device_state.nickname,
             manufacturer="TP-Link",
-            sw_version=device_state["fw_ver"],
-            hw_version=device_state["hw_ver"],
+            sw_version=device_state.firmware_version,
+            hw_version=device_state.hardware_version,
         )
 
 
-def _create_child_device(child_state: dict[str, Any], hub: HubDevice):
-    model = child_state["model"].lower()
-    device_id = child_state["device_id"]
+def _create_child_device(child_state: HubChildBaseInfo, hub: HubDevice):
+    model = child_state.model.lower()
+    device_id = child_state.device_id
     if "t31" in model:
         return T31Device(hub, device_id)
     elif "t110" in model:
@@ -129,6 +129,8 @@ def _create_child_device(child_state: dict[str, Any], hub: HubDevice):
         return S200ButtonDevice(hub, device_id)
     elif "t100" in model:
         return T100MotionSensor(hub, device_id)
+    elif any(supported in model for supported in ["s200", "s210"]):
+        return SwitchChildDevice(hub, device_id)
     return None
 
 
