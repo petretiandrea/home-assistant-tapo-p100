@@ -94,7 +94,8 @@ async def connect_tapo_client(
     else:
         _LOGGGER.debug("Creating new API to create a coordinator for %s", unique_id)
         session = async_get_clientsession(hass)
-        api = TapoClient(credentials, ip_address, http_session=session)
+        host, port = get_host_port(ip_address)
+        api = TapoClient(credentials, ip_address=host, port=port, http_session=session)
         await api.initialize()
     return api
 
@@ -122,3 +123,10 @@ async def try_track_ip_address(
         _LOGGGER.warning("No permission to scan network")
 
     return last_known_ip
+
+
+def get_host_port(host_user_input: str) -> (str, int):
+    if ":" in host_user_input:
+        parts = host_user_input.split(":", 1)
+        return (parts[0], int(parts[1]))
+    return (host_user_input, 80)

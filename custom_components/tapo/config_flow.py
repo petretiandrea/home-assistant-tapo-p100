@@ -21,6 +21,7 @@ from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
 from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.setup_helpers import get_host_port
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -207,7 +208,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             credential = AuthCredential(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
-            client = TapoClient(credential, user_input[CONF_HOST], http_session=session)
+            host, port = get_host_port(user_input[CONF_HOST])
+            client = TapoClient(
+                credential, ip_address=host, port=port, http_session=session
+            )
             await client.initialize()
             return client
         except TapoException as error:
