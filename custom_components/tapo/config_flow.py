@@ -207,7 +207,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             credential = AuthCredential(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
-            return await TapoClient.connect(credential, user_input[CONF_HOST], session)
+            client = TapoClient(credential, user_input[CONF_HOST], http_session=session)
+            await client.initialize()
+            return client
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:
