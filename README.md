@@ -29,7 +29,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ### Supported devices
 
 - [x] pure async home assistant's method
-- [x] support for tapo `H100` hub (`H200` is coming)
+- [x] support for tapo `H100` hub and siren, `H200`
 - [x] support for `T31x` temperature and humidity sensor hub's device
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
