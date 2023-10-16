@@ -40,7 +40,7 @@ from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.tri import Failure
 from plugp100.common.functional.tri import Try
 from plugp100.responses.child_device_list import PowerStripChild
-from plugp100.responses.device_state import DeviceInfo
+from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 from plugp100.responses.device_state import LedStripDeviceState
 from plugp100.responses.device_state import LightDeviceState
 from plugp100.responses.device_state import PlugDeviceState
@@ -64,7 +64,7 @@ class HassTapoDeviceData:
 async def create_coordinator(
     hass: HomeAssistant, client: TapoClient, host: str, polling_interval: timedelta
 ) -> Try["TapoCoordinator"]:
-    device_info = (await client.get_device_info()).map(lambda x: DeviceInfo(**x))
+    device_info = (await client.get_device_info()).map(lambda x: TapoDeviceInfo(**x))
     if device_info.is_success():
         model = get_short_model(device_info.get().model)
         _LOGGER.info("Detected model of %s: %s", str(host), str(model))
@@ -130,8 +130,12 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
         return self._states
 
     @property
-    def device_info(self) -> DeviceInfo:
-        return self.get_state_of(DeviceInfo)
+    def model(self) -> str:
+        return self.get_state_of(TapoDeviceInfo).model.lower()
+
+    @property
+    def device_info(self) -> TapoDeviceInfo:
+        return self.get_state_of(TapoDeviceInfo)
 
     @abstractmethod
     async def _update_state(self) -> None:
@@ -168,7 +172,7 @@ class PlugTapoCoordinator(TapoCoordinator):
     @cached_property
     def has_power_monitor(self) -> bool:
         return (
-            get_short_model(self.get_state_of(DeviceInfo).model)
+            get_short_model(self.get_state_of(TapoDeviceInfo).model)
             in SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR
         )
 
@@ -176,7 +180,7 @@ class PlugTapoCoordinator(TapoCoordinator):
         plug = cast(PlugDevice, self.device)
         plug_state = (await plug.get_state()).get_or_raise()
         self.update_state_of(PlugDeviceState, plug_state)
-        self.update_state_of(DeviceInfo, plug_state.info)
+        self.update_state_of(TapoDeviceInfo, plug_state.info)
         if self.has_power_monitor:
             power_info = value_optional(await plug.get_current_power())
             energy_usage = value_optional(await plug.get_energy_usage())
@@ -195,7 +199,7 @@ class LightTapoCoordinator(TapoCoordinator):
 
     async def _update_state(self):
         state = (await self.device.get_state()).get_or_raise()
-        self.update_state_of(DeviceInfo, state.info)
+        self.update_state_of(TapoDeviceInfo, state.info)
         if isinstance(self.device, LightDevice):
             self.update_state_of(LightDeviceState, state)
         elif isinstance(self.device, LedStripDevice):
@@ -222,7 +226,7 @@ class PowerStripCoordinator(TapoCoordinator):
     async def _update_state(self):
         strip_state = (await self.device.get_state()).get_or_raise()
         children_state = (await self.device.get_children()).get_or_raise()
-        self.update_state_of(DeviceInfo, strip_state.info)
+        self.update_state_of(TapoDeviceInfo, strip_state.info)
         self.update_state_of(PowerStripChildrenState, children_state)
 
     def get_children(self) -> list[PowerStripChild]:

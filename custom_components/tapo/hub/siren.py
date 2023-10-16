@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.requests.set_device_info.play_alarm_params import PlayAlarmParams
-from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 from plugp100.responses.device_state import HubDeviceState
 
 
@@ -26,7 +25,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    if data.coordinator.get_state_of(TapoDeviceInfo).model == SUPPORTED_HUB_ALARM:
+    if data.coordinator.model == SUPPORTED_HUB_ALARM:
         available_tones = (
             (await data.coordinator.device.get_supported_alarm_tones())
             .get_or_raise()
