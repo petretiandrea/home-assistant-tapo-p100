@@ -129,7 +129,7 @@ def _create_child_device(child_state: HubChildBaseInfo, hub: HubDevice):
         return S200ButtonDevice(hub, device_id)
     elif "t100" in model:
         return T100MotionSensor(hub, device_id)
-    elif any(supported in model for supported in ["s200", "s210"]):
+    elif any(supported in model for supported in ["s220", "s210"]):
         return SwitchChildDevice(hub, device_id)
     return None
 
