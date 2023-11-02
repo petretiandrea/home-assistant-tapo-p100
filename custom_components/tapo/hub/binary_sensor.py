@@ -17,6 +17,7 @@ from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 
 
 async def async_setup_entry(
@@ -44,6 +45,26 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .is_open
+        )
+
+
+class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: TapoCoordinator):
+        super().__init__(coordinator)
+
+    @property
+    def device_class(self) -> Optional[str]:
+        return BinarySensorDeviceClass.MOISTURE
+
+    @property
+    def is_on(self) -> bool:
+        return (
+            cast(TapoCoordinator, self.coordinator)
+            .get_state_of(HubChildCommonState)
+            .water_leak_status
+            != "normal"
         )
 
 
@@ -93,4 +114,5 @@ SENSOR_MAPPING = {
     S200ButtonDevice: [LowBatterySensor],
     T100MotionSensor: [MotionSensor, LowBatterySensor],
     SwitchChildDevice: [LowBatterySensor],
+    WaterLeakDevice: [WaterLeakSensor, LowBatterySensor],
 }

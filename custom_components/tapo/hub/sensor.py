@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date
+from datetime import datetime
 from typing import cast
 from typing import Optional
 from typing import Union
@@ -23,6 +24,7 @@ from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 from plugp100.responses.hub_childs.t31x_device_state import TemperatureUnit
 
 
@@ -147,4 +149,5 @@ SENSOR_MAPPING = {
     T110SmartDoor: [ReportIntervalDiagnostic],
     S200ButtonDevice: [ReportIntervalDiagnostic],
     T100MotionSensor: [ReportIntervalDiagnostic],
+    WaterLeakDevice: [ReportIntervalDiagnostic],
 }
