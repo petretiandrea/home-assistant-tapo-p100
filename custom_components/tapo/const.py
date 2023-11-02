@@ -35,7 +35,7 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
     "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "s500": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "s505": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "s505": [ColorMode.ONOFF],
     "ts15": [ColorMode.ONOFF],
     "l535": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
 }
