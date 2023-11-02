@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import List
@@ -18,6 +19,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.api.hub.hub_device import HubDevice
+from plugp100.api.hub.hub_device_tracker import DeviceAdded
+from plugp100.api.hub.hub_device_tracker import HubDeviceEvent
 from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
@@ -25,6 +28,8 @@ from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
 from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.hub_childs.hub_child_base_info import HubChildBaseInfo
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,7 +56,6 @@ class TapoHub:
             hw_version=device_info.hardware_version,
         )
 
-        # TODO: TIPS: attach to hub coordinator to handle device removal
         device_list = (
             (await self.hub.get_children()).get_or_else([]).get_children_base_info()
         )
@@ -66,6 +70,21 @@ class TapoHub:
             ),
             child_coordinators=child_coordinators,
         )
+
+        # TODO: refactory with add_device and remove_device methods
+        initial_device_ids = list(map(lambda x: x.device_id, device_list))
+
+        async def _handle_child_device_event(event: HubDeviceEvent):
+            _LOGGER.info("Detected child association change %s", str(event))
+            if event.device_id not in initial_device_ids:
+                await hass.config_entries.async_reload(self.entry.entry_id)
+            elif event is DeviceAdded:
+                initial_device_ids.remove(event.device_id)
+
+        self.entry.async_on_unload(
+            self.hub.subscribe_device_association(_handle_child_device_event)
+        )
+
         await hass.config_entries.async_forward_entry_setups(self.entry, HUB_PLATFORMS)
         return True
 
@@ -76,14 +95,14 @@ class TapoHub:
         device_list: list[HubChildBaseInfo],
     ):
         knwon_children = [
-            self.add_child_device(registry, device_state)
+            self.add_child_device(registry, device_state).id
             for device_state in device_list
         ]
 
         # delete device which is no longer available to hub
         for device in dr.async_entries_for_config_entry(registry, self.entry.entry_id):
             # avoid delete hub device which has a connection
-            if device not in knwon_children and device.connections is []:
+            if device.id not in knwon_children and len(device.connections) == 0:
                 registry.async_remove_device(device.id)
 
     async def setup_child_coordinators(
