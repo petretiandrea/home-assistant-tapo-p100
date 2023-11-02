@@ -41,10 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             (await api.get_device_info()).map(lambda x: DeviceInfo(**x)).get_or_raise()
         )
         if get_short_model(state.model) in SUPPORTED_HUB_DEVICE_MODEL:
-            scan_interval = entry.data.get(CONF_SCAN_INTERVAL)
+            scan_interval_millis = entry.data.get(CONF_SCAN_INTERVAL) * 1000
             hub = TapoHub(
                 entry,
-                HubDevice(api, subscription_polling_interval_millis=scan_interval),
+                HubDevice(
+                    api, subscription_polling_interval_millis=scan_interval_millis
+                ),
             )
             return await hub.initialize_hub(hass)
         else:
