@@ -12,7 +12,6 @@ from custom_components.tapo.migrations import migrate_entry_to_v6
 from custom_components.tapo.setup_helpers import setup_tapo_api
 from custom_components.tapo.tapo_device import TapoDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from plugp100.api.hub.hub_device import HubDevice
@@ -41,12 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             (await api.get_device_info()).map(lambda x: DeviceInfo(**x)).get_or_raise()
         )
         if get_short_model(state.model) in SUPPORTED_HUB_DEVICE_MODEL:
-            scan_interval_millis = entry.data.get(CONF_SCAN_INTERVAL) * 1000
             hub = TapoHub(
                 entry,
-                HubDevice(
-                    api, subscription_polling_interval_millis=scan_interval_millis
-                ),
+                HubDevice(api, subscription_polling_interval_millis=30_000),
             )
             return await hub.initialize_hub(hass)
         else:
