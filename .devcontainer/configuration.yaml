@@ -12,34 +12,201 @@ debugpy:
   wait: false
 
 scene:
-  - id: "1677657730214"
-    name: L530
+  - id: "1682456037783"
+    name: 3 Office pinks
     entities:
-      light.lampadina_smart:
+      light.striscia_luminosa_smart:
         min_color_temp_kelvin: 2500
-        max_color_temp_kelvin: 6535
+        max_color_temp_kelvin: 6500
         min_mireds: 153
         max_mireds: 400
+        effect_list:
+          - bubblingcauldron
+          - aurora
+          - candycane
+          - christmas
+          - flicker
+          - christmaslight
+          - hanukkah
+          - hauntedmansion
+          - icicle
+          - lightning
+          - ocean
+          - rainbow
+          - raindrop
+          - spring
+          - sunrise
+          - sunset
+          - valentines
         supported_color_modes:
           - brightness
           - color_temp
           - hs
           - onoff
+        friendly_name: Office kallax
+        supported_features: 4
         color_mode: hs
         brightness: 255
         hs_color:
-          - 120
-          - 85
+          - 295
+          - 99
         rgb_color:
-          - 38
+          - 233
+          - 2
           - 255
-          - 38
         xy_color:
-          - 0.182
-          - 0.721
-        friendly_name: Luce Camera Andrea
-        supported_features: 0
+          - 0.357
+          - 0.142
         state: "on"
     metadata:
-      light.lampadina_smart:
+      light.striscia_luminosa_smart:
         entity_only: true
+    icon: mdi:desktop-classic
+  - id: "1682456224579"
+    name: 2 Office White
+    entities:
+      light.striscia_luminosa_smart:
+        min_color_temp_kelvin: 2500
+        max_color_temp_kelvin: 6500
+        min_mireds: 153
+        max_mireds: 400
+        effect_list:
+          - bubblingcauldron
+          - aurora
+          - candycane
+          - christmas
+          - flicker
+          - christmaslight
+          - hanukkah
+          - hauntedmansion
+          - icicle
+          - lightning
+          - ocean
+          - rainbow
+          - raindrop
+          - spring
+          - sunrise
+          - sunset
+          - valentines
+        supported_color_modes:
+          - brightness
+          - color_temp
+          - hs
+          - onoff
+        color_mode: color_temp
+        brightness: 255
+        color_temp_kelvin: 6535
+        color_temp: 153
+        hs_color:
+          - 54.768
+          - 1.6
+        rgb_color:
+          - 255
+          - 254
+          - 250
+        xy_color:
+          - 0.326
+          - 0.333
+        friendly_name: Office kallax
+        supported_features: 4
+        state: "on"
+    metadata:
+      light.striscia_luminosa_smart:
+        entity_only: true
+    icon: mdi:desktop-classic
+  - id: "1697651778268"
+    name: 1 Office Streamin
+    entities:
+      light.striscia_luminosa_smart:
+        min_color_temp_kelvin: 2500
+        max_color_temp_kelvin: 6500
+        min_mireds: 153
+        max_mireds: 400
+        effect_list:
+          - bubblingcauldron
+          - aurora
+          - candycane
+          - christmas
+          - flicker
+          - christmaslight
+          - hanukkah
+          - hauntedmansion
+          - icicle
+          - lightning
+          - ocean
+          - rainbow
+          - raindrop
+          - spring
+          - sunrise
+          - sunset
+          - valentines
+        supported_color_modes:
+          - brightness
+          - color_temp
+          - hs
+          - onoff
+        friendly_name: Office kallax
+        supported_features: 4
+        color_mode: color_temp
+        brightness: 255
+        color_temp_kelvin: 2500
+        color_temp: 400
+        hs_color:
+          - 28.874
+          - 72.522
+        rgb_color:
+          - 255
+          - 159
+          - 70
+        xy_color:
+          - 0.546
+          - 0.389
+        effect: Rainbow
+        state: "on"
+    icon: mdi:desktop-classic
+    metadata:
+      light.striscia_luminosa_smart:
+        entity_only: true
+  - id: "1687783375727"
+    name: Studio Light Warm 100%
+    entities:
+      light.striscia_luminosa_smart:
+        effect_list:
+          - bubblingcauldron
+          - aurora
+          - candycane
+          - christmas
+          - flicker
+          - christmaslight
+          - hanukkah
+          - hauntedmansion
+          - icicle
+          - lightning
+          - ocean
+          - rainbow
+          - raindrop
+          - spring
+          - sunrise
+          - sunset
+          - valentines
+        supported_color_modes:
+          - brightness
+          - hs
+          - onoff
+        color_mode: hs
+        brightness: 128
+        hs_color:
+          - 30
+          - 94
+        rgb_color:
+          - 255
+          - 135
+          - 15
+        xy_color:
+          - 0.6
+          - 0.381
+        friendly_name: Studio Right Strip
+        supported_features: 4
+        state: "on"
+        icon: mdi:globe-light
+        metadata: {}

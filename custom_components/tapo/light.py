@@ -11,8 +11,11 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import LightTapoCoordinator
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
-from custom_components.tapo.helpers import clamp
 from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.helpers import hass_to_tapo_brightness
+from custom_components.tapo.helpers import hass_to_tapo_color_temperature
+from custom_components.tapo.helpers import tapo_to_hass_brightness
+from custom_components.tapo.helpers import tapo_to_hass_color_temperature
 from custom_components.tapo.setup_helpers import setup_from_platform_config
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.light import ATTR_COLOR_TEMP
@@ -26,9 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-)
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 from plugp100.api.light_effect_preset import LightEffectPreset
 
@@ -92,12 +92,12 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
 
     @property
     def brightness(self):
-        if self._effects and self.coordinator.light_state.lighting_effect is not None:
-            return round(
-                (self.coordinator.light_state.lighting_effect.brightness * 255) / 100
-            )
-        else:
-            return round((self.coordinator.light_state.brightness * 255) / 100)
+        current_brightness = (
+            self.coordinator.light_state.lighting_effect.brightness
+            if self._has_light_effect_enabled()
+            else self.coordinator.light_state.brightness
+        )
+        return tapo_to_hass_brightness(current_brightness)
 
     @property
     def hs_color(self):
@@ -112,102 +112,119 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
 
     @property
     def color_temp(self):
-        color_temp = self.coordinator.light_state.color_temp
-        if color_temp is not None and color_temp > 0:
-            return clamp(
-                kelvin_to_mired(color_temp),
-                min_value=self.min_mireds,
-                max_value=self.max_mireds,
-            )
-        else:
-            return None
+        return tapo_to_hass_color_temperature(
+            self.coordinator.light_state.color_temp, (self.min_mireds, self.max_mireds)
+        )
 
     @property
     def effect(self) -> Optional[str]:
-        if (
-            self._effects
-            and self.coordinator.light_state.lighting_effect is not None
-            and self.coordinator.light_state.lighting_effect.enable
-        ):
+        if self._has_light_effect_enabled():
             return self.coordinator.light_state.lighting_effect.name.lower()
         else:
             return None
 
+    def _has_light_effect_enabled(self) -> bool:
+        is_enabled = (
+            self._effects
+            and self.coordinator.light_state.lighting_effect is not None
+            and self.coordinator.light_state.lighting_effect.enable
+        )
+        print(f"Effect enabledd {is_enabled}")
+        return is_enabled
+
     async def async_turn_on(self, **kwargs):
+        print(kwargs)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         color = kwargs.get(ATTR_HS_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         effect = kwargs.get(ATTR_EFFECT)
+        tapo_brightness = hass_to_tapo_brightness(brightness)
+        tapo_color_temp = hass_to_tapo_color_temperature(
+            color_temp,
+            (self.min_mireds, self.max_mireds),
+            (self.min_color_temp_kelvin, self.max_color_temp_kelvin),
+        )
 
-        _LOGGER.info("Setting brightness: %s", str(brightness))
-        _LOGGER.info("Setting color: %s", str(color))
-        _LOGGER.info("Setting color_temp: %s", str(color_temp))
+        _LOGGER.info(
+            "Setting brightness: %s, tapo %s", str(brightness), str(tapo_brightness)
+        )
+        _LOGGER.info("Setting color: %s, tapo %s", str(color), str(color))
+        _LOGGER.info(
+            "Setting color_temp: %s, tapo %s", str(color_temp), str(tapo_color_temp)
+        )
         _LOGGER.info("Setting effect: %s", str(effect))
 
-        if (
-            brightness is not None
-            or color is not None
-            or color_temp is not None
-            or effect is not None
-        ):
-            if self.is_on is False:
-                (await self.coordinator.device.on()).get_or_raise()
-            if color is not None and ColorMode.HS in self.supported_color_modes:
-                hue = int(color[0])
-                saturation = int(color[1])
-                await self._change_color(hue, saturation)
-            elif (
-                color_temp is not None
-                and ColorMode.COLOR_TEMP in self.supported_color_modes
-            ):
-                color_temp = int(color_temp)
-                await self._change_color_temp(color_temp)
-            if brightness is not None:
-                await self._change_brightness(brightness)
-            if effect is not None:
-                (
-                    await self.coordinator.device.set_light_effect(
-                        self._effects[effect].to_effect()
-                    )
-                ).get_or_raise()
-        else:
-            (await self.coordinator.device.on()).get_or_raise()
+        await self._set_state(
+            on=True,
+            color_temp=tapo_color_temp,
+            hue_saturation=color,
+            brightness=tapo_brightness,
+            effect=effect,
+            current_effect=self.effect,
+        )
 
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        (await self.coordinator.device.off()).get_or_raise()
+        await self._set_state(on=False)
         await self.coordinator.async_request_refresh()
 
-    async def _change_brightness(self, new_brightness):
-        brightness_to_set = round((new_brightness / 255) * 100)
-        _LOGGER.debug("Change brightness to: %s", str(brightness_to_set))
-        if self.effect is not None:
+    async def _set_state(
+        self,
+        on: bool,
+        color_temp=None,
+        hue_saturation=None,
+        brightness=None,
+        effect: str = None,
+        current_effect: str = None,
+    ):
+        if not on:
+            return (await self.coordinator.device.off()).get_or_raise()
+
+        (await self.coordinator.device.on()).get_or_raise()
+        if effect is not None:
+            (
+                await self.coordinator.device.set_light_effect(
+                    self._effects[effect.lower()].to_effect()
+                )
+            ).get_or_raise()
+        elif hue_saturation is not None and ColorMode.HS in self.supported_color_modes:
+            hue = int(hue_saturation[0])
+            saturation = int(hue_saturation[1])
+            (
+                await self.coordinator.device.set_hue_saturation(hue, saturation)
+            ).get_or_raise()
+        elif (
+            color_temp is not None
+            and ColorMode.COLOR_TEMP in self.supported_color_modes
+        ):
+            color_temp = int(color_temp)
+            (
+                await self.coordinator.device.set_color_temperature(color_temp)
+            ).get_or_raise()
+
+        # handle all brightness user use cases
+        # 1. brightness set with effect (scene)
+        # 2. brightness set with colors (scene)
+        # 3. brightness set with slider, so change effect or color based on last state
+        if brightness is not None:
+            if effect is not None:
+                await self._change_brightness(brightness, apply_to_effect=effect)
+            elif color_temp is not None or hue_saturation is not None:
+                await self._change_brightness(brightness, apply_to_effect=None)
+            else:
+                await self._change_brightness(
+                    brightness, apply_to_effect=current_effect
+                )
+
+    async def _change_brightness(self, new_brightness, apply_to_effect: str = None):
+        if apply_to_effect:
             (
                 await self.coordinator.device.set_light_effect_brightness(
-                    self._effects[self.effect].to_effect(), brightness_to_set
+                    self._effects[apply_to_effect.lower()].to_effect(), new_brightness
                 )
             ).get_or_raise()
         else:
             (
-                await self.coordinator.device.set_brightness(brightness_to_set)
+                await self.coordinator.device.set_brightness(new_brightness)
             ).get_or_raise()
-
-    async def _change_color_temp(self, color_temp):
-        _LOGGER.debug("Change color temp to: %s", str(color_temp))
-        constraint_color_temp = clamp(color_temp, self.min_mireds, self.max_mireds)
-        kelvin_color_temp = clamp(
-            mired_to_kelvin(constraint_color_temp),
-            min_value=self.min_color_temp_kelvin,
-            max_value=self.max_color_temp_kelvin,
-        )
-
-        (
-            await self.coordinator.device.set_color_temperature(kelvin_color_temp)
-        ).get_or_raise()
-
-    async def _change_color(self, hue, saturation):
-        _LOGGER.debug("Change colors to: (%s, %s)", str(hue), str(saturation))
-        (
-            await self.coordinator.device.set_hue_saturation(hue, saturation)
-        ).get_or_raise()
