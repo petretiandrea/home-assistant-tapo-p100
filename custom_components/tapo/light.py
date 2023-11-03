@@ -129,11 +129,9 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
             and self.coordinator.light_state.lighting_effect is not None
             and self.coordinator.light_state.lighting_effect.enable
         )
-        print(f"Effect enabledd {is_enabled}")
         return is_enabled
 
     async def async_turn_on(self, **kwargs):
-        print(kwargs)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         color = kwargs.get(ATTR_HS_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
