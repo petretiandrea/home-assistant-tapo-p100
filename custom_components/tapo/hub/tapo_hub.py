@@ -26,6 +26,7 @@ from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.hub_childs.hub_child_base_info import HubChildBaseInfo
 
@@ -148,6 +149,8 @@ def _create_child_device(child_state: HubChildBaseInfo, hub: HubDevice):
         return S200ButtonDevice(hub, device_id)
     elif "t100" in model:
         return T100MotionSensor(hub, device_id)
+    elif "ke100" in model:
+        return KE100Device(hub, device_id)
     elif any(supported in model for supported in ["s220", "s210"]):
         return SwitchChildDevice(hub, device_id)
     return None

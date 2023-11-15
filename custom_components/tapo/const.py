@@ -57,6 +57,8 @@ HUB_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.CLIMATE,
+    Platform.NUMBER
 ]
 
 CONF_HOST = "host"
