@@ -85,6 +85,7 @@ class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
             .detected
         )
 
+
 class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
@@ -107,6 +108,7 @@ class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
             .base_info.at_low_battery
         )
 
+
 SENSOR_MAPPING = {
     T31Device: [LowBatterySensor],
     T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
@@ -114,5 +116,5 @@ SENSOR_MAPPING = {
     T100MotionSensor: [MotionSensor, LowBatterySensor],
     SwitchChildDevice: [LowBatterySensor],
     WaterLeakDevice: [WaterLeakSensor, LowBatterySensor],
-    KE100Device: [LowBatterySensor]
+    KE100Device: [LowBatterySensor],
 }

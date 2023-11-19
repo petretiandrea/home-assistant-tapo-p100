@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import StateType
 from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.responses.temperature_unit import TemperatureUnit
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
@@ -32,6 +33,7 @@ async def async_setup_entry(
         async_add_entities(
             [factory(child_coordinator) for factory in sensor_factories], True
         )
+
 
 class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
     _attr_has_entity_name = True
@@ -88,13 +90,11 @@ class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         (
-            await cast(TapoCoordinator, self.coordinator)
-            .device
-            .set_temp_offset(int(value))
+            await cast(TapoCoordinator, self.coordinator).device.set_temp_offset(
+                int(value)
+            )
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
 
-SENSOR_MAPPING = {
-    KE100Device: [TRVTemperatureOffset]
-}
+SENSOR_MAPPING = {KE100Device: [TRVTemperatureOffset]}

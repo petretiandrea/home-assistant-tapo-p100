@@ -2,7 +2,9 @@ from typing import cast
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.hub.climate import async_setup_entry as async_setup_hub_climate
+from custom_components.tapo.hub.climate import (
+    async_setup_entry as async_setup_hub_climate,
+)
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

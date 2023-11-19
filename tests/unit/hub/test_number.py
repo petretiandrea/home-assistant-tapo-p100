@@ -5,15 +5,12 @@ from custom_components.tapo.hub.number import *
 
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
 
-class TestSensorMappings:
 
+class TestSensorMappings:
     coordinator = Mock(TapoCoordinator)
 
     def test_binary_sensor_mappings(self):
-        expected_mappings = \
-        {
-            KE100Device: [TRVTemperatureOffset]
-        }
+        expected_mappings = {KE100Device: [TRVTemperatureOffset]}
 
         assert SENSOR_MAPPING == expected_mappings
 
@@ -31,7 +28,6 @@ class TestTRVTemperatureOffset:
         result = subject.unique_id
 
         assert result == "hub1234_Temperature_Offset"
-
 
     def test_device_class(self):
         subject = TRVTemperatureOffset(coordinator=self.coordinator)
@@ -79,11 +75,18 @@ class TestTRVTemperatureOffset:
 
         assert result == -4
 
-
-    @pytest.mark.parametrize("temperature_unit, expected_unit_of_temperature",
-                            [(TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
-                              (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT)])
-    def test_native_unit_of_measurement(self, temperature_unit: TemperatureUnit, expected_unit_of_temperature: UnitOfTemperature):
+    @pytest.mark.parametrize(
+        "temperature_unit, expected_unit_of_temperature",
+        [
+            (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
+            (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
+        ],
+    )
+    def test_native_unit_of_measurement(
+        self,
+        temperature_unit: TemperatureUnit,
+        expected_unit_of_temperature: UnitOfTemperature,
+    ):
         base_data = Mock()
         base_data.temperature_unit = temperature_unit
         self.coordinator.get_state_of.return_value = base_data
@@ -94,10 +97,9 @@ class TestTRVTemperatureOffset:
 
         assert result == expected_unit_of_temperature
 
-
     @pytest.mark.asyncio
     async def test_async_set_native_value(self):
-        value  = 8
+        value = 8
         async_coordinator = AsyncMock(TapoCoordinator)
         device = AsyncMock()
         async_coordinator.device = device

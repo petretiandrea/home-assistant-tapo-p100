@@ -4,19 +4,18 @@ from custom_components.tapo.hub.sensor import *
 
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
 
-class TestSensorMappings:
 
+class TestSensorMappings:
     coordinator = Mock(TapoCoordinator)
 
     def test_binary_sensor_mappings(self):
-        expected_mappings = \
-        {
+        expected_mappings = {
             T31Device: [HumitidySensor, TemperatureSensor, ReportIntervalDiagnostic],
             T110SmartDoor: [ReportIntervalDiagnostic],
             S200ButtonDevice: [ReportIntervalDiagnostic],
             T100MotionSensor: [ReportIntervalDiagnostic],
             WaterLeakDevice: [ReportIntervalDiagnostic],
-            KE100Device: [TemperatureSensor, BatteryLevelSensor]
+            KE100Device: [TemperatureSensor, BatteryLevelSensor],
         }
 
         assert SENSOR_MAPPING == expected_mappings

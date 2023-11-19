@@ -5,15 +5,12 @@ from custom_components.tapo.hub.climate import *
 
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
 
-class TestSensorMappings:
 
+class TestSensorMappings:
     coordinator = Mock(TapoCoordinator)
 
     def test_binary_sensor_mappings(self):
-        expected_mappings = \
-        {
-            KE100Device: [TRVClimate]
-        }
+        expected_mappings = {KE100Device: [TRVClimate]}
 
         assert SENSOR_MAPPING == expected_mappings
 
@@ -31,7 +28,6 @@ class TestTRVClimate:
         result = subject.unique_id
 
         assert result == "hub1234_Climate"
-
 
     def test_supported_features(self):
         subject = TRVClimate(coordinator=self.coordinator)
@@ -91,11 +87,18 @@ class TestTRVClimate:
 
         assert result == 22.0
 
-
-    @pytest.mark.parametrize("trv_temperature_unit, expected_unit_of_temperature",
-                            [(TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
-                              (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT)])
-    def test_temperature_unit(self, trv_temperature_unit: TemperatureUnit, expected_unit_of_temperature: UnitOfTemperature):
+    @pytest.mark.parametrize(
+        "trv_temperature_unit, expected_unit_of_temperature",
+        [
+            (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
+            (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
+        ],
+    )
+    def test_temperature_unit(
+        self,
+        trv_temperature_unit: TemperatureUnit,
+        expected_unit_of_temperature: UnitOfTemperature,
+    ):
         base_data = Mock()
         base_data.temperature_unit = trv_temperature_unit
         self.coordinator.get_state_of.return_value = base_data
@@ -106,10 +109,10 @@ class TestTRVClimate:
 
         assert result == expected_unit_of_temperature
 
-
-    @pytest.mark.parametrize("trv_state, expected_hvac_mode",
-                            [(TRVState.HEATING, HVACMode.HEAT),
-                              (TRVState.OFF, HVACMode.OFF)])
+    @pytest.mark.parametrize(
+        "trv_state, expected_hvac_mode",
+        [(TRVState.HEATING, HVACMode.HEAT), (TRVState.OFF, HVACMode.OFF)],
+    )
     def test_hvac_mode(self, trv_state: TRVState, expected_hvac_mode: HVACMode):
         base_data = Mock()
         base_data.trv_state = trv_state
@@ -120,7 +123,6 @@ class TestTRVClimate:
         result = subject.hvac_mode
 
         assert result == expected_hvac_mode
-
 
     @pytest.mark.asyncio
     async def test_async_hvac_mode_heat(self):
@@ -150,7 +152,7 @@ class TestTRVClimate:
 
     @pytest.mark.asyncio
     async def test_async_set_temperature(self):
-        temp_args = {'temperature' : 18}
+        temp_args = {"temperature": 18}
         async_coordinator = AsyncMock(TapoCoordinator)
         device = AsyncMock()
         async_coordinator.device = device

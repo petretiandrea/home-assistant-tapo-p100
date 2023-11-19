@@ -5,15 +5,14 @@ from custom_components.tapo.hub.switch import *
 
 from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
 
-class TestSensorMappings:
 
+class TestSensorMappings:
     coordinator = Mock(TapoCoordinator)
 
     def test_binary_sensor_mappings(self):
-        expected_mappings = \
-        {
+        expected_mappings = {
             SwitchChildDevice: [SwitchTapoChild],
-            KE100Device: [TRVFrostProtection, TRVChildLock]
+            KE100Device: [TRVFrostProtection, TRVChildLock],
         }
 
         assert SWITCH_MAPPING == expected_mappings
@@ -32,7 +31,6 @@ class TestTRVFrostProtection:
         result = subject.unique_id
 
         assert result == "hub1234_Frost_Protection"
-
 
     def test_is_on(self):
         base_data = Mock()

@@ -54,8 +54,9 @@ class SwitchTapoChild(BaseTapoHubChildEntity, SwitchEntity):
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
-#Perhaps unneeded as Climate Entity provides this functionality
-#These can be extracted into common functionality
+
+# Perhaps unneeded as Climate Entity provides this functionality
+# These can be extracted into common functionality
 class TRVFrostProtection(BaseTapoHubChildEntity, SwitchEntity):
     _attr_has_entity_name = True
     _attr_name = "Frost Protection"
@@ -81,19 +82,20 @@ class TRVFrostProtection(BaseTapoHubChildEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         (
-            await cast(TapoHubChildCoordinator, self.coordinator)
-            .device
-            .set_frost_protection_on()
+            await cast(
+                TapoHubChildCoordinator, self.coordinator
+            ).device.set_frost_protection_on()
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         (
-            await cast(TapoHubChildCoordinator, self.coordinator)
-            .device
-            .set_frost_protection_off()
+            await cast(
+                TapoHubChildCoordinator, self.coordinator
+            ).device.set_frost_protection_off()
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
+
 
 class TRVChildLock(BaseTapoHubChildEntity, SwitchEntity):
     _attr_has_entity_name = True
@@ -120,21 +122,22 @@ class TRVChildLock(BaseTapoHubChildEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         (
-            await cast(TapoHubChildCoordinator, self.coordinator)
-            .device
-            .set_child_protection_on()
+            await cast(
+                TapoHubChildCoordinator, self.coordinator
+            ).device.set_child_protection_on()
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         (
-            await cast(TapoHubChildCoordinator, self.coordinator)
-            .device
-            .set_child_protection_off()
+            await cast(
+                TapoHubChildCoordinator, self.coordinator
+            ).device.set_child_protection_off()
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
+
 SWITCH_MAPPING = {
     SwitchChildDevice: [SwitchTapoChild],
-    KE100Device: [TRVFrostProtection, TRVChildLock]
+    KE100Device: [TRVFrostProtection, TRVChildLock],
 }

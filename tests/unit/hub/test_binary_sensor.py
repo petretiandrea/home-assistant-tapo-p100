@@ -8,17 +8,17 @@ from plugp100.api.hub.t31x_device import T31Device
 from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 
+
 class TestSensorMappings:
     def test_binary_sensor_mappings(self):
-        expected_mappings = \
-        {
+        expected_mappings = {
             T31Device: [LowBatterySensor],
             T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
             S200ButtonDevice: [LowBatterySensor],
             T100MotionSensor: [MotionSensor, LowBatterySensor],
             SwitchChildDevice: [LowBatterySensor],
             WaterLeakDevice: [WaterLeakSensor, LowBatterySensor],
-            KE100Device: [LowBatterySensor]
+            KE100Device: [LowBatterySensor],
         }
 
         assert SENSOR_MAPPING == expected_mappings

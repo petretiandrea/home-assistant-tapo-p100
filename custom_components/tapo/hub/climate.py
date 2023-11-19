@@ -19,6 +19,7 @@ from plugp100.responses.hub_childs.ke100_device_state import TRVState
 
 from plugp100.responses.temperature_unit import TemperatureUnit
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
@@ -51,7 +52,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     @property
     def min_temp(self) -> float:
-         return (
+        return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .min_control_temperature
@@ -59,7 +60,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     @property
     def max_temp(self) -> float:
-         return (
+        return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .max_control_temperature
@@ -67,7 +68,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-         return (
+        return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .current_temperature
@@ -75,7 +76,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float | None:
-         return (
+        return (
             cast(TapoCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .target_temperature
@@ -108,32 +109,28 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
         else:
             return HVACMode.OFF
 
-    #Kasa seems to use Frost Protection to turn the TRV On and Off
+    # Kasa seems to use Frost Protection to turn the TRV On and Off
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-
         if hvac_mode == HVACMode.HEAT:
             (
-                await cast(TapoCoordinator, self.coordinator)
-                .device
-                .set_frost_protection_off()
+                await cast(
+                    TapoCoordinator, self.coordinator
+                ).device.set_frost_protection_off()
             ).get_or_raise()
         else:
             (
-                await cast(TapoCoordinator, self.coordinator)
-                .device
-                .set_frost_protection_on()
+                await cast(
+                    TapoCoordinator, self.coordinator
+                ).device.set_frost_protection_on()
             ).get_or_raise()
 
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         (
-            await cast(TapoCoordinator, self.coordinator)
-            .device
-            .set_target_temp(kwargs)
+            await cast(TapoCoordinator, self.coordinator).device.set_target_temp(kwargs)
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 
-SENSOR_MAPPING = {
-    KE100Device: [TRVClimate]
-}
+
+SENSOR_MAPPING = {KE100Device: [TRVClimate]}

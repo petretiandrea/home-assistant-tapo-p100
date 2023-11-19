@@ -113,6 +113,7 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
             .current_temperature
         )
 
+
 class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
     _attr_has_entity_name = True
 
@@ -182,5 +183,5 @@ SENSOR_MAPPING = {
     S200ButtonDevice: [ReportIntervalDiagnostic],
     T100MotionSensor: [ReportIntervalDiagnostic],
     WaterLeakDevice: [ReportIntervalDiagnostic],
-    KE100Device: [TemperatureSensor, BatteryLevelSensor]
+    KE100Device: [TemperatureSensor, BatteryLevelSensor],
 }
