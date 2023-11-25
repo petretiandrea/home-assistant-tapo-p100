@@ -20,11 +20,11 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 from plugp100.responses.temperature_unit import TemperatureUnit
 
@@ -34,7 +34,7 @@ async def async_setup_entry(
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
-        sensor_factories = SENSOR_MAPPING[type(child_coordinator.device)]
+        sensor_factories = SENSOR_MAPPING.get(type(child_coordinator.device), [])
         async_add_entities(
             [factory(child_coordinator) for factory in sensor_factories], True
         )

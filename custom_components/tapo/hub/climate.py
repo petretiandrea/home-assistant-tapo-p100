@@ -1,5 +1,5 @@
-from typing import cast
 from typing import Any
+from typing import cast
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
@@ -9,14 +9,12 @@ from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommon
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate import HVACMode
-from homeassistant.const import UnitOfTemperature
-
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.responses.hub_childs.ke100_device_state import TRVState
-
 from plugp100.responses.temperature_unit import TemperatureUnit
 
 
@@ -25,7 +23,7 @@ async def async_setup_entry(
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
-        sensor_factories = SENSOR_MAPPING[type(child_coordinator.device)]
+        sensor_factories = SENSOR_MAPPING.get(type(child_coordinator.device), [])
         async_add_entities(
             [factory(child_coordinator) for factory in sensor_factories], True
         )

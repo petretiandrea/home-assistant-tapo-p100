@@ -209,8 +209,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             host, port = get_host_port(user_input[CONF_HOST])
-            client = TapoClient(
-                credential, ip_address=host, port=port, http_session=session
+            client = TapoClient.create(
+                credential, address=host, port=port, http_session=session
             )
             await client.initialize()
             return client
