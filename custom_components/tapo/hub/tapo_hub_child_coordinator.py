@@ -20,6 +20,8 @@ from plugp100.api.hub.t31x_device import T31DeviceState
 from plugp100.api.hub.t31x_device import TemperatureHumidityRecordsRaw
 from plugp100.api.hub.water_leak_device import LeakDeviceState
 from plugp100.api.hub.water_leak_device import WaterLeakSensor
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.ke100_device import KE100DeviceState
 
 HubChildDevice = (
     T31Device
@@ -29,6 +31,7 @@ HubChildDevice = (
     | T100MotionSensor
     | SwitchChildDevice
     | WaterLeakSensor
+    | KE100Device
 )
 HubChildCommonState = (
     T31DeviceState
@@ -37,6 +40,7 @@ HubChildCommonState = (
     | T100MotionSensorState
     | SwitchChildDeviceState
     | LeakDeviceState
+    | KE100DeviceState
 )
 
 
@@ -70,6 +74,9 @@ class TapoHubChildCoordinator(TapoCoordinator):
             base_state = (await self.device.get_device_info()).get_or_raise()
             self.update_state_of(HubChildCommonState, base_state)
         elif isinstance(self.device, WaterLeakSensor):
+            base_state = (await self.device.get_device_state()).get_or_raise()
+            self.update_state_of(HubChildCommonState, base_state)
+        elif isinstance(self.device, KE100Device):
             base_state = (await self.device.get_device_state()).get_or_raise()
             self.update_state_of(HubChildCommonState, base_state)
 

@@ -1,0 +1,1 @@
+"""Tests for tapo integration."""

@@ -24,8 +24,9 @@ from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
-from plugp100.responses.hub_childs.t31x_device_state import TemperatureUnit
+from plugp100.responses.temperature_unit import TemperatureUnit
 
 
 async def async_setup_entry(
@@ -113,6 +114,38 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
         )
 
 
+class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: TapoCoordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Battery Percentage"
+
+    @property
+    def unique_id(self):
+        return super().unique_id + "_" + self._attr_name.replace(" ", "_")
+
+    @property
+    def device_class(self) -> Optional[str]:
+        return SensorDeviceClass.BATTERY
+
+    @property
+    def state_class(self) -> Optional[str]:
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def native_unit_of_measurement(self) -> Optional[str]:
+        return PERCENTAGE
+
+    @property
+    def native_value(self) -> Union[StateType, date, datetime]:
+        return (
+            cast(TapoCoordinator, self.coordinator)
+            .get_state_of(HubChildCommonState)
+            .battery_percentage
+        )
+
+
 class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
     def __init__(self, coordinator: TapoCoordinator):
         super().__init__(coordinator)
@@ -150,4 +183,5 @@ SENSOR_MAPPING = {
     S200ButtonDevice: [ReportIntervalDiagnostic],
     T100MotionSensor: [ReportIntervalDiagnostic],
     WaterLeakDevice: [ReportIntervalDiagnostic],
+    KE100Device: [TemperatureSensor, BatteryLevelSensor],
 }

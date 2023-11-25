@@ -17,6 +17,7 @@ from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 
 
@@ -115,4 +116,5 @@ SENSOR_MAPPING = {
     T100MotionSensor: [MotionSensor, LowBatterySensor],
     SwitchChildDevice: [LowBatterySensor],
     WaterLeakDevice: [WaterLeakSensor, LowBatterySensor],
+    KE100Device: [LowBatterySensor],
 }

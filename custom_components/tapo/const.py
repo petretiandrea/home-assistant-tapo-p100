@@ -5,7 +5,7 @@ from plugp100.api.light_effect_preset import LightEffectPreset
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.11.0"
+VERSION = "2.12.0"
 
 SUPPORTED_HUB_DEVICE_MODEL = ["h100", "kh100", "h200"]
 SUPPORTED_HUB_ALARM = "h100"
@@ -57,6 +57,8 @@ HUB_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.CLIMATE,
+    Platform.NUMBER,
 ]
 
 CONF_HOST = "host"
