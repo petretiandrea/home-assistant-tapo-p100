@@ -21,12 +21,12 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.hub.hub_device_tracker import DeviceAdded
 from plugp100.api.hub.hub_device_tracker import HubDeviceEvent
+from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.t100_device import T100MotionSensor
 from plugp100.api.hub.t110_device import T110SmartDoor
 from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.hub_childs.hub_child_base_info import HubChildBaseInfo
 
@@ -60,9 +60,13 @@ class TapoHub:
         device_list = (
             (await self.hub.get_children()).get_or_else([]).get_children_base_info()
         )
-        await self.setup_child_devices(hass, registry, device_list)
-        child_coordinators = await self.setup_child_coordinators(
-            hass, device_list, polling_rate
+        _LOGGER.info(
+            "Found %d children associated to hub %s",
+            len(device_list),
+            device_info.device_id,
+        )
+        child_coordinators = await self.setup_children(
+            hass, registry, device_list, polling_rate
         )
         hass.data[DOMAIN][self.entry.entry_id] = HassTapoDeviceData(
             coordinator=hub_coordinator,
@@ -89,42 +93,46 @@ class TapoHub:
         await hass.config_entries.async_forward_entry_setups(self.entry, HUB_PLATFORMS)
         return True
 
-    async def setup_child_devices(
+    async def setup_children(
         self,
         hass: HomeAssistant,
         registry: DeviceRegistry,
         device_list: list[HubChildBaseInfo],
-    ):
-        knwon_children = [
-            self.add_child_device(registry, device_state).id
-            for device_state in device_list
+        polling_rate: timedelta,
+    ) -> List[TapoHubChildCoordinator]:
+        setup_results = [
+            await self._add_hass_tapo_child_device(
+                hass, registry, child_device, polling_rate
+            )
+            for child_device in device_list
         ]
+        device_entries, child_coordinators = zip(*setup_results)
 
         # delete device which is no longer available to hub
         for device in dr.async_entries_for_config_entry(registry, self.entry.entry_id):
             # avoid delete hub device which has a connection
-            if device.id not in knwon_children and len(device.connections) == 0:
+            if (
+                device.id not in map(lambda x: x.id, device_entries)
+                and len(device.connections) == 0
+            ):
                 registry.async_remove_device(device.id)
-
-    async def setup_child_coordinators(
-        self,
-        hass: HomeAssistant,
-        device_list: list[HubChildBaseInfo],
-        polling_rate: timedelta,
-    ) -> List[TapoHubChildCoordinator]:
-        child_coordinators = []
-        for child in device_list:
-            child_device = _create_child_device(child, self.hub)
-            if child_device is not None:
-                child_coordinator = TapoHubChildCoordinator(
-                    hass, child_device, polling_rate
-                )
-                await child_coordinator.async_config_entry_first_refresh()
-                child_coordinators.append(child_coordinator)
 
         return child_coordinators
 
-    def add_child_device(
+    async def _add_hass_tapo_child_device(
+        self,
+        hass: HomeAssistant,
+        registry: DeviceRegistry,
+        device_state: HubChildBaseInfo,
+        polling_rate: timedelta,
+    ) -> (DeviceEntry, TapoHubChildCoordinator):
+        entry = self._hass_add_child_device(registry, device_state)
+        child_device = _create_child_device(device_state, self.hub)
+        coordinator = TapoHubChildCoordinator(hass, child_device, polling_rate)
+        await coordinator.async_config_entry_first_refresh()
+        return (entry, coordinator)
+
+    def _hass_add_child_device(
         self, registry: DeviceRegistry, device_state: HubChildBaseInfo
     ) -> DeviceEntry:
         return registry.async_get_or_create(

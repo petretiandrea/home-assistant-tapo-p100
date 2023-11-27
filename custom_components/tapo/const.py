@@ -17,12 +17,11 @@ SUPPORTED_DEVICE_AS_SWITCH = [
     "p115",
     "p125",
     "p125m",
-    "s500",
     "p110m",
     "tp15",
     "p100m",
 ]
-SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115", "p110m"]
+SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115", "p110m", "p125m"]
 SUPPORTED_DEVICE_AS_LIGHT = {
     "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
     "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
@@ -35,6 +34,7 @@ SUPPORTED_DEVICE_AS_LIGHT = {
     "tl33": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
     "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
     "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
+    "s505d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "s500": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
     "s505": [ColorMode.ONOFF],
     "ts15": [ColorMode.ONOFF],
