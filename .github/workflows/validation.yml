@@ -74,3 +74,4 @@ jobs:
             -n auto \
             -p no:sugar \
             tests/unit
+            --cov-fail-under=40
