@@ -65,11 +65,11 @@ class TestTapoHub:
                     )
 
                     assert len(result) == 1
-                    assert result[0].device is expected_type
-                    print(result[0].device)
+                    assert type(result[0].device) is expected_type
 
     @pytest.mark.asyncio
-    async def test_setup_all_children(self):
+    @pytest.mark.parametrize("children_count", [10, 50, 55, 101])
+    async def test_setup_all_children(self, children_count: int):
         with patch(
             "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
         ):
@@ -80,7 +80,7 @@ class TestTapoHub:
                     "homeassistant.helpers.device_registry.async_entries_for_config_entry"
                 ):
                     children = []
-                    for i in range(0, 100):
+                    for i in range(0, children_count):
                         mock = Mock(HubChildBaseInfo)
                         mock.model = "T110"
                         mock.device_id = f"123ABC{i}"
@@ -97,4 +97,4 @@ class TestTapoHub:
                         polling_rate=self.polling_rate,
                     )
 
-                    assert len(result) == 100
+                    assert len(result) == children_count
