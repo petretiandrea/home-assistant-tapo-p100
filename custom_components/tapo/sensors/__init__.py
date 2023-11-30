@@ -107,7 +107,11 @@ class TodayRuntimeSensorSource(TapoSensorSource):
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
-        return coordinator.get_state_of(EnergyInfo).today_runtime
+        if coordinator.has_capability(EnergyInfo):
+            sensor = coordinator.get_state_of(EnergyInfo)
+            if sensor is not None:
+                return sensor.today_runtime
+        return None
 
 
 class MonthRuntimeSensorSource(TapoSensorSource):
@@ -120,4 +124,8 @@ class MonthRuntimeSensorSource(TapoSensorSource):
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
-        return coordinator.get_state_of(EnergyInfo).month_runtime
+        if coordinator.has_capability(EnergyInfo):
+            sensor = coordinator.get_state_of(EnergyInfo)
+            if sensor is not None:
+                return sensor.month_runtime
+        return None
