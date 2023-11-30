@@ -13,8 +13,8 @@ from homeassistant.const import POWER_WATT
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import TIME_MINUTES
 from homeassistant.helpers.typing import StateType
-from plugp100.api.plug_device import EnergyInfo
-from plugp100.api.plug_device import PowerInfo
+from plugp100.responses.energy_info import EnergyInfo
+from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.device_state import DeviceInfo
 
 
