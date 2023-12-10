@@ -32,13 +32,13 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
-from plugp100.api.plug_device import EnergyInfo
 from plugp100.api.plug_device import PlugDevice
-from plugp100.api.plug_device import PowerInfo
 from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.tri import Failure
 from plugp100.common.functional.tri import Try
+from plugp100.responses.energy_info import EnergyInfo
+from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 from plugp100.responses.device_state import LedStripDeviceState
