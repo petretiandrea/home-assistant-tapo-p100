@@ -19,7 +19,7 @@ from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
 from plugp100.discovery.local_device_finder import LocalDeviceFinder
@@ -93,7 +93,7 @@ async def connect_tapo_client(
         _LOGGGER.debug("Re-using setup API to create a coordinator")
     else:
         _LOGGGER.debug("Creating new API to create a coordinator for %s", unique_id)
-        session = async_get_clientsession(hass)
+        session = async_create_clientsession(hass)
         host, port = get_host_port(ip_address)
         api = TapoClient.create(
             credentials, address=host, port=port, http_session=session

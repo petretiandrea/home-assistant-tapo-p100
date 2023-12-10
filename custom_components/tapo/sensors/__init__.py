@@ -13,8 +13,8 @@ from homeassistant.const import POWER_WATT
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.const import TIME_MINUTES
 from homeassistant.helpers.typing import StateType
-from plugp100.api.plug_device import EnergyInfo
-from plugp100.api.plug_device import PowerInfo
+from plugp100.responses.energy_info import EnergyInfo
+from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.device_state import DeviceInfo
 
 
@@ -107,7 +107,11 @@ class TodayRuntimeSensorSource(TapoSensorSource):
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
-        return coordinator.get_state_of(EnergyInfo).today_runtime
+        if coordinator.has_capability(EnergyInfo):
+            sensor = coordinator.get_state_of(EnergyInfo)
+            if sensor is not None:
+                return sensor.today_runtime
+        return None
 
 
 class MonthRuntimeSensorSource(TapoSensorSource):
@@ -120,4 +124,8 @@ class MonthRuntimeSensorSource(TapoSensorSource):
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
-        return coordinator.get_state_of(EnergyInfo).month_runtime
+        if coordinator.has_capability(EnergyInfo):
+            sensor = coordinator.get_state_of(EnergyInfo)
+            if sensor is not None:
+                return sensor.month_runtime
+        return None

@@ -16,11 +16,17 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![License][license-shield]](LICENSE)
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-## Warning!!!
+## Warnings
+
+### Tapo protocol
+
+Tapo is updating it's devices with a new firmware which use a new protocol called KLAP. This integration support it's but if you running older version your devices maybe cannot works. So please keep this integration up to date by using HACS!
+
+### Local Integration
 
 Although the integration works using LAN, the tapo device needs internet access to synchronize with tapo cloud, especially for credentials, a missing internet access could lead into "Invalida authentication error". Also a static IP must be set for device.
 
-## Warning!!!
+### Authentication
 
 For some unknown reason email with capital letter thrown an "Invalid authentication" error. So before open an new issue check your email address on Tapo App Settings. If contains capital letter, the integration won't work. I've opened an issue that explain this [#122](https://github.com/petretiandrea/home-assistant-tapo-p100/issues/122), I will fix asap. As workaround you can create a new account using all lower-case in your email address.
 
@@ -33,6 +39,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 - [x] support for `T31x` temperature and humidity sensor hub's device
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
+- [x] support for `S220`, `S210` switch hub's device
 - [x] partial support for `S200B` button hub's device (actually no events are reported to HA)
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`, `P110M`)
