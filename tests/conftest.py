@@ -19,9 +19,14 @@ from plugp100.api.tapo_client import PassthroughProtocol
 from plugp100.api.tapo_client import TapoClient
 from plugp100.api.tapo_client import TapoProtocol
 from plugp100.common.functional.tri import Try
+from plugp100.requests.tapo_request import TapoRequest
 from plugp100.responses.tapo_response import TapoResponse
 from pytest_homeassistant_custom_component.common import load_fixture
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from .tapo_mock_helper import tapo_response_child_of
+from .tapo_mock_helper import tapo_response_of
+from .tapo_mock_helper import TapoResponseMockHelper
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)
 
@@ -30,14 +35,14 @@ pytest_plugins = ("pytest_homeassistant_custom_component",)
 def mock_protocol() -> TapoProtocol:
     mock = Mock(PassthroughProtocol)
 
-    async def load_test_data(response: Try[TapoResponse]):
-        mock.send_request = AsyncMock(return_value=response)
+    async def _side_load(request: TapoRequest) -> Try[TapoResponse]:
+        return await mock.helper.get_response(request)
 
-    async def load_test_data2(data: list[Try[TapoResponse]]):
-        mock.send_request = AsyncMock(side_effect=data)
+    async def load_test_data(data: dict[str, Try[TapoResponse]]):
+        mock.helper = TapoResponseMockHelper(data)
+        mock.send_request = AsyncMock(side_effect=_side_load)
 
     mock.load_test_data = load_test_data
-    mock.load_test_data2 = load_test_data2
     return mock
 
 
@@ -75,9 +80,9 @@ def create_mock_tapo_client(protocol: TapoProtocol) -> TapoClient:
     )
 
 
-def fixture_tapo_responses(resource: str) -> list[Try[TapoResponse]]:
+def fixture_tapo_map(resource: str) -> dict[str, Try[TapoResponse]]:
     elems = json.loads(load_fixture(resource))
-    return [tapo_response_of(e) for e in elems]
+    return {k: tapo_response_of(elems[k]) for k in elems.keys()}
 
 
 def fixture_tapo_response(resource: str) -> Try[TapoResponse]:
@@ -85,19 +90,7 @@ def fixture_tapo_response(resource: str) -> Try[TapoResponse]:
 
 
 def fixture_tapo_response_child(resource: str) -> Try[TapoResponse]:
-    return tapo_response_of(
-        {
-            "responseData": {
-                "result": {
-                    "responses": [{"result": json.loads(load_fixture(resource))}]
-                }
-            }
-        }
-    )
-
-
-def tapo_response_of(payload: dict[str, any]) -> Try[TapoResponse]:
-    return Try.of(TapoResponse(error_code=0, result=payload, msg=""))
+    return tapo_response_child_of(json.loads(load_fixture(resource)))
 
 
 async def setup_platform(hass: HomeAssistant, platforms: list[str]):

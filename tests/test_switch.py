@@ -7,13 +7,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from plugp100.api.tapo_client import TapoProtocol
 
-from .conftest import fixture_tapo_response
+from .conftest import fixture_tapo_map
 from .conftest import setup_platform
 
 
 @pytest.mark.parametrize(
     "device_state_fixture, device_id",
-    [("plug_device_state.json", "80225A84E5F52C914E409EF8CCE7D68D20FAA0B9")],
+    [("plug_p105.json", "80225A84E5F52C914E409EF8CCE7D68D20FAA0B9")],
 )
 async def test_switch_setup(
     hass: HomeAssistant,
@@ -22,7 +22,7 @@ async def test_switch_setup(
     device_id: str,
 ):
     device_registry = dr.async_get(hass)
-    await mock_protocol.load_test_data(fixture_tapo_response(device_state_fixture))
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
 
     await setup_platform(hass, ["switch"])
     assert len(hass.states.async_all()) == 1
@@ -35,11 +35,11 @@ async def test_switch_setup(
     assert device is not None
 
 
-@pytest.mark.parametrize("device_state_fixture", ["plug_device_state.json"])
+@pytest.mark.parametrize("device_state_fixture", ["plug_p105.json"])
 async def test_switch_turn_on_service(
     hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
 ):
-    await mock_protocol.load_test_data(fixture_tapo_response(device_state_fixture))
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
     await setup_platform(hass, ["switch"])
     await hass.services.async_call(
         "switch", SERVICE_TURN_ON, {"entity_id": "switch.albero_natale"}, blocking=True
@@ -49,11 +49,11 @@ async def test_switch_turn_on_service(
     assert mock_protocol.send_request.call_args.args[0].method == "set_device_info"
 
 
-@pytest.mark.parametrize("device_state_fixture", ["plug_device_state.json"])
+@pytest.mark.parametrize("device_state_fixture", ["plug_p105.json"])
 async def test_switch_turn_off_service(
     hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
 ):
-    await mock_protocol.load_test_data(fixture_tapo_response(device_state_fixture))
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
     await setup_platform(hass, ["switch"])
     await hass.services.async_call(
         "switch", SERVICE_TURN_OFF, {"entity_id": "switch.albero_natale"}, blocking=True
