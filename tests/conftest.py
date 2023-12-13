@@ -52,7 +52,7 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     yield
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def patch_setup_api(tapo_client: TapoClient):
     with patch(
         target="custom_components.tapo.setup_helpers.connect_tapo_client",

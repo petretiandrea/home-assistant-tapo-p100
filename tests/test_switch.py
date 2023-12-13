@@ -11,7 +11,6 @@ from .conftest import fixture_tapo_response
 from .conftest import setup_platform
 
 
-@pytest.mark.usefixtures("patch_setup_api")
 @pytest.mark.parametrize(
     "device_state_fixture, device_id",
     [("plug_device_state.json", "80225A84E5F52C914E409EF8CCE7D68D20FAA0B9")],
@@ -36,7 +35,6 @@ async def test_switch_setup(
     assert device is not None
 
 
-@pytest.mark.usefixtures("patch_setup_api")
 @pytest.mark.parametrize("device_state_fixture", ["plug_device_state.json"])
 async def test_switch_turn_on_service(
     hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
@@ -51,7 +49,6 @@ async def test_switch_turn_on_service(
     assert mock_protocol.send_request.call_args.args[0].method == "set_device_info"
 
 
-@pytest.mark.usefixtures("patch_setup_api")
 @pytest.mark.parametrize("device_state_fixture", ["plug_device_state.json"])
 async def test_switch_turn_off_service(
     hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
