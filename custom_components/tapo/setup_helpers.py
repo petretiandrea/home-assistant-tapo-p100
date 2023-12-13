@@ -105,7 +105,6 @@ async def connect_tapo_client(
         api = TapoClient.create(
             credentials, address=host, port=port, http_session=session
         )
-        await api.initialize()
     return api
 
 
