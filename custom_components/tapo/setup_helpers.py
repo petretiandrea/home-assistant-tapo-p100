@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
 from plugp100.discovery.local_device_finder import LocalDeviceFinder
+from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 
 _LOGGGER = logging.getLogger(__name__)
 
@@ -71,6 +72,11 @@ async def setup_from_platform_config(
         options={CONF_TRACK_DEVICE: config.get(CONF_TRACK_DEVICE, False)},
     )
     client = await setup_tapo_api(hass, temporary_entry)
+    state = (
+        (await client.get_device_info())
+        .map(lambda x: TapoDeviceInfo(**x))
+        .get_or_raise()
+    )
     return await create_coordinator(
         hass,
         client,
@@ -78,6 +84,7 @@ async def setup_from_platform_config(
         polling_interval=timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         ),
+        device_info=state,
     )
 
 

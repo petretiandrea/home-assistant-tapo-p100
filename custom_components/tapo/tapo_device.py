@@ -7,10 +7,16 @@ from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import PLATFORMS
 from custom_components.tapo.coordinators import create_coordinator
 from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.hub.tapo_hub import TapoHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.tapo_client import TapoClient
+from plugp100.responses.device_state import DeviceInfo
+
+from .const import SUPPORTED_HUB_DEVICE_MODEL
 
 
 @dataclass
@@ -23,8 +29,29 @@ class TapoDevice:
             seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
         host = self.entry.data.get(CONF_HOST)
+        state = (
+            (await self.client.get_device_info())
+            .map(lambda x: DeviceInfo(**x))
+            .get_or_raise()
+        )
+        if get_short_model(state.model) in SUPPORTED_HUB_DEVICE_MODEL:
+            hub = TapoHub(
+                self.entry,
+                HubDevice(self.client, subscription_polling_interval_millis=30_000),
+            )
+            return await hub.initialize_hub(hass)
+        else:
+            return await self._initialize_single_device(hass, host, polling_rate, state)
+
+    async def _initialize_single_device(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        polling_rate: timedelta,
+        device_data: DeviceInfo,
+    ):
         coordinator = (
-            await create_coordinator(hass, self.client, host, polling_rate)
+            await create_coordinator(hass, self.client, host, polling_rate, device_data)
         ).get_or_raise()
         await coordinator.async_config_entry_first_refresh()  # could raise ConfigEntryNotReady
         hass.data[DOMAIN][self.entry.entry_id] = HassTapoDeviceData(
