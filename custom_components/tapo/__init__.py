@@ -6,9 +6,9 @@ from typing import Optional
 
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.errors import DeviceNotSupported
+from custom_components.tapo.hass_tapo import HassTapo
 from custom_components.tapo.migrations import migrate_entry_to_v6
-from custom_components.tapo.setup_helpers import setup_tapo_api
-from custom_components.tapo.tapo_device import TapoDevice
+from custom_components.tapo.setup_helpers import create_api_from_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -30,8 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        api = await setup_tapo_api(hass, entry)
-        device = TapoDevice(entry, api)
+        api = await create_api_from_config(hass, entry)
+        device = HassTapo(entry, api)
         return await device.initialize_device(hass)
     except DeviceNotSupported as error:
         raise error

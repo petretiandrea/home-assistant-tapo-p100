@@ -1,11 +1,10 @@
 from datetime import date
 from datetime import datetime
-from typing import Any
 from typing import cast
-from typing import Dict
 from typing import Optional
 from typing import Union
 
+from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import TapoCoordinator
@@ -20,7 +19,6 @@ from custom_components.tapo.sensors import SignalSensorSource
 from custom_components.tapo.sensors import TodayEnergySensorSource
 from custom_components.tapo.sensors import TodayRuntimeSensorSource
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.setup_helpers import setup_from_platform_config
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -39,14 +37,14 @@ SUPPORTED_ENERGY_SENSOR = [
 ]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
-) -> None:
-    coordinator = await setup_from_platform_config(hass, config)
-    _setup_from_coordinator(hass, coordinator, async_add_entities)
+# async def async_setup_platform(
+#     hass: HomeAssistant,
+#     config: Dict[str, Any],
+#     async_add_entities: AddEntitiesCallback,
+#     discovery_info=None,
+# ) -> None:
+#     coordinator = await setup_from_platform_config(hass, config)
+#     _setup_from_coordinator(hass, coordinator, async_add_entities)
 
 
 async def async_setup_entry(
@@ -65,7 +63,7 @@ def _setup_from_coordinator(
     async_add_entities: AddEntitiesCallback,
 ):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
-    if coordinator.components.has("energy_monitoring"):
+    if coordinator.components.has(Component.ENERGY_MONITORING.value):
         sensors.extend(
             [TapoSensor(coordinator, factory()) for factory in SUPPORTED_ENERGY_SENSOR]
         )

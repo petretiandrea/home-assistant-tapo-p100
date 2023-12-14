@@ -8,18 +8,17 @@ from typing import List
 from typing import Optional
 from typing import Type
 from typing import TypeVar
-from typing import Union
 
 import aiohttp
 import async_timeout
+from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LED_STRIP
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LIGHT
 from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH
 from custom_components.tapo.const import SUPPORTED_HUB_DEVICE_MODEL
 from custom_components.tapo.const import SUPPORTED_POWER_STRIP_DEVICE_MODEL
-from custom_components.tapo.errors import DeviceNotSupported
-from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.const import TapoDevice
 from custom_components.tapo.helpers import value_optional
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.core import HomeAssistant
@@ -33,8 +32,6 @@ from plugp100.api.light_device import LightDevice
 from plugp100.api.plug_device import PlugDevice
 from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.api.tapo_client import TapoClient
-from plugp100.common.functional.tri import Failure
-from plugp100.common.functional.tri import Try
 from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.components import Components
 from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
@@ -44,8 +41,6 @@ from plugp100.responses.tapo_exception import TapoError
 from plugp100.responses.tapo_exception import TapoException
 
 _LOGGER = logging.getLogger(__name__)
-
-TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice, PowerStripDevice]
 
 DEBOUNCER_COOLDOWN = 2
 
@@ -57,38 +52,18 @@ class HassTapoDeviceData:
     child_coordinators: List["TapoCoordinator"]
 
 
-async def create_coordinator(
-    hass: HomeAssistant,
-    client: TapoClient,
-    host: str,
-    polling_interval: timedelta,
-    device_info: TapoDeviceInfo,
-) -> Try["TapoCoordinator"]:
-    if device_info:
-        model = get_short_model(device_info.model)
-        _LOGGER.info("Detected model of %s: %s", str(host), str(model))
-        if model in SUPPORTED_DEVICE_AS_SWITCH:
-            return Try.of(
-                SingleDeviceCoordinator(hass, PlugDevice(client), polling_interval)
-            )
-        elif model in SUPPORTED_DEVICE_AS_LED_STRIP:
-            return Try.of(
-                SingleDeviceCoordinator(hass, LedStripDevice(client), polling_interval)
-            )
-        elif model in SUPPORTED_DEVICE_AS_LIGHT:
-            return Try.of(
-                SingleDeviceCoordinator(hass, LightDevice(client), polling_interval)
-            )
-        elif model == SUPPORTED_POWER_STRIP_DEVICE_MODEL:
-            return Try.of(
-                SingleDeviceCoordinator(
-                    hass, PowerStripDevice(client), polling_interval
-                )
-            )
-        else:
-            return Failure(DeviceNotSupported(f"Device {host} not supported!"))
-
-    return device_info
+def create_tapo_device(model: str, client: TapoClient) -> Optional[TapoDevice]:
+    if model in SUPPORTED_DEVICE_AS_SWITCH:
+        return PlugDevice(client)
+    if model in SUPPORTED_DEVICE_AS_LED_STRIP:
+        return LedStripDevice(client)
+    if model in SUPPORTED_DEVICE_AS_LIGHT:
+        return LightDevice(client)
+    if model in SUPPORTED_POWER_STRIP_DEVICE_MODEL:
+        return PowerStripDevice(client)
+    if model in SUPPORTED_HUB_DEVICE_MODEL:
+        return HubDevice(client, subscription_polling_interval_millis=30_000)
+    return None
 
 
 T = TypeVar("T")
@@ -121,7 +96,6 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
             self.components = (
                 await self.device.get_component_negotiation()
             ).get_or_raise()
-            print("components", type(self.device), self.components.as_list())
 
     @property
     def device(self) -> TapoDevice:
@@ -140,11 +114,7 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
 
     @property
     def is_hub(self) -> bool:
-        return self.model in SUPPORTED_HUB_DEVICE_MODEL
-
-    @property
-    def model(self) -> str:
-        return self.get_state_of(TapoDeviceInfo).model.lower()
+        return isinstance(self.device, HubDevice)
 
     @property
     def device_info(self) -> TapoDeviceInfo:
@@ -177,7 +147,7 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
 PowerStripChildrenState = dict[str, PowerStripChild]
 
 
-class SingleDeviceCoordinator(TapoCoordinator):
+class TapoDeviceCoordinator(TapoCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -193,13 +163,13 @@ class SingleDeviceCoordinator(TapoCoordinator):
         self.update_state_of(type(state), state)
         self.update_state_of(TapoDeviceInfo, state.info)
 
-        if self.components.has("energy_monitoring"):
+        if self.components.has(Component.ENERGY_MONITORING.value):
             power_info = value_optional(await self.device.get_current_power())
             energy_usage = value_optional(await self.device.get_energy_usage())
             self.update_state_of(PowerInfo, power_info)
             self.update_state_of(EnergyInfo, energy_usage)
 
-        if self.components.has("control_child") and isinstance(
+        if self.components.has(Component.CONTROL_CHILD.value) and isinstance(
             self.device, PowerStripDevice
         ):
             children_state = (await self.device.get_children()).get_or_raise()

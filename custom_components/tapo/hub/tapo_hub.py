@@ -7,7 +7,7 @@ from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import HUB_PLATFORMS
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import SingleDeviceCoordinator
+from custom_components.tapo.coordinators import TapoDeviceCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import (
     TapoHubChildCoordinator,
 )
@@ -42,7 +42,7 @@ class TapoHub:
         polling_rate = timedelta(
             seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
         )
-        hub_coordinator = SingleDeviceCoordinator(hass, self.hub, polling_rate)
+        hub_coordinator = TapoDeviceCoordinator(hass, self.hub, polling_rate)
         await hub_coordinator.async_config_entry_first_refresh()
         device_info = hub_coordinator.get_state_of(DeviceInfo)
         registry: DeviceRegistry = device_registry.async_get(hass)

@@ -1,18 +1,14 @@
-from typing import Any
 from typing import cast
-from typing import Dict
 from typing import Optional
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import PowerStripChildrenState
-from custom_components.tapo.coordinators import SingleDeviceCoordinator
+from custom_components.tapo.coordinators import TapoDeviceCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
 from custom_components.tapo.hub.switch import (
     async_setup_entry as async_setup_hub_switch,
 )
-from custom_components.tapo.setup_helpers import setup_from_platform_config
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,27 +17,29 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from plugp100.api.plug_device import PlugDevice
 from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.device_state import PlugDeviceState
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
-) -> None:
-    coordinator = await setup_from_platform_config(hass, config)
-    if isinstance(coordinator, SingleDeviceCoordinator):
-        async_add_entities([TapoPlugEntity(coordinator)], True)
+# async def async_setup_platform(
+#     hass: HomeAssistant,
+#     config: Dict[str, Any],
+#     async_add_entities: AddEntitiesCallback,
+#     discovery_info=None,
+# ) -> None:
+#     coordinator = await setup_from_platform_config(hass, config)
+#     if isinstance(coordinator, SingleDeviceCoordinator):
+#         async_add_entities([TapoPlugEntity(coordinator)], True)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     # get tapo helper
-    if entry.data.get("is_hub", False):
+    data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
+    if data.coordinator.is_hub:
         await async_setup_hub_switch(hass, entry, async_add_entities)
     else:
         await async_setup_device_switch(hass, entry, async_add_entities)
@@ -51,7 +49,7 @@ async def async_setup_device_switch(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    if data.coordinator.model in SUPPORTED_DEVICE_AS_SWITCH:
+    if isinstance(data.coordinator.device, PlugDevice):
         async_add_devices([TapoPlugEntity(data.coordinator)], True)
     elif isinstance(data.coordinator.device, PowerStripDevice):
         children = list(data.coordinator.get_state_of(PowerStripChildrenState).values())
@@ -61,10 +59,10 @@ async def async_setup_device_switch(
         )
 
 
-class TapoPlugEntity(BaseTapoEntity[SingleDeviceCoordinator], SwitchEntity):
+class TapoPlugEntity(BaseTapoEntity[TapoDeviceCoordinator], SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
-    def __init__(self, coordinator: SingleDeviceCoordinator):
+    def __init__(self, coordinator: TapoDeviceCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -80,11 +78,11 @@ class TapoPlugEntity(BaseTapoEntity[SingleDeviceCoordinator], SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class StripPlugEntity(CoordinatorEntity[SingleDeviceCoordinator], SwitchEntity):
+class StripPlugEntity(CoordinatorEntity[TapoDeviceCoordinator], SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: SingleDeviceCoordinator, device_id: str) -> None:
+    def __init__(self, coordinator: TapoDeviceCoordinator, device_id: str) -> None:
         super().__init__(coordinator)
         self.device_id = device_id
         self._attr_name = f"{self._get_child_state().nickname}"

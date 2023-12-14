@@ -16,11 +16,9 @@ from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import STEP_ADVANCED_SETTINGS
 from custom_components.tapo.const import STEP_INIT
-from custom_components.tapo.const import SUPPORTED_HUB_DEVICE_MODEL
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
-from custom_components.tapo.helpers import get_short_model
 from custom_components.tapo.setup_helpers import get_host_port
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
@@ -120,7 +118,6 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_id = device_data.device_id
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
-                self.hass.data[DOMAIN][f"{device_id}_api"] = tapo_client
 
                 config_entry_data = user_input | {
                     CONF_MAC: device_data.mac,
@@ -128,12 +125,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TRACK_DEVICE: user_input.pop(CONF_TRACK_DEVICE, False),
                 }
 
-                if get_short_model(device_data.model) in SUPPORTED_HUB_DEVICE_MODEL:
-                    return self.async_create_entry(
-                        title=f"Tapo Hub {device_data.friendly_name}",
-                        data={"is_hub": True, **config_entry_data},
-                    )
-                elif user_input.get(CONF_ADVANCED_SETTINGS, False):
+                if user_input.get(CONF_ADVANCED_SETTINGS, False):
                     self.first_step_data = FirstStepData(device_data, user_input)
                     return await self.async_step_advanced_config()
                 else:
