@@ -7,7 +7,6 @@ from custom_components.tapo.entity import BaseTapoEntity
 from custom_components.tapo.hub.binary_sensor import (
     async_setup_entry as async_setup_binary_sensors,
 )
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     sensors = [OverheatSensor(data.coordinator)]
     async_add_devices(sensors, True)
-    if isinstance(data.coordinator, TapoHubCoordinator):
+    if data.coordinator.is_hub:
         await async_setup_binary_sensors(hass, entry, async_add_devices)
 
 

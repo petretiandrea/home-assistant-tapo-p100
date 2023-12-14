@@ -8,13 +8,11 @@ from typing import Union
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import PlugTapoCoordinator
 from custom_components.tapo.coordinators import TapoCoordinator
 from custom_components.tapo.entity import BaseTapoEntity
 from custom_components.tapo.hub.sensor import (
     async_setup_entry as async_setup_hub_sensors,
 )
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from custom_components.tapo.sensors import CurrentEnergySensorSource
 from custom_components.tapo.sensors import MonthEnergySensorSource
 from custom_components.tapo.sensors import MonthRuntimeSensorSource
@@ -31,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 # Supported sensors: Today energy and current power
-SUPPORTED_SENSOR = [
+SUPPORTED_ENERGY_SENSOR = [
     CurrentEnergySensorSource,
     TodayEnergySensorSource,
     MonthEnergySensorSource,
@@ -57,7 +55,7 @@ async def async_setup_entry(
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     _setup_from_coordinator(hass, data.coordinator, async_add_entities)
-    if isinstance(data.coordinator, TapoHubCoordinator):
+    if data.coordinator.is_hub:
         await async_setup_hub_sensors(hass, entry, async_add_entities)
 
 
@@ -67,9 +65,9 @@ def _setup_from_coordinator(
     async_add_entities: AddEntitiesCallback,
 ):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
-    if isinstance(coordinator, PlugTapoCoordinator) and coordinator.has_power_monitor:
+    if coordinator.components.has("energy_monitoring"):
         sensors.extend(
-            [TapoSensor(coordinator, factory()) for factory in SUPPORTED_SENSOR]
+            [TapoSensor(coordinator, factory()) for factory in SUPPORTED_ENERGY_SENSOR]
         )
     async_add_entities(sensors, True)
 

@@ -1,9 +1,15 @@
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
+from unittest.mock import AsyncMock
+from unittest.mock import Mock
+
 import pytest
-
-from custom_components.tapo.hub.switch import *
-
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
+from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.hub.switch import SWITCH_MAPPING
+from custom_components.tapo.hub.switch import SwitchTapoChild
+from custom_components.tapo.hub.switch import TRVChildLock
+from custom_components.tapo.hub.switch import TRVFrostProtection
+from homeassistant.components.switch import SwitchDeviceClass
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
 
 
 class TestSensorMappings:
@@ -41,7 +47,7 @@ class TestTRVFrostProtection:
 
         result = subject.is_on
 
-        assert result == False
+        assert result is False
 
     def test_device_class(self):
         subject = TRVFrostProtection(coordinator=self.coordinator)
@@ -100,7 +106,7 @@ class TestTRVChildLock:
 
         result = subject.is_on
 
-        assert result == True
+        assert result is True
 
     def test_device_class(self):
         subject = TRVChildLock(coordinator=self.coordinator)

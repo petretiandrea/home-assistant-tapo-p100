@@ -1,9 +1,16 @@
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
+from unittest.mock import AsyncMock
+from unittest.mock import Mock
+
 import pytest
-
-from custom_components.tapo.hub.climate import *
-
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
+from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.hub.climate import SENSOR_MAPPING
+from custom_components.tapo.hub.climate import TRVClimate
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import HVACMode
+from homeassistant.const import UnitOfTemperature
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.responses.hub_childs.ke100_device_state import TRVState
+from plugp100.responses.temperature_unit import TemperatureUnit
 
 
 class TestSensorMappings:

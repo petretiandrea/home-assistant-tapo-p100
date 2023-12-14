@@ -7,6 +7,8 @@ from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.ke100_device import KE100DeviceState
 from plugp100.api.hub.s200b_device import S200BDeviceState
 from plugp100.api.hub.s200b_device import S200ButtonDevice
 from plugp100.api.hub.switch_child_device import SwitchChildDevice
@@ -20,8 +22,6 @@ from plugp100.api.hub.t31x_device import T31DeviceState
 from plugp100.api.hub.t31x_device import TemperatureHumidityRecordsRaw
 from plugp100.api.hub.water_leak_device import LeakDeviceState
 from plugp100.api.hub.water_leak_device import WaterLeakSensor
-from plugp100.api.hub.ke100_device import KE100Device
-from plugp100.api.hub.ke100_device import KE100DeviceState
 
 HubChildDevice = (
     T31Device
