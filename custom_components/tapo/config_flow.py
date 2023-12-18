@@ -212,7 +212,6 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = TapoClient.create(
                 credential, address=host, port=port, http_session=session
             )
-            await client.initialize()
             return client
         except TapoException as error:
             self._raise_from_tapo_exception(error)
