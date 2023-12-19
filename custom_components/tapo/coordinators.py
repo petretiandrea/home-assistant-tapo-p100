@@ -37,13 +37,13 @@ from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.functional.tri import Failure
 from plugp100.common.functional.tri import Try
-from plugp100.responses.energy_info import EnergyInfo
-from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 from plugp100.responses.device_state import LedStripDeviceState
 from plugp100.responses.device_state import LightDeviceState
 from plugp100.responses.device_state import PlugDeviceState
+from plugp100.responses.energy_info import EnergyInfo
+from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.tapo_exception import TapoError
 from plugp100.responses.tapo_exception import TapoException
 
@@ -62,11 +62,14 @@ class HassTapoDeviceData:
 
 
 async def create_coordinator(
-    hass: HomeAssistant, client: TapoClient, host: str, polling_interval: timedelta
+    hass: HomeAssistant,
+    client: TapoClient,
+    host: str,
+    polling_interval: timedelta,
+    device_info: TapoDeviceInfo,
 ) -> Try["TapoCoordinator"]:
-    device_info = (await client.get_device_info()).map(lambda x: TapoDeviceInfo(**x))
-    if device_info.is_success():
-        model = get_short_model(device_info.get().model)
+    if device_info:
+        model = get_short_model(device_info.model)
         _LOGGER.info("Detected model of %s: %s", str(host), str(model))
         if model in SUPPORTED_DEVICE_AS_SWITCH:
             return Try.of(

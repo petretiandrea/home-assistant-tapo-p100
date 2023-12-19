@@ -1,53 +1,63 @@
 """Test tapo switch."""
-from unittest.mock import call
-from unittest.mock import patch
-
-from custom_components.tapo import (
-    async_setup_entry,
-)
-from custom_components.tapo.const import (
-    DEFAULT_NAME,
-)
-from custom_components.tapo.const import (
-    DOMAIN,
-)
-from custom_components.tapo.const import (
-    SWITCH,
-)
+import pytest
+from custom_components.tapo.const import DOMAIN
 from homeassistant.components.switch import SERVICE_TURN_OFF
 from homeassistant.components.switch import SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from plugp100.api.tapo_client import TapoProtocol
 
-from .const import MOCK_CONFIG
+from .conftest import fixture_tapo_map
+from .conftest import setup_platform
 
 
-async def test_switch_services(hass):
-    """Test switch services."""
-    # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    assert await async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
+@pytest.mark.parametrize(
+    "device_state_fixture, device_id",
+    [("plug_p105.json", "80225A84E5F52C914E409EF8CCE7D68D20FAA0B9")],
+)
+async def test_switch_setup(
+    hass: HomeAssistant,
+    mock_protocol: TapoProtocol,
+    device_state_fixture: str,
+    device_id: str,
+):
+    device_registry = dr.async_get(hass)
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
 
-    # Functions/objects can be patched directly in test code as well and can be used to test
-    # additional things, like whether a function was called or what arguments it was called with
-    with patch("custom_components.tapo.TapoApiClient.async_set_title") as title_func:
-        await hass.services.async_call(
-            SWITCH,
-            SERVICE_TURN_OFF,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
-            blocking=True,
-        )
-        assert title_func.called
-        assert title_func.call_args == call("foo")
+    await setup_platform(hass, ["switch"])
+    assert len(hass.states.async_all()) == 1
 
-        title_func.reset_mock()
+    state_entity = hass.states.get("switch.albero_natale")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert state_entity is not None
+    assert state_entity.state == "on"
+    assert state_entity.attributes["device_class"] == "outlet"
+    assert device is not None
 
-        await hass.services.async_call(
-            SWITCH,
-            SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
-            blocking=True,
-        )
-        assert title_func.called
-        assert title_func.call_args == call("bar")
+
+@pytest.mark.parametrize("device_state_fixture", ["plug_p105.json"])
+async def test_switch_turn_on_service(
+    hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
+):
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
+    await setup_platform(hass, ["switch"])
+    await hass.services.async_call(
+        "switch", SERVICE_TURN_ON, {"entity_id": "switch.albero_natale"}, blocking=True
+    )
+    assert mock_protocol.send_request.called
+    assert mock_protocol.send_request.call_args.args[0].params == {"device_on": True}
+    assert mock_protocol.send_request.call_args.args[0].method == "set_device_info"
+
+
+@pytest.mark.parametrize("device_state_fixture", ["plug_p105.json"])
+async def test_switch_turn_off_service(
+    hass: HomeAssistant, mock_protocol: TapoProtocol, device_state_fixture: str
+):
+    await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))
+    await setup_platform(hass, ["switch"])
+    await hass.services.async_call(
+        "switch", SERVICE_TURN_OFF, {"entity_id": "switch.albero_natale"}, blocking=True
+    )
+    assert mock_protocol.send_request.called
+    assert mock_protocol.send_request.call_args.args[0].params == {"device_on": False}
+    assert mock_protocol.send_request.call_args.args[0].method == "set_device_info"
