@@ -5,6 +5,10 @@ from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 # from homeassistant.components.sensor import SensorStateClass
 # from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 # from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
+from homeassistant.components.sensor import (
+  SensorDeviceClass,
+  SensorStateClass,
+)
 # from homeassistant.const import DEVICE_CLASS_ENERGY
 # from homeassistant.const import DEVICE_CLASS_POWER
 # from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
@@ -13,8 +17,6 @@ from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 # from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 # from homeassistant.const import TIME_MINUTES
 from homeassistant.const import (
-  SensorDeviceClass,
-  SensorStateClass,
   UnitOfEnergy,
   UnitOfPower,
   UnitOfTime,
