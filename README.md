@@ -16,6 +16,8 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 [![License][license-shield]](LICENSE)
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
+Please help me to complete the [new roadmap](https://github.com/petretiandrea/home-assistant-tapo-p100/discussions/655)
+
 ## Warnings
 
 ### Tapo protocol
