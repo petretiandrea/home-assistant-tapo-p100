@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
-from plugp100.discovery.local_device_finder import LocalDeviceFinder
+from plugp100.discovery.arp_lookup import ArpLookup
 
 _LOGGGER = logging.getLogger(__name__)
 
@@ -112,10 +112,10 @@ async def try_track_ip_address(
     try:
         if adapter is not None:
             target_network = get_network_of(adapter)
-            device = await LocalDeviceFinder.scan_one(
+            device_ip = await ArpLookup.lookup(
                 mac.replace("-", ":"), target_network, timeout=5
             )
-            return device.get_or_else(last_known_ip)
+            return device_ip.get_or_else(last_known_ip)
         else:
             _LOGGGER.warning(
                 "No adapter found for %s with last ip %s", mac, last_known_ip
