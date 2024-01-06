@@ -3,28 +3,23 @@ from custom_components.tapo.sensors.sensor_config import SensorConfig
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
-from homeassistant.const import DEVICE_CLASS_ENERGY
-from homeassistant.const import DEVICE_CLASS_POWER
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
-from homeassistant.const import POWER_WATT
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfTime
 from homeassistant.helpers.typing import StateType
+from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.energy_info import EnergyInfo
 from plugp100.responses.power_info import PowerInfo
-from plugp100.responses.device_state import DeviceInfo
 
 
 class TodayEnergySensorSource(TapoSensorSource):
     def get_config(self) -> SensorConfig:
         return SensorConfig(
             "today energy",
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_TOTAL_INCREASING,
-            ENERGY_KILO_WATT_HOUR,
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            UnitOfEnergy.KILO_WATT_HOUR,
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
@@ -37,9 +32,9 @@ class MonthEnergySensorSource(TapoSensorSource):
     def get_config(self) -> SensorConfig:
         return SensorConfig(
             "month energy",
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_TOTAL_INCREASING,
-            ENERGY_KILO_WATT_HOUR,
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            UnitOfEnergy.KILO_WATT_HOUR,
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
@@ -67,9 +62,9 @@ class CurrentEnergySensorSource(TapoSensorSource):
     def get_config(self) -> SensorConfig:
         return SensorConfig(
             "current power",
-            DEVICE_CLASS_POWER,
-            STATE_CLASS_MEASUREMENT,
-            POWER_WATT,
+            SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT,
+            UnitOfPower.WATT,
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
@@ -84,7 +79,7 @@ class SignalSensorSource(TapoSensorSource):
     def get_config(self) -> SensorConfig:
         return SensorConfig(
             name="signal level",
-            device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
             state_class=None,
             unit_measure=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
             is_diagnostic=True,
@@ -103,7 +98,7 @@ class TodayRuntimeSensorSource(TapoSensorSource):
             "today runtime",
             SensorDeviceClass.DURATION,
             SensorStateClass.TOTAL_INCREASING,
-            TIME_MINUTES,
+            UnitOfTime.MINUTES,
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
@@ -120,7 +115,7 @@ class MonthRuntimeSensorSource(TapoSensorSource):
             "month runtime",
             SensorDeviceClass.DURATION,
             SensorStateClass.TOTAL_INCREASING,
-            TIME_MINUTES,
+            UnitOfTime.MINUTES,
         )
 
     def get_value(self, coordinator: TapoCoordinator) -> StateType:
