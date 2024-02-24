@@ -31,5 +31,25 @@
       "state": {}
     },
     "overheated": false
+  },
+  "component_nego": {
+    "device": 2,
+    "firmware": 2,
+    "quick_setup": 3,
+    "time": 1,
+    "wireless": 1,
+    "schedule": 2,
+    "countdown": 2,
+    "antitheft": 1,
+    "account": 1,
+    "synchronize": 1,
+    "sunrise_sunset": 1,
+    "led": 1,
+    "cloud_connect": 1,
+    "iot_cloud": 1,
+    "device_local_time": 1,
+    "default_states": 1,
+    "auto_off": 2,
+    "localSmart": 1
   }
 }
