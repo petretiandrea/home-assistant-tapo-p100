@@ -51,7 +51,20 @@ SUPPORTED_DEVICE_AS_LIGHT = {
         ColorMode.COLOR_TEMP,
         ColorMode.HS,
     },
+    "tl135": {
+        ColorMode.ONOFF,
+        ColorMode.BRIGHTNESS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    },
+    "tl135e": {
+        ColorMode.ONOFF,
+        ColorMode.BRIGHTNESS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    },
 }
+
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
 SUPPORTED_LIGHT_EFFECTS = {
