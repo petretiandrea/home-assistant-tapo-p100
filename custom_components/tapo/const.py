@@ -23,28 +23,28 @@ SUPPORTED_DEVICE_AS_SWITCH = [
 ]
 SUPPORTED_DEVICE_AS_SWITCH_POWER_MONITOR = ["p110", "p115", "p110m", "p125m"]
 SUPPORTED_DEVICE_AS_LIGHT = {
-    "l920": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
-    "l930": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
-    "l900": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS],
-    "l630": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
-    "l530": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
-    "l520": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "l510": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "l610": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "tl33": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
-    "tl31": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP],
-    "s500d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "s505d": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "s500": [ColorMode.ONOFF, ColorMode.BRIGHTNESS],
-    "s505": [ColorMode.ONOFF],
-    "ts15": [ColorMode.ONOFF],
-    "l535": [ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS],
-    "l535b": [
+    "l920": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS},
+    "l930": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS},
+    "l900": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.HS},
+    "l630": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS},
+    "l530": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS},
+    "l520": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "l510": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "l610": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "tl33": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS},
+    "tl31": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP},
+    "s500d": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "s505d": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "s500": {ColorMode.ONOFF, ColorMode.BRIGHTNESS},
+    "s505": {ColorMode.ONOFF},
+    "ts15": {ColorMode.ONOFF},
+    "l535": {ColorMode.ONOFF, ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP, ColorMode.HS},
+    "l535b": {
         ColorMode.ONOFF,
         ColorMode.BRIGHTNESS,
         ColorMode.COLOR_TEMP,
         ColorMode.HS,
-    ],
+    },
 }
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
