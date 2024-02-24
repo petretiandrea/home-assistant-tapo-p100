@@ -17,7 +17,7 @@ from homeassistant.components.light import ATTR_EFFECT
 from homeassistant.components.light import ATTR_HS_COLOR
 from homeassistant.components.light import ColorMode
 from homeassistant.components.light import LightEntity
-from homeassistant.components.light import SUPPORT_EFFECT
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,7 +66,9 @@ class TapoLight(BaseTapoEntity[TapoDeviceCoordinator], LightEntity):
         self._attr_min_color_temp_kelvin = 2500
         self._attr_max_mireds = kelvin_to_mired(self._attr_min_color_temp_kelvin)
         self._attr_min_mireds = kelvin_to_mired(self._attr_max_color_temp_kelvin)
-        self._attr_supported_features = SUPPORT_EFFECT if self._effects else 0
+        self._attr_supported_features = (
+            LightEntityFeature.EFFECT if self._effects else 0
+        )
         self._attr_supported_color_modes = _components_to_color_modes(
             self.coordinator.components
         )

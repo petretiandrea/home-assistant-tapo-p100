@@ -11,7 +11,7 @@ from plugp100.api.power_strip_device import PowerStripDevice
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.12.1"
+VERSION = "2.13.0"
 
 SUPPORTED_HUB_DEVICE_MODEL = ["h100", "kh100", "h200"]
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
@@ -43,6 +43,10 @@ SUPPORTED_DEVICE_AS_LIGHT = [
     "s505",
     "ts15",
     "l535",
+    "l535e",
+    "l535b",
+    "tl135",
+    "tl135e",
 ]
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
