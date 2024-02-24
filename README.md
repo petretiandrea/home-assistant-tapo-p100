@@ -45,7 +45,7 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 - [x] partial support for `S200B` button hub's device (actually no events are reported to HA)
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`, `P110M`)
-- [x] support for tapo light bulb with or without color (`L530`, `L510`, `L520`, `L630`, `L610`, `L530B`)
+- [x] support for tapo light bulb with or without color (`L530`, `L510`, `L520`, `L630`, `L610`, `L530B`, `L530E`)
 - [x] support for tapo light strip with or without color (`L900`)
 - [x] partial support for tapo light strip (`L920`, `L930` (including light effects)). Only RGB works not the addressable feature of strip.
 - [x] support for energy monitoring (`P110`, `P115`, `P110M`)

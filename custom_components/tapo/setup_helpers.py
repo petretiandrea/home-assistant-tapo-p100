@@ -92,7 +92,9 @@ async def connect_tapo_client(
     if api is not None:
         _LOGGGER.debug("Re-using setup API to create a coordinator")
     else:
-        _LOGGGER.debug("Creating new API to create a coordinator for %s", unique_id)
+        _LOGGGER.debug(
+            "Creating new API to create a coordinator for %s: %s", unique_id, ip_address
+        )
         session = async_create_clientsession(hass)
         host, port = get_host_port(ip_address)
         api = TapoClient.create(
