@@ -3,7 +3,7 @@ from typing import cast
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
 from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.climate import ClimateEntity
@@ -33,7 +33,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = "Climate"
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -51,7 +51,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .min_control_temperature
         )
@@ -59,7 +59,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .max_control_temperature
         )
@@ -67,7 +67,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .current_temperature
         )
@@ -75,7 +75,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .target_temperature
         )
@@ -83,7 +83,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         temp_unit = (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .temperature_unit
         )
@@ -97,7 +97,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         trv_state = (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .trv_state
         )
@@ -112,13 +112,13 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
         if hvac_mode == HVACMode.HEAT:
             (
                 await cast(
-                    TapoCoordinator, self.coordinator
+                    TapoDataCoordinator, self.coordinator
                 ).device.set_frost_protection_off()
             ).get_or_raise()
         else:
             (
                 await cast(
-                    TapoCoordinator, self.coordinator
+                    TapoDataCoordinator, self.coordinator
                 ).device.set_frost_protection_on()
             ).get_or_raise()
 
@@ -126,7 +126,9 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         (
-            await cast(TapoCoordinator, self.coordinator).device.set_target_temp(kwargs)
+            await cast(TapoDataCoordinator, self.coordinator).device.set_target_temp(
+                kwargs
+            )
         ).get_or_raise()
         await self.coordinator.async_request_refresh()
 

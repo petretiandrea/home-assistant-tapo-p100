@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.switch import SWITCH_MAPPING
 from custom_components.tapo.hub.switch import SwitchTapoChild
 from custom_components.tapo.hub.switch import TRVChildLock
@@ -13,7 +13,7 @@ from plugp100.api.hub.switch_child_device import SwitchChildDevice
 
 
 class TestSensorMappings:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {
@@ -25,7 +25,7 @@ class TestSensorMappings:
 
 
 class TestTRVFrostProtection:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()
@@ -58,7 +58,7 @@ class TestTRVFrostProtection:
 
     @pytest.mark.asyncio
     async def test_async_turn_on(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 
@@ -71,7 +71,7 @@ class TestTRVFrostProtection:
 
     @pytest.mark.asyncio
     async def test_async_turn_off(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 
@@ -84,7 +84,7 @@ class TestTRVFrostProtection:
 
 
 class TestTRVChildLock:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()
@@ -117,7 +117,7 @@ class TestTRVChildLock:
 
     @pytest.mark.asyncio
     async def test_async_turn_on(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 
@@ -130,7 +130,7 @@ class TestTRVChildLock:
 
     @pytest.mark.asyncio
     async def test_async_turn_off(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 

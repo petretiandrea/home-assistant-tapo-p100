@@ -47,9 +47,9 @@ DEBOUNCER_COOLDOWN = 2
 
 @dataclass
 class HassTapoDeviceData:
-    coordinator: "TapoCoordinator"
+    coordinator: "TapoDataCoordinator"
     config_entry_update_unsub: CALLBACK_TYPE
-    child_coordinators: List["TapoCoordinator"]
+    child_coordinators: List["TapoDataCoordinator"]
 
 
 def create_tapo_device(model: str, client: TapoClient) -> Optional[TapoDevice]:
@@ -71,7 +71,7 @@ T = TypeVar("T")
 StateMap = Dict[Type[T], T]
 
 
-class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
+class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -147,7 +147,7 @@ class TapoCoordinator(ABC, DataUpdateCoordinator[StateMap]):
 PowerStripChildrenState = dict[str, PowerStripChild]
 
 
-class TapoDeviceCoordinator(TapoCoordinator):
+class TapoDeviceCoordinator(TapoDataCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,

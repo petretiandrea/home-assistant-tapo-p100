@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import TypeVar
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -44,7 +44,7 @@ HubChildCommonState = (
 )
 
 
-class TapoHubChildCoordinator(TapoCoordinator):
+class TapoHubChildCoordinator(TapoDataCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -81,7 +81,7 @@ class TapoHubChildCoordinator(TapoCoordinator):
             self.update_state_of(HubChildCommonState, base_state)
 
 
-C = TypeVar("C", bound=TapoCoordinator)
+C = TypeVar("C", bound=TapoDataCoordinator)
 
 
 class BaseTapoHubChildEntity(CoordinatorEntity[C]):

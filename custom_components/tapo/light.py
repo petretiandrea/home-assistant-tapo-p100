@@ -6,7 +6,7 @@ from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.coordinators import TapoDeviceCoordinator
-from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.entity import CoordinatedTapoEntity
 from custom_components.tapo.helpers import hass_to_tapo_brightness
 from custom_components.tapo.helpers import hass_to_tapo_color_temperature
 from custom_components.tapo.helpers import tapo_to_hass_brightness
@@ -56,7 +56,7 @@ async def async_setup_entry(
         async_add_entities([light], True)
 
 
-class TapoLight(BaseTapoEntity[TapoDeviceCoordinator], LightEntity):
+class TapoLight(CoordinatedTapoEntity[TapoDeviceCoordinator], LightEntity):
     def __init__(self, coordinator: TapoDeviceCoordinator):
         super().__init__(coordinator)
         supported_effects = _components_to_light_effects(self.coordinator.components)

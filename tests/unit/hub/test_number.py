@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.number import SENSOR_MAPPING
 from custom_components.tapo.hub.number import TRVTemperatureOffset
 from homeassistant.components.number import NumberDeviceClass
@@ -13,7 +13,7 @@ from plugp100.responses.temperature_unit import TemperatureUnit
 
 
 class TestSensorMappings:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {KE100Device: [TRVTemperatureOffset]}
@@ -22,7 +22,7 @@ class TestSensorMappings:
 
 
 class TestTRVTemperatureOffset:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()
@@ -106,7 +106,7 @@ class TestTRVTemperatureOffset:
     @pytest.mark.asyncio
     async def test_async_set_native_value(self):
         value = 8
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 

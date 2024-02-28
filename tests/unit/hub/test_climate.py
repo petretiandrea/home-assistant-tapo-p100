@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.climate import SENSOR_MAPPING
 from custom_components.tapo.hub.climate import TRVClimate
 from homeassistant.components.climate import ClimateEntityFeature
@@ -14,7 +14,7 @@ from plugp100.responses.temperature_unit import TemperatureUnit
 
 
 class TestSensorMappings:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {KE100Device: [TRVClimate]}
@@ -23,7 +23,7 @@ class TestSensorMappings:
 
 
 class TestTRVClimate:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()
@@ -133,7 +133,7 @@ class TestTRVClimate:
 
     @pytest.mark.asyncio
     async def test_async_hvac_mode_heat(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 
@@ -146,7 +146,7 @@ class TestTRVClimate:
 
     @pytest.mark.asyncio
     async def test_async_hvac_mode_off(self):
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 
@@ -160,7 +160,7 @@ class TestTRVClimate:
     @pytest.mark.asyncio
     async def test_async_set_temperature(self):
         temp_args = {"temperature": 18}
-        async_coordinator = AsyncMock(TapoCoordinator)
+        async_coordinator = AsyncMock(TapoDataCoordinator)
         device = AsyncMock()
         async_coordinator.device = device
 

@@ -7,8 +7,8 @@ from typing import Union
 from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
-from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.entity import CoordinatedTapoEntity
 from custom_components.tapo.hub.sensor import (
     async_setup_entry as async_setup_hub_sensors,
 )
@@ -59,7 +59,7 @@ async def async_setup_entry(
 
 def _setup_from_coordinator(
     hass: HomeAssistant,
-    coordinator: TapoCoordinator,
+    coordinator: TapoDataCoordinator,
     async_add_entities: AddEntitiesCallback,
 ):
     sensors = [TapoSensor(coordinator, SignalSensorSource())]
@@ -70,12 +70,12 @@ def _setup_from_coordinator(
     async_add_entities(sensors, True)
 
 
-class TapoSensor(BaseTapoEntity[TapoCoordinator], SensorEntity):
+class TapoSensor(CoordinatedTapoEntity[TapoDataCoordinator], SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TapoCoordinator,
+        coordinator: TapoDataCoordinator,
         sensor_source: TapoSensorSource,
     ):
         super().__init__(coordinator)

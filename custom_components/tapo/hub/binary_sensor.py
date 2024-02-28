@@ -3,7 +3,7 @@ from typing import Optional
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
 from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -43,7 +43,7 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .is_open
         )
@@ -52,7 +52,7 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -62,7 +62,7 @@ class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .water_leak_status
             != "normal"
@@ -70,7 +70,7 @@ class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 
 
 class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -80,14 +80,14 @@ class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .detected
         )
 
 
 class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Battery Low"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -103,7 +103,7 @@ class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .base_info.at_low_battery
         )

@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.sensor import BatteryLevelSensor
 from custom_components.tapo.hub.sensor import HumitidySensor
 from custom_components.tapo.hub.sensor import ReportIntervalDiagnostic
@@ -18,7 +18,7 @@ from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevic
 
 
 class TestSensorMappings:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {
@@ -34,7 +34,7 @@ class TestSensorMappings:
 
 
 class TestBatteryLevelSensor:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()
