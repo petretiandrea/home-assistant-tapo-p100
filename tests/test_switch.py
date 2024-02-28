@@ -17,9 +17,9 @@ from .conftest import setup_platform
 )
 async def test_switch_setup(
     hass: HomeAssistant,
-    mock_protocol: TapoProtocol,
     device_state_fixture: str,
     device_id: str,
+    mock_protocol: TapoProtocol,
 ):
     device_registry = dr.async_get(hass)
     await mock_protocol.load_test_data(fixture_tapo_map(device_state_fixture))

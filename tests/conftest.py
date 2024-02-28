@@ -31,7 +31,7 @@ from .tapo_mock_helper import TapoResponseMockHelper
 pytest_plugins = ("pytest_homeassistant_custom_component",)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def mock_protocol() -> TapoProtocol:
     mock = Mock(PassthroughProtocol)
 
@@ -46,9 +46,9 @@ def mock_protocol() -> TapoProtocol:
     return mock
 
 
-@pytest.fixture(scope="session")
-def tapo_client(mock_protocol: TapoProtocol):
-    """Mock the Hue V1 api."""
+@pytest.fixture()
+def tapo_client(mock_protocol: TapoProtocol) -> TapoClient:
+    print("Mock proto", mock_protocol)
     return create_mock_tapo_client(mock_protocol)
 
 
@@ -57,13 +57,11 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     yield
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def patch_setup_api(tapo_client: TapoClient):
-    with patch(
-        target="custom_components.tapo.setup_helpers.create_api_from_config",
-        return_value=tapo_client,
-    ):
-        yield
+    with patch("custom_components.tapo.create_api_from_config") as mock:
+        mock.return_value = tapo_client
+        yield mock
 
 
 @pytest.fixture(autouse=True)
@@ -111,7 +109,7 @@ async def setup_platform(hass: HomeAssistant, platforms: list[str]):
 
     config_entry.add_to_hass(hass)
     with patch.object(hass.config_entries, "async_forward_entry_setup"):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
 
