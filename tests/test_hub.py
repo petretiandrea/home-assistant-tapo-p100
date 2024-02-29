@@ -1,67 +1,75 @@
-from unittest.mock import AsyncMock
-from unittest.mock import patch
-
-from custom_components.tapo.const import CONF_HOST
-from custom_components.tapo.const import CONF_PASSWORD
-from custom_components.tapo.const import CONF_TRACK_DEVICE
-from custom_components.tapo.const import CONF_USERNAME
+from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import HUB_PLATFORMS
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.components.siren import SERVICE_TURN_OFF
+from homeassistant.components.siren import SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from plugp100.api.tapo_client import TapoProtocol
-from plugp100.common.functional.tri import Failure
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from .conftest import fixture_tapo_map
-
-MOCK_CONFIG_ENTRY_DATA = {
-    CONF_HOST: "1.2.3.4",
-    CONF_USERNAME: "mock",
-    CONF_PASSWORD: "mock",
-    CONF_SCAN_INTERVAL: 5000,
-    CONF_TRACK_DEVICE: False,
-    "is_hub": True,
-}
+from .conftest import mock_hub
+from .conftest import setup_platform
 
 
-async def test_hub_setup(hass: HomeAssistant, mock_protocol: TapoProtocol):
-    config_entry = MockConfigEntry(
-        domain="tapo",
-        data=MOCK_CONFIG_ENTRY_DATA,
-        version=6,
-        entry_id="test",
-        unique_id="test",
+async def test_hub_siren_on(hass: HomeAssistant):
+    device = mock_hub()
+    await setup_platform(hass, device, HUB_PLATFORMS)
+    entity_id = "siren.smart_hub_siren"
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+    await hass.services.async_call(
+        SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    await mock_protocol.load_test_data(fixture_tapo_map("hub.json"))
-    config_entry.add_to_hass(hass)
-    device_registry: dr.DeviceRegistry = dr.async_get(hass)
-
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
-        await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.LOADED
-        assert {c[1][1] for c in mock_forward.mock_calls} == set(HUB_PLATFORMS)
-        assert len(device_registry.devices) == 2
+    assert device.turn_alarm_on.called
 
 
-async def test_hub_setup_retry_when_error(
-    hass: HomeAssistant, mock_protocol: TapoProtocol
+async def test_hub_siren_off(hass: HomeAssistant):
+    device = mock_hub()
+    await setup_platform(hass, device, HUB_PLATFORMS)
+    entity_id = "siren.smart_hub_siren"
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+    await hass.services.async_call(
+        SIREN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert device.turn_alarm_off.called
+
+
+async def test_hub_signal_sensor(
+    hass: HomeAssistant,
 ):
-    config_entry = MockConfigEntry(
-        domain="tapo", data=MOCK_CONFIG_ENTRY_DATA, version=6, entry_id="test"
-    )
-    config_entry.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    device = mock_hub()
+    entry = await setup_platform(hass, device, [SENSOR_DOMAIN])
+    entity_id = "sensor.smart_hub_signal_level"
+    assert len(hass.states.async_all()) == 1
 
-    mock_protocol.send_request = AsyncMock(
-        return_value=Failure(Exception("generic error"))
-    )
+    state_entity = hass.states.get(entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    assert state_entity is not None
+    assert state_entity.state == "-70"
+    assert state_entity.attributes["device_class"] == "signal_strength"
+    assert "signal level" in state_entity.attributes["friendly_name"].lower()
+    assert device is not None
 
-    with patch.object(
-        mock_protocol, "send_request", side_effect=[Failure(Exception("generic error"))]
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+async def test_hub_overheat_sensor(
+    hass: HomeAssistant,
+):
+    device_registry = dr.async_get(hass)
+    device = mock_hub()
+    entry = await setup_platform(hass, device, [BINARY_SENSOR_DOMAIN])
+    entity_id = "binary_sensor.smart_hub_overheat"
+    assert len(hass.states.async_all()) == 1
+
+    state_entity = hass.states.get(entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    assert state_entity is not None
+    assert state_entity.state == "off"
+    assert state_entity.attributes["device_class"] == "heat"
+    assert "overheat" in state_entity.attributes["friendly_name"].lower()
+    assert device is not None

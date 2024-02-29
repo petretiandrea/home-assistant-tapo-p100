@@ -83,5 +83,89 @@
     "avatar": "button",
     "report_interval": 16,
     "region": "Europe/Rome"
+  },
+  "component_nego": {
+    "component_list": [
+      {
+        "id": "device",
+        "ver_code": 2
+      },
+      {
+        "id": "firmware",
+        "ver_code": 2
+      },
+      {
+        "id": "quick_setup",
+        "ver_code": 3
+      },
+      {
+        "id": "inherit",
+        "ver_code": 1
+      },
+      {
+        "id": "time",
+        "ver_code": 1
+      },
+      {
+        "id": "wireless",
+        "ver_code": 1
+      },
+      {
+        "id": "account",
+        "ver_code": 1
+      },
+      {
+        "id": "synchronize",
+        "ver_code": 1
+      },
+      {
+        "id": "sunrise_sunset",
+        "ver_code": 1
+      },
+      {
+        "id": "led",
+        "ver_code": 1
+      },
+      {
+        "id": "cloud_connect",
+        "ver_code": 1
+      },
+      {
+        "id": "iot_cloud",
+        "ver_code": 1
+      },
+      {
+        "id": "child_device",
+        "ver_code": 1
+      },
+      {
+        "id": "child_quick_setup",
+        "ver_code": 1
+      },
+      {
+        "id": "child_inherit",
+        "ver_code": 1
+      },
+      {
+        "id": "control_child",
+        "ver_code": 1
+      },
+      {
+        "id": "alarm",
+        "ver_code": 1
+      },
+      {
+        "id": "device_load",
+        "ver_code": 1
+      },
+      {
+        "id": "device_local_time",
+        "ver_code": 1
+      },
+      {
+        "id": "alarm_logs",
+        "ver_code": 1
+      }
+    ]
   }
 }

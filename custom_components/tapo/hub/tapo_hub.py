@@ -106,7 +106,9 @@ class TapoHub:
             )
             for child_device in device_list
         ]
-        device_entries, child_coordinators = zip(*setup_results)
+        device_entries, child_coordinators = (
+            zip(*setup_results) if len(setup_results) > 0 else ([], [])
+        )
 
         # delete device which is no longer available to hub
         for device in dr.async_entries_for_config_entry(registry, self.entry.entry_id):

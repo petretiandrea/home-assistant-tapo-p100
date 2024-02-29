@@ -33,23 +33,25 @@
     "overheated": false
   },
   "component_nego": {
-    "device": 2,
-    "firmware": 2,
-    "quick_setup": 3,
-    "time": 1,
-    "wireless": 1,
-    "schedule": 2,
-    "countdown": 2,
-    "antitheft": 1,
-    "account": 1,
-    "synchronize": 1,
-    "sunrise_sunset": 1,
-    "led": 1,
-    "cloud_connect": 1,
-    "iot_cloud": 1,
-    "device_local_time": 1,
-    "default_states": 1,
-    "auto_off": 2,
-    "localSmart": 1
+    "component_list": [
+      { "id": "device", "ver_code": 2 },
+      { "id": "firmware", "ver_code": 2 },
+      { "id": "quick_setup", "ver_code": 2 },
+      { "id": "time", "ver_code": 2 },
+      { "id": "wireless", "ver_code": 2 },
+      { "id": "schedule", "ver_code": 2 },
+      { "id": "countdown", "ver_code": 2 },
+      { "id": "antitheft", "ver_code": 2 },
+      { "id": "account", "ver_code": 2 },
+      { "id": "synchronize", "ver_code": 2 },
+      { "id": "sunrise_sunset", "ver_code": 2 },
+      { "id": "led", "ver_code": 2 },
+      { "id": "cloud_connect", "ver_code": 2 },
+      { "id": "iot_cloud", "ver_code": 2 },
+      { "id": "device_local_time", "ver_code": 2 },
+      { "id": "default_states", "ver_code": 2 },
+      { "id": "auto_off", "ver_code": 2 },
+      { "id": "localSmart", "ver_code": 2 }
+    ]
   }
 }
