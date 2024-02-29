@@ -7,6 +7,10 @@ on:
       - master
       - dev
   pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
     branches:
       - main
       - master
