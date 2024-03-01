@@ -15,6 +15,8 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from plugp100.api.hub.hub_device import HubDevice
+from plugp100.api.ledstrip_device import LedStripDevice
+from plugp100.api.light_device import LightDevice
 from plugp100.api.plug_device import PlugDevice
 from plugp100.common.functional.tri import Success
 from plugp100.common.functional.tri import Try
@@ -22,6 +24,8 @@ from plugp100.responses.alarm_type_list import AlarmTypeList
 from plugp100.responses.child_device_list import ChildDeviceList
 from plugp100.responses.components import Components
 from plugp100.responses.device_state import HubDeviceState
+from plugp100.responses.device_state import LedStripDeviceState
+from plugp100.responses.device_state import LightDeviceState
 from plugp100.responses.device_state import PlugDeviceState
 from plugp100.responses.tapo_response import TapoResponse
 from pytest_homeassistant_custom_component.common import load_fixture
@@ -138,3 +142,64 @@ def mock_hub() -> MagicMock:
     )
     device.__class__ = HubDevice
     return device
+
+
+def mock_bulb(components_to_exclude: list[str] = []) -> MagicMock:
+    response = fixture_tapo_map("bulb.json")
+    state = response.get("get_device_info").flat_map(
+        lambda x: LightDeviceState.try_from_json(x.result)
+    )
+    components = (
+        response.get("component_nego")
+        .map(lambda x: Components.try_from_json(x.result))
+        .map(lambda x: exclude_components(x, components_to_exclude))
+    )
+    device = MagicMock(auto_spec=LightDevice, name="Mocked bulb device")
+    device.on = AsyncMock(return_value=Success(True))
+    device.off = AsyncMock(return_value=Success(True))
+    device.set_brightness = AsyncMock(return_value=Success(True))
+    device.set_hue_saturation = AsyncMock(return_value=Success(True))
+    device.set_color_temperature = AsyncMock(return_value=Success(True))
+    device.get_state = AsyncMock(return_value=state)
+    device.get_component_negotiation = AsyncMock(return_value=components)
+    device.__class__ = LightDevice
+    return device
+
+
+def mock_led_strip() -> MagicMock:
+    response = fixture_tapo_map("ledstrip.json")
+    state = response.get("get_device_info").flat_map(
+        lambda x: LedStripDeviceState.try_from_json(x.result)
+    )
+    components = response.get("component_nego").map(
+        lambda x: Components.try_from_json(x.result)
+    )
+    device = MagicMock(auto_spec=LedStripDevice, name="Mocked led strip device")
+    device.on = AsyncMock(return_value=Success(True))
+    device.off = AsyncMock(return_value=Success(True))
+    device.set_brightness = AsyncMock(return_value=Success(True))
+    device.set_hue_saturation = AsyncMock(return_value=Success(True))
+    device.set_color_temperature = AsyncMock(return_value=Success(True))
+    device.set_light_effect = AsyncMock(return_value=Success(True))
+    device.set_light_effect_brightness = AsyncMock(return_value=Success(True))
+    device.get_state = AsyncMock(return_value=state)
+    device.get_component_negotiation = AsyncMock(return_value=components)
+    device.__class__ = LedStripDevice
+    return device
+
+
+async def extract_entity_id(device: TapoDevice, platform: str, postfix: str = ""):
+    nickname = (await device.get_state()).map(lambda x: x.info.nickname).get_or_raise()
+    return platform + "." + (nickname + " " + postfix).strip().lower().replace(" ", "_")
+
+
+def exclude_components(components: Components, to_exclude: list[str]) -> Components:
+    component_list = {
+        "component_list": [
+            {"id": component, "ver_code": components.get_version(component)}
+            for component in filter(
+                lambda x: x not in to_exclude, components.component_list
+            )
+        ]
+    }
+    return Components.try_from_json(component_list)
