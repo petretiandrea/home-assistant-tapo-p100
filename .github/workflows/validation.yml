@@ -103,10 +103,9 @@ jobs:
             --cov-fail-under=40 \
             --junitxml=pytest.xml \
             --cov-report=term-missing:skip-covered \
-            --cov=app
-            -n auto \
+            --cov=app \
             -p no:sugar \
-            tests/unit | tee pytest-coverage.txt
+            tests/ | tee pytest-coverage.txt
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
