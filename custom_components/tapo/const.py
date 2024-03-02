@@ -1,4 +1,5 @@
 """Constants for the tapo integration."""
+from datetime import timedelta
 from enum import Enum
 from typing import Union
 
@@ -12,6 +13,9 @@ from plugp100.api.power_strip_device import PowerStripDevice
 NAME = "tapo"
 DOMAIN = "tapo"
 VERSION = "2.13.0"
+
+DISCOVERY_INTERVAL = timedelta(minutes=10)
+DISCOVERY_TIMEOUT = 5
 
 SUPPORTED_HUB_DEVICE_MODEL = ["h100", "kh100", "h200"]
 SUPPORTED_POWER_STRIP_DEVICE_MODEL = "p300"
