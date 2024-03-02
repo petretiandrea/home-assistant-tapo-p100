@@ -1,12 +1,24 @@
 from unittest.mock import Mock
 
-from custom_components.tapo.hub.sensor import *
-
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.hub.sensor import BatteryLevelSensor
+from custom_components.tapo.hub.sensor import HumitidySensor
+from custom_components.tapo.hub.sensor import ReportIntervalDiagnostic
+from custom_components.tapo.hub.sensor import SENSOR_MAPPING
+from custom_components.tapo.hub.sensor import TemperatureSensor
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import PERCENTAGE
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.t100_device import T100MotionSensor
+from plugp100.api.hub.t110_device import T110SmartDoor
+from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
 
 
 class TestSensorMappings:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {
@@ -22,7 +34,7 @@ class TestSensorMappings:
 
 
 class TestBatteryLevelSensor:
-    coordinator = Mock(TapoCoordinator)
+    coordinator = Mock(TapoDataCoordinator)
 
     def test_unique_id(self):
         base_data = Mock()

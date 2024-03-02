@@ -2,12 +2,11 @@ from typing import cast
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
-from custom_components.tapo.entity import BaseTapoEntity
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.entity import CoordinatedTapoEntity
 from custom_components.tapo.hub.binary_sensor import (
     async_setup_entry as async_setup_binary_sensors,
 )
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,12 +20,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     sensors = [OverheatSensor(data.coordinator)]
     async_add_devices(sensors, True)
-    if isinstance(data.coordinator, TapoHubCoordinator):
+    if data.coordinator.is_hub:
         await async_setup_binary_sensors(hass, entry, async_add_devices)
 
 
-class OverheatSensor(BaseTapoEntity[TapoCoordinator], BinarySensorEntity):
-    def __init__(self, coordinator: TapoCoordinator):
+class OverheatSensor(CoordinatedTapoEntity[TapoDataCoordinator], BinarySensorEntity):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Overheat"
         self._attr_icon = "mdi:fire-alert"

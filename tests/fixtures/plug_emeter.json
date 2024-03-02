@@ -1,0 +1,137 @@
+{
+  "get_device_info": {
+    "device_id": "80225A84E5F52C914E409EF8CCE7D68D20FAA0B4",
+    "fw_ver": "1.0.4 Build 230825 Rel.115051",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOPLUG",
+    "model": "P110M",
+    "mac": "I_WOULD_RATHER_NOT",
+    "hw_id": "I_WOULD_RATHER_NOT",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "F031I_WOULD_RATHER_NOT91C",
+    "ip": "192.168.0.8",
+    "time_diff": 0,
+    "ssid": "cGx1ZyBlbWV0ZXI=",
+    "rssi": -51,
+    "signal_level": 2,
+    "auto_off_status": "off",
+    "auto_off_remain_time": 0,
+    "latitude": 0,
+    "longitude": 0,
+    "lang": "",
+    "avatar": "",
+    "region": "Europe/Rome",
+    "specs": "",
+    "nickname": "cGx1ZyBlbWV0ZXI=",
+    "has_set_location_info": false,
+    "device_on": true,
+    "on_time": 2409,
+    "default_states": {
+      "type": "last_states",
+      "state": {}
+    },
+    "overheated": false,
+    "power_protection_status": "normal",
+    "overcurrent_status": "normal"
+  },
+  "component_nego": {
+    "component_list": [
+      {
+        "id": "device",
+        "ver_code": 2
+      },
+      {
+        "id": "firmware",
+        "ver_code": 2
+      },
+      {
+        "id": "quick_setup",
+        "ver_code": 3
+      },
+      {
+        "id": "time",
+        "ver_code": 1
+      },
+      {
+        "id": "wireless",
+        "ver_code": 1
+      },
+      {
+        "id": "schedule",
+        "ver_code": 2
+      },
+      {
+        "id": "countdown",
+        "ver_code": 2
+      },
+      {
+        "id": "antitheft",
+        "ver_code": 1
+      },
+      {
+        "id": "account",
+        "ver_code": 1
+      },
+      {
+        "id": "synchronize",
+        "ver_code": 1
+      },
+      {
+        "id": "sunrise_sunset",
+        "ver_code": 1
+      },
+      {
+        "id": "led",
+        "ver_code": 1
+      },
+      {
+        "id": "cloud_connect",
+        "ver_code": 1
+      },
+      {
+        "id": "iot_cloud",
+        "ver_code": 1
+      },
+      {
+        "id": "device_local_time",
+        "ver_code": 1
+      },
+      {
+        "id": "default_states",
+        "ver_code": 1
+      },
+      {
+        "id": "auto_off",
+        "ver_code": 2
+      },
+      {
+        "id": "energy_monitoring",
+        "ver_code": 2
+      },
+      {
+        "id": "power_protection",
+        "ver_code": 1
+      },
+      {
+        "id": "matter",
+        "ver_code": 2
+      },
+      {
+        "id": "current_protection",
+        "ver_code": 1
+      }
+    ]
+  },
+  "get_current_power": {
+    "current_power": 1.2
+  },
+  "get_energy_usage": {
+    "current_power": 1.2,
+    "electricity_charge": [0, 0, 0],
+    "local_time": "2024-01-20 09:25:31",
+    "month_energy": 1421,
+    "month_runtime": 19742,
+    "today_energy": 0,
+    "today_runtime": 3
+  }
+}

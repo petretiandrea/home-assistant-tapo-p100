@@ -6,7 +6,7 @@ from typing import Union
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
 from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.sensor import SensorDeviceClass
@@ -43,7 +43,7 @@ async def async_setup_entry(
 class HumitidySensor(BaseTapoHubChildEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Humidity"
 
@@ -66,7 +66,7 @@ class HumitidySensor(BaseTapoHubChildEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .current_humidity
         )
@@ -75,7 +75,7 @@ class HumitidySensor(BaseTapoHubChildEntity, SensorEntity):
 class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Temperature"
 
@@ -94,7 +94,7 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> Optional[str]:
         temp_unit = (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .temperature_unit
         )
@@ -108,7 +108,7 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .current_temperature
         )
@@ -117,7 +117,7 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
 class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Battery Percentage"
 
@@ -140,14 +140,14 @@ class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .battery_percentage
         )
 
 
 class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
         self._attr_name = "Report Interval"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -171,7 +171,7 @@ class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .report_interval_seconds
         )

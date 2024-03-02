@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node 20.x
+        uses: actions/setup-node@4.0.2
+        with:
+          node-version: 20
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@4.0.0
+        with:
+          semantic_version: 23.0.2
+          branches: |
+            [ 'main' ]
+          extra_plugins: |
+            @semantic-release/commit-analyzer@11.1.0
+            @semantic-release/release-notes-generator@12.1.0
+            @semantic-release/git@10.0.1
+            @semantic-release/github@9.2.6
+            @semantic-release/exec@6.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,7 +2,7 @@ import logging
 from typing import TypeVar
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -11,10 +11,10 @@ from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
 _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T")
-C = TypeVar("C", bound=TapoCoordinator)
+C = TypeVar("C", bound=TapoDataCoordinator)
 
 
-class BaseTapoEntity(CoordinatorEntity[C]):
+class CoordinatedTapoEntity(CoordinatorEntity[C]):
     _attr_has_entity_name = True
     _attr_name = None
 

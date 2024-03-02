@@ -6,7 +6,7 @@ from typing import Union
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
 from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.number import NumberDeviceClass
@@ -36,7 +36,7 @@ class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
     _attr_has_entity_name = True
     _attr_name = "Temperature Offset"
 
-    def __init__(self, coordinator: TapoCoordinator):
+    def __init__(self, coordinator: TapoDataCoordinator):
         super().__init__(coordinator)
 
     @property
@@ -66,7 +66,7 @@ class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .temperature_offset
         )
@@ -74,7 +74,7 @@ class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
     @property
     def native_unit_of_measurement(self) -> Optional[str]:
         temp_unit = (
-            cast(TapoCoordinator, self.coordinator)
+            cast(TapoDataCoordinator, self.coordinator)
             .get_state_of(HubChildCommonState)
             .temperature_unit
         )
@@ -87,7 +87,7 @@ class TRVTemperatureOffset(BaseTapoHubChildEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         (
-            await cast(TapoCoordinator, self.coordinator).device.set_temp_offset(
+            await cast(TapoDataCoordinator, self.coordinator).device.set_temp_offset(
                 int(value)
             )
         ).get_or_raise()

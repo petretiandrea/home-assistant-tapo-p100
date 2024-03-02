@@ -1,0 +1,171 @@
+{
+  "get_device_info": {
+    "device_id": "802D86324AC15B78B560A284ED9A2E292137268A",
+    "fw_ver": "1.3.9 Build 230522 Rel.103415",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOHUB",
+    "model": "H100",
+    "mac": "78-8C-B5-F7-46-85",
+    "hw_id": "81C01BC6E4AD1827315AC6A9D81A5132",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "D65F1AA7B819559EDF3C5C2BD5957929",
+    "overheated": false,
+    "ip": "192.168.1.13",
+    "time_diff": 60,
+    "ssid": "SG9tZS1OZXR3b3Jr",
+    "rssi": -70,
+    "signal_level": 1,
+    "in_alarm": false,
+    "in_alarm_source": "",
+    "latitude": 437009,
+    "longitude": 128307,
+    "lang": "it_IT",
+    "avatar": "hub",
+    "region": "Europe/Rome",
+    "specs": "EU",
+    "nickname": "U21hcnQgSHVi",
+    "has_set_location_info": false
+  },
+  "get_child_device_list": {
+    "child_device_list": [
+      {
+        "parent_device_id": "802D86324AC15B78B560A284ED9A2E292137268A",
+        "hw_ver": "1.0",
+        "fw_ver": "1.10.0 Build 220728 Rel.154816",
+        "device_id": "802E7B27B9B02EE9CC80D45266892785214DC06F",
+        "mac": "5C628BC0ECA0",
+        "type": "SMART.TAPOSENSOR",
+        "model": "S200B",
+        "hw_id": "9A1EB033BE24834E2A7A6A4E4CF405E8",
+        "oem_id": "3D8088F225430E1A4D209836F8B29E3A",
+        "specs": "EU",
+        "category": "subg.trigger.button",
+        "bind_count": 7,
+        "status_follow_edge": false,
+        "status": "online",
+        "lastOnboardingTimestamp": 1698964042,
+        "rssi": -85,
+        "signal_level": 1,
+        "jamming_rssi": -120,
+        "jamming_signal_level": 1,
+        "at_low_battery": false,
+        "nickname": "UHVsc2FudGUgaW50ZWxsaWdlbnRl",
+        "avatar": "button",
+        "report_interval": 16,
+        "region": "Europe/Rome"
+      }
+    ],
+    "start_index": 0,
+    "sum": 1
+  },
+  "get_device_info_802E7B27B9B02EE9CC80D45266892785214DC06F": {
+    "parent_device_id": "802D86324AC15B78B560A284ED9A2E292137268A",
+    "hw_ver": "1.0",
+    "fw_ver": "1.10.0 Build 220728 Rel.154816",
+    "device_id": "802E7B27B9B02EE9CC80D45266892785214DC06F",
+    "mac": "5C628BC0ECA0",
+    "type": "SMART.TAPOSENSOR",
+    "model": "S200B",
+    "hw_id": "9A1EB033BE24834E2A7A6A4E4CF405E8",
+    "oem_id": "3D8088F225430E1A4D209836F8B29E3A",
+    "specs": "EU",
+    "category": "subg.trigger.button",
+    "bind_count": 7,
+    "status_follow_edge": false,
+    "status": "online",
+    "lastOnboardingTimestamp": 1698964042,
+    "rssi": -85,
+    "signal_level": 1,
+    "jamming_rssi": -120,
+    "jamming_signal_level": 1,
+    "at_low_battery": false,
+    "nickname": "UHVsc2FudGUgaW50ZWxsaWdlbnRl",
+    "avatar": "button",
+    "report_interval": 16,
+    "region": "Europe/Rome"
+  },
+  "component_nego": {
+    "component_list": [
+      {
+        "id": "device",
+        "ver_code": 2
+      },
+      {
+        "id": "firmware",
+        "ver_code": 2
+      },
+      {
+        "id": "quick_setup",
+        "ver_code": 3
+      },
+      {
+        "id": "inherit",
+        "ver_code": 1
+      },
+      {
+        "id": "time",
+        "ver_code": 1
+      },
+      {
+        "id": "wireless",
+        "ver_code": 1
+      },
+      {
+        "id": "account",
+        "ver_code": 1
+      },
+      {
+        "id": "synchronize",
+        "ver_code": 1
+      },
+      {
+        "id": "sunrise_sunset",
+        "ver_code": 1
+      },
+      {
+        "id": "led",
+        "ver_code": 1
+      },
+      {
+        "id": "cloud_connect",
+        "ver_code": 1
+      },
+      {
+        "id": "iot_cloud",
+        "ver_code": 1
+      },
+      {
+        "id": "child_device",
+        "ver_code": 1
+      },
+      {
+        "id": "child_quick_setup",
+        "ver_code": 1
+      },
+      {
+        "id": "child_inherit",
+        "ver_code": 1
+      },
+      {
+        "id": "control_child",
+        "ver_code": 1
+      },
+      {
+        "id": "alarm",
+        "ver_code": 1
+      },
+      {
+        "id": "device_load",
+        "ver_code": 1
+      },
+      {
+        "id": "device_local_time",
+        "ver_code": 1
+      },
+      {
+        "id": "alarm_logs",
+        "ver_code": 1
+      }
+    ]
+  }
+}
