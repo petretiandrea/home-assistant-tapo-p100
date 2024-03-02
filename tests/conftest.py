@@ -18,15 +18,19 @@ from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
 from plugp100.api.light_device import LightDevice
 from plugp100.api.plug_device import PlugDevice
+from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.common.functional.tri import Success
 from plugp100.common.functional.tri import Try
 from plugp100.responses.alarm_type_list import AlarmTypeList
 from plugp100.responses.child_device_list import ChildDeviceList
+from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.components import Components
 from plugp100.responses.device_state import HubDeviceState
 from plugp100.responses.device_state import LedStripDeviceState
 from plugp100.responses.device_state import LightDeviceState
 from plugp100.responses.device_state import PlugDeviceState
+from plugp100.responses.energy_info import EnergyInfo
+from plugp100.responses.power_info import PowerInfo
 from plugp100.responses.tapo_response import TapoResponse
 from pytest_homeassistant_custom_component.common import load_fixture
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -101,8 +105,8 @@ async def setup_platform(
     return config_entry
 
 
-def mock_switch() -> MagicMock:
-    response = fixture_tapo_map("plug_p105.json")
+def mock_plug(with_emeter: bool = False) -> MagicMock:
+    response = fixture_tapo_map("plug.json" if not with_emeter else "plug_emeter.json")
     state = response.get("get_device_info").flat_map(
         lambda x: PlugDeviceState.try_from_json(x.result)
     )
@@ -115,10 +119,17 @@ def mock_switch() -> MagicMock:
     device.get_state = AsyncMock(return_value=state)
     device.get_component_negotiation = AsyncMock(return_value=components)
     device.__class__ = PlugDevice
+
+    if with_emeter:
+        power = response.get("get_current_power").map(lambda x: PowerInfo(x.result))
+        energy = response.get("get_energy_usage").map(lambda x: EnergyInfo(x.result))
+        device.get_current_power = AsyncMock(return_value=power)
+        device.get_energy_usage = AsyncMock(return_value=energy)
+
     return device
 
 
-def mock_hub() -> MagicMock:
+def mock_hub(with_children: bool = False) -> MagicMock:
     response = fixture_tapo_map("hub.json")
     state = response.get("get_device_info").flat_map(
         lambda x: HubDeviceState.try_from_json(x.result)
@@ -126,10 +137,6 @@ def mock_hub() -> MagicMock:
     components = response.get("component_nego").map(
         lambda x: Components.try_from_json(x.result)
     )
-    # children = response.get("get_child_device_list").map(
-    #     lambda x: ChildDeviceList.try_from_json(**x.result)
-    # )
-
     device = MagicMock(auto_spec=HubDevice, name="Mocked hub device")
     device.turn_alarm_on = AsyncMock(return_value=Success(True))
     device.turn_alarm_off = AsyncMock(return_value=Success(True))
@@ -140,6 +147,11 @@ def mock_hub() -> MagicMock:
     device.get_supported_alarm_tones = AsyncMock(
         return_value=Success(AlarmTypeList(["test_tone"]))
     )
+    if with_children:
+        children = response.get("get_child_device_list").map(
+            lambda x: ChildDeviceList.try_from_json(**x.result)
+        )
+        device.get_children = AsyncMock(return_value=children)
     device.__class__ = HubDevice
     return device
 
@@ -189,7 +201,12 @@ def mock_led_strip() -> MagicMock:
 
 
 async def extract_entity_id(device: TapoDevice, platform: str, postfix: str = ""):
-    nickname = (await device.get_state()).map(lambda x: x.info.nickname).get_or_raise()
+    nickname = (
+        (await device.get_state())
+        .map(lambda x: x.info.nickname if x.info.nickname != "" else x.info.model)
+        .get_or_raise()
+    )
+
     return platform + "." + (nickname + " " + postfix).strip().lower().replace(" ", "_")
 
 
@@ -203,3 +220,27 @@ def exclude_components(components: Components, to_exclude: list[str]) -> Compone
         ]
     }
     return Components.try_from_json(component_list)
+
+
+def mock_plug_strip() -> MagicMock:
+    response = fixture_tapo_map("plug_strip.json")
+    state = response.get("get_device_info").flat_map(
+        lambda x: PlugDeviceState.try_from_json(x.result)
+    )
+    components = response.get("component_nego").map(
+        lambda x: Components.try_from_json(x.result)
+    )
+    device = MagicMock(auto_spec=PowerStripDevice, name="Mocked plug strip device")
+    device.get_state = AsyncMock(return_value=state)
+    device.get_component_negotiation = AsyncMock(return_value=components)
+    device.on = AsyncMock(return_value=Success(True))
+    device.off = AsyncMock(return_value=Success(True))
+    children = (
+        response.get("get_child_device_list")
+        .map(lambda x: ChildDeviceList.try_from_json(**x.result))
+        .map(lambda sub: sub.get_children(lambda x: PowerStripChild.try_from_json(**x)))
+        .map(lambda x: {child.device_id: child for child in x})
+    )
+    device.get_children = AsyncMock(return_value=children)
+    device.__class__ = PowerStripDevice
+    return device
