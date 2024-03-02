@@ -8,7 +8,7 @@ on:
       - synchronize
     branches:
       - main
-      - develop
+      - next
 
 env:
   DEFAULT_PYTHON: 3.11
