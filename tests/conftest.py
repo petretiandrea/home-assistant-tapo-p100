@@ -21,10 +21,12 @@ from plugp100.api.plug_device import PlugDevice
 from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.common.functional.tri import Success
 from plugp100.common.functional.tri import Try
+from plugp100.discovery.discovered_device import DiscoveredDevice
 from plugp100.responses.alarm_type_list import AlarmTypeList
 from plugp100.responses.child_device_list import ChildDeviceList
 from plugp100.responses.child_device_list import PowerStripChild
 from plugp100.responses.components import Components
+from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.device_state import HubDeviceState
 from plugp100.responses.device_state import LedStripDeviceState
 from plugp100.responses.device_state import LightDeviceState
@@ -40,6 +42,9 @@ from .tapo_mock_helper import tapo_response_of
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)
 
+IP_ADDRESS = "1.2.3.4"
+MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
@@ -49,6 +54,20 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 @pytest.fixture(autouse=True)
 def expected_lingering_tasks() -> bool:
     return True
+
+
+@pytest.fixture()
+def mock_discovery() -> DiscoveredDevice:
+    (discovered_device, device_info) = mock_discovered_device()
+    with patch(
+        "custom_components.tapo.discovery_tapo_devices",
+        AsyncMock(return_value={device_info.mac: device_info}),
+    ):
+        with patch(
+            "custom_components.tapo.config_flow.TapoConfigFlow._async_get_device_info",
+            AsyncMock(return_value=device_info),
+        ):
+            yield discovered_device
 
 
 def fixture_tapo_map(resource: str) -> dict[str, Try[TapoResponse]]:
@@ -72,7 +91,7 @@ async def setup_platform(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "1.2.3.4",
+            CONF_HOST: IP_ADDRESS,
             CONF_USERNAME: "mock",
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
@@ -103,6 +122,20 @@ async def setup_platform(
     await hass.async_block_till_done()
 
     return config_entry
+
+
+def mock_discovered_device() -> [DiscoveredDevice, DeviceInfo]:
+    response = fixture_tapo_map("bulb.json")
+    state = (
+        response.get("get_device_info")
+        .flat_map(lambda x: LightDeviceState.try_from_json(x.result))
+        .get_or_raise()
+        .info
+    )
+    return [
+        DiscoveredDevice.from_dict(json.loads(load_fixture("discovery.json"))),
+        state,
+    ]
 
 
 def mock_plug(with_emeter: bool = False) -> MagicMock:
