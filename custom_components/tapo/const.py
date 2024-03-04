@@ -54,6 +54,13 @@ SUPPORTED_DEVICE_AS_LIGHT = [
 ]
 SUPPORTED_DEVICE_AS_LED_STRIP = ["l930", "l920", "l900"]
 
+
+SUPPORTED_DEVICES = SUPPORTED_DEVICE_AS_LED_STRIP\
+                    + SUPPORTED_DEVICE_AS_LIGHT\
+                    + SUPPORTED_HUB_DEVICE_MODEL\
+                    + SUPPORTED_DEVICE_AS_SWITCH\
+                    + [SUPPORTED_POWER_STRIP_DEVICE_MODEL]
+
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
@@ -75,10 +82,11 @@ CONF_PASSWORD = "password"
 CONF_ADVANCED_SETTINGS = "advanced_settings"
 CONF_TRACK_DEVICE = "track_device_mac"
 
-CONF_DEVICE_TYPE = "device_type"
+CONF_DISCOVERED_DEVICE_INFO = "discovered_device_info"
 
 STEP_INIT = "user"
 STEP_ADVANCED_SETTINGS = "advanced_config"
+STEP_DISCOVERY_REQUIRE_AUTH = "discovery_auth_confirm"
 
 DEFAULT_POLLING_RATE_S = 30  # 30 seconds
 

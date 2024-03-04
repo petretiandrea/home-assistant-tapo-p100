@@ -1,7 +1,6 @@
 import asyncio
 from itertools import chain
 
-from custom_components.tapo.const import DISCOVERY_TIMEOUT
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -9,6 +8,8 @@ from homeassistant.helpers import (
 )
 from plugp100.discovery.discovered_device import DiscoveredDevice
 from plugp100.discovery.tapo_discovery import TapoDiscovery
+
+from custom_components.tapo.const import DISCOVERY_TIMEOUT
 
 
 async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDevice]:

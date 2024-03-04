@@ -1,7 +1,7 @@
 """The tapo integration."""
 import asyncio
 import logging
-from typing import cast
+from typing import cast, Any
 from typing import Optional
 
 from custom_components.tapo.coordinators import HassTapoDeviceData
@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from plugp100.discovery.discovered_device import DiscoveredDevice
 
-from .const import CONF_HOST
+from .const import CONF_HOST, CONF_DISCOVERED_DEVICE_INFO
 from .const import CONF_MAC
 from .const import CONF_TRACK_DEVICE
 from .const import DEFAULT_POLLING_RATE_S
@@ -35,9 +35,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the tapo_p100 component."""
     hass.data.setdefault(DOMAIN, {})
 
-    async def _start_discovery() -> None:
+    async def _start_discovery(_: Any = None) -> None:
         if device_found := await discovery_tapo_devices(hass):
-            async_create_discovery_flow(device_found)
+            async_create_discovery_flow(hass, device_found)
 
     hass.async_create_background_task(_start_discovery(), "Initial tapo discovery")
     async_track_time_interval(
@@ -103,11 +103,14 @@ def async_create_discovery_flow(
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            context={
+                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+                CONF_DISCOVERED_DEVICE_INFO: device
+            },
             data={
                 CONF_HOST: device.ip,
                 CONF_MAC: mac,
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                CONF_TRACK_DEVICE: False,
+                CONF_TRACK_DEVICE: False
             },
         )

@@ -7,7 +7,11 @@
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
   "requirements": ["plugp100==4.0.3"],
-  "dependencies": [],
+  "dependencies": ["network"],
+  "import_executor": true,
+  "dhcp": [
+    { "registered_devices": true }
+  ],
   "integration_type": "device",
   "codeowners": ["@petretiandrea"]
 }
