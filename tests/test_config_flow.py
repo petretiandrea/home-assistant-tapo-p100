@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from plugp100.discovery.discovered_device import DiscoveredDevice
 
+from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from .conftest import IP_ADDRESS
 from .conftest import MAC_ADDRESS
 
@@ -19,7 +20,7 @@ from .conftest import MAC_ADDRESS
 async def test_discovery_auth(
     hass: HomeAssistant, mock_discovery: DiscoveredDevice
 ) -> None:
-    """Test authenticated discovery."""
+    """Test step required authentication on discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -35,7 +36,7 @@ async def test_discovery_auth(
     )
     await hass.async_block_till_done()
     assert result["type"] == "form"
-    assert result["step_id"] == "discovery_auth_confirm"
+    assert result["step_id"] == STEP_DISCOVERY_REQUIRE_AUTH
 
     auth_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
