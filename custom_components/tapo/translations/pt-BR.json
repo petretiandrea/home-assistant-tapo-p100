@@ -21,6 +21,14 @@
           "advanced_settings": "Configurações avançadas"
         }
       },
+      "discovery_auth_confirm": {
+          "title": "Insira os dados para autenticar-se",
+          "description": "Insira as credenciais usadas no aplicativo Tapo.",
+          "data": {
+              "password": "Senha do aplicativo Tapo",
+              "username": "Nome de usuário do aplicativo Tapo (e-mail)"
+          }
+      },
       "advanced_config": {
         "title": "Configuração avançada",
         "description": "Ao personalizar a taxa de atualização, comportamentos inesperados podem ocorrer. O dispositivo pode até ficar sem resposta por um tempo.",

@@ -21,6 +21,14 @@
           "advanced_settings": "Erweiterte Einstellungen"
         }
       },
+      "discovery_auth_confirm": {
+        "title": "Voer de authenticatiegegevens in",
+        "description": "Voer de inloggegevens van de Tapo-app in.",
+        "data": {
+          "password": "Wachtwoord van de Tapo-app",
+          "username": "Gebruikersnaam van de Tapo-app (e-mail)"
+        }
+      },
       "advanced_config": {
         "title": "Erweiterte Konfiguration",
         "description": "Durch Anpassen der Abfragehäufigkeit können unerwartete Verhaltensweisen auftreten. Das Gerät kann sogar vorübergehend nicht reagieren.",

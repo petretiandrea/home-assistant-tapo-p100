@@ -22,8 +22,8 @@
         }
       },
       "discovery_auth_confirm": {
-        "title": "Insert authentication data",
-        "description": "Enter the tapo app credentials.",
+        "title": "Inserisci i dati per autenticarti",
+        "description": "Inserisci le credenziali usate per l'app Tapo.",
         "data": {
           "password": "Password dell'app Tapo",
           "username": "Nome utente dell'app Tapo (e-mail)"

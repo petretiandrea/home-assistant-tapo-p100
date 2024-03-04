@@ -21,6 +21,14 @@
           "advanced_settings": "Paramètres avancés"
         }
       },
+      "discovery_auth_confirm": {
+        "title": "Insérer les données d'authentification",
+        "description": "Entrez les identifiants de l'application Tapo.",
+        "data": {
+          "password": "Mot de passe de l'application Tapo",
+          "username": "Nom d'utilisateur de l'application Tapo (e-mail)"
+        }
+      },
       "advanced_config": {
         "title": "Configuration avancée",
         "description": "En personnalisant le taux de rafraîchissement, un comportement inattendu peut se produire. L'appareil peut même devenir non réactif pendant un certain temps.",
