@@ -13,8 +13,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.api.hub.switch_child_device import SwitchChildDevice
 from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
 
 
 async def async_setup_entry(

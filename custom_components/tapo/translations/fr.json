@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name} ({host} - {mac})",
     "abort": {
       "already_configured": "Appareil est déjà configuré"
     },
@@ -18,6 +19,14 @@
           "username": "Nom d'utilisateur de l'application Tapo (e-mail)",
           "track_device_mac": "Expérimental: Essayer de suivre l'adresse IP dynamique de l'appareil en utilisant l'adresse MAC. (Votre HA doit pouvoir accéder au même réseau que l'appareil)",
           "advanced_settings": "Paramètres avancés"
+        }
+      },
+      "discovery_auth_confirm": {
+        "title": "Insérer les données d'authentification",
+        "description": "Entrez les identifiants de l'application Tapo.",
+        "data": {
+          "password": "Mot de passe de l'application Tapo",
+          "username": "Nom d'utilisateur de l'application Tapo (e-mail)"
         }
       },
       "advanced_config": {
