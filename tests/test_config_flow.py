@@ -45,7 +45,7 @@ async def test_discovery_auth(
     )
 
     assert auth_result["type"] is FlowResultType.CREATE_ENTRY
-    assert auth_result["context"]["unique_id"] == MAC_ADDRESS
+    assert auth_result["context"]["unique_id"] == mock_discovery.device_id
     assert auth_result["data"][CONF_USERNAME] == "fake_username"
     assert auth_result["data"][CONF_PASSWORD] == "fake_password"
     assert auth_result["data"][CONF_HOST] == mock_discovery.ip

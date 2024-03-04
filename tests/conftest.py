@@ -95,7 +95,7 @@ async def setup_platform(
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
         },
-        version=6,
+        version=7,
         unique_id=state.value.info.device_id,
     )
     config_entry.add_to_hass(hass)
