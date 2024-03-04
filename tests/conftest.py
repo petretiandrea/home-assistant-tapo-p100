@@ -7,7 +7,6 @@ from unittest.mock import patch
 import pytest
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_PASSWORD
-from custom_components.tapo.const import CONF_TRACK_DEVICE
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import TapoDevice
@@ -95,7 +94,6 @@ async def setup_platform(
             CONF_USERNAME: "mock",
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
-            CONF_TRACK_DEVICE: False,
         },
         version=6,
         unique_id=state.value.info.device_id,

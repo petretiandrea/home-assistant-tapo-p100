@@ -4,6 +4,7 @@ from typing import TypeVar
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
@@ -31,6 +32,9 @@ class CoordinatedTapoEntity(CoordinatorEntity[C]):
             "manufacturer": "TP-Link",
             "sw_version": self._base_data.firmware_version,
             "hw_version": self._base_data.hardware_version,
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._base_data.mac)
+            },
         }
 
     @property
