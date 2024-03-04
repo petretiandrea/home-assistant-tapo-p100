@@ -25,6 +25,8 @@ from custom_components.tapo.errors import InvalidHost
 from custom_components.tapo.setup_helpers import get_host_port
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -140,6 +142,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await self._async_get_device_info(user_input)
                 await self.async_set_unique_id(device_info.device_id)
                 self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOST: device_info.ip})
 
                 if user_input.get(CONF_ADVANCED_SETTINGS, False):
                     self.first_step_data = FirstStepData(device_info, user_input)
@@ -192,14 +195,23 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
+    # TODO: use mac address as unique id
     async def _async_handle_discovery(
         self,
         host: str,
-        device_id: str,
+        mac_address: str,
         discovered_device: DiscoveredDevice,
     ) -> data_entry_flow.FlowResult:
         self._discovered_info = discovered_device
-        await self.async_set_unique_id(device_id, raise_on_progress=False)
+        existing_entry = await self.async_set_unique_id(
+            discovered_device.device_id, raise_on_progress=False
+        )
+        if existing_entry:
+            if result := self._recover_config_on_entry_error(
+                existing_entry, discovered_device.ip
+            ):
+                return result
+
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -219,6 +231,8 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await self._async_get_device_info_from_discovered(
                     self._discovered_info, user_input
                 )
+                await self.async_set_unique_id(device_info.device_id)
+                self._abort_if_unique_id_configured()
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
                 _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
@@ -245,6 +259,21 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=discovery_data,
         )
+
+    @callback
+    def _recover_config_on_entry_error(
+        self, entry: ConfigEntry, host: str
+    ) -> data_entry_flow.FlowResult | None:
+        if entry.state not in (
+            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+        ):
+            return None
+        if entry.data[CONF_HOST] != host:
+            return self.async_update_reload_and_abort(
+                entry, data={**entry.data, CONF_HOST: host}, reason="already_configured"
+            )
+        return None
 
     async def _async_create_config_entry_from_device_info(
         self, info: DeviceInfo, options: dict[str, Any]
