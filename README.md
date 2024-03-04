@@ -34,6 +34,14 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 
 ## Features
 
+### Discovery
+The integration now supports native tapo discovery! To enable it you must add at least one tapo device or this line to your tapo configuration file
+```
+tapo:
+```
+This will enable tapo device discovery. Not all tapo devices supports tapo discovery, so if you not find it, try adding manually.
+Also tapo integration discovery filters out not supported devices!
+
 ### Supported devices
 
 - [x] pure async home assistant's method
@@ -101,18 +109,11 @@ This video show installation steps:
 <!---->
 
 ## Configuration by configuration.yaml
+[BREAKING] 
 
-Domain can be `switch`, `light` or `sensor`.
+The latest version of this integration remove configuration.yaml device configuration support. This
+is due to follow home assistant best practices https://developers.home-assistant.io/docs/configuration_yaml_index/ and https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md#decision
 
-An example with switch:
-
-```yaml
-switch:
-  platform: tapo
-  host: ...
-  username: ...
-  password: ...
-```
 
 ## Contributions are welcome!
 
