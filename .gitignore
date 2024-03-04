@@ -8,3 +8,5 @@ venv
 coverage_re/
 pytest-coverage.txt
 pytest.xml
+
+.idea/

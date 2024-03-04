@@ -1,33 +1,31 @@
-import pytest
 from datetime import timedelta
-from typing import Any
+from unittest.mock import AsyncMock
+from unittest.mock import Mock
+from unittest.mock import patch
 
-from unittest.mock import Mock, AsyncMock, patch
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from plugp100.common.functional.tri import Try
-
-from plugp100.api.hub.ke100_device import KE100Device
-from plugp100.api.hub.s200b_device import S200ButtonDevice
-from plugp100.api.hub.switch_child_device import SwitchChildDevice
-from plugp100.api.hub.t100_device import T100MotionSensor
-from plugp100.api.hub.t110_device import T110SmartDoor
-from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.s200b_device import S200BDeviceState
-from plugp100.api.hub.switch_child_device import SwitchChildDeviceState
-from plugp100.api.hub.t100_device import T100MotionSensorState
-from plugp100.api.hub.t110_device import T110SmartDoorState
-from plugp100.api.hub.t31x_device import T31DeviceState
-from plugp100.api.hub.water_leak_device import WaterLeakSensor
-from plugp100.api.hub.water_leak_device import LeakDeviceState
-from plugp100.api.hub.ke100_device import KE100DeviceState
-
+import pytest
+from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
+from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildDevice
 from custom_components.tapo.hub.tapo_hub_child_coordinator import (
     TapoHubChildCoordinator,
 )
-from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildDevice
-from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from plugp100.api.hub.ke100_device import KE100Device
+from plugp100.api.hub.ke100_device import KE100DeviceState
+from plugp100.api.hub.s200b_device import S200BDeviceState
+from plugp100.api.hub.s200b_device import S200ButtonDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDevice
+from plugp100.api.hub.switch_child_device import SwitchChildDeviceState
+from plugp100.api.hub.t100_device import T100MotionSensor
+from plugp100.api.hub.t100_device import T100MotionSensorState
+from plugp100.api.hub.t110_device import T110SmartDoor
+from plugp100.api.hub.t110_device import T110SmartDoorState
+from plugp100.api.hub.t31x_device import T31Device
+from plugp100.api.hub.t31x_device import T31DeviceState
+from plugp100.api.hub.water_leak_device import LeakDeviceState
+from plugp100.api.hub.water_leak_device import WaterLeakSensor
+from plugp100.common.functional.tri import Try
 
 
 class TestTapoHubChildCoordinator:

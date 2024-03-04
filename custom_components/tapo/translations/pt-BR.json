@@ -22,12 +22,12 @@
         }
       },
       "discovery_auth_confirm": {
-          "title": "Insira os dados para autenticar-se",
-          "description": "Insira as credenciais usadas no aplicativo Tapo.",
-          "data": {
-              "password": "Senha do aplicativo Tapo",
-              "username": "Nome de usuário do aplicativo Tapo (e-mail)"
-          }
+        "title": "Insira os dados para autenticar-se",
+        "description": "Insira as credenciais usadas no aplicativo Tapo.",
+        "data": {
+          "password": "Senha do aplicativo Tapo",
+          "username": "Nome de usuário do aplicativo Tapo (e-mail)"
+        }
       },
       "advanced_config": {
         "title": "Configuração avançada",

@@ -6,11 +6,8 @@ from typing import Optional
 
 import aiohttp
 import voluptuous as vol
-from homeassistant.helpers.typing import DiscoveryInfoType
-from plugp100.discovery.discovered_device import DiscoveredDevice
-
-from custom_components.tapo.const import CONF_ADVANCED_SETTINGS, CONF_DISCOVERED_DEVICE_INFO, \
-    STEP_DISCOVERY_REQUIRE_AUTH, SUPPORTED_DEVICES
+from custom_components.tapo.const import CONF_ADVANCED_SETTINGS
+from custom_components.tapo.const import CONF_DISCOVERED_DEVICE_INFO
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import CONF_PASSWORD
@@ -19,7 +16,9 @@ from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import STEP_ADVANCED_SETTINGS
+from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from custom_components.tapo.const import STEP_INIT
+from custom_components.tapo.const import SUPPORTED_DEVICES
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
@@ -29,14 +28,15 @@ from homeassistant import data_entry_flow
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.api.tapo_client import TapoClient
 from plugp100.common.credentials import AuthCredential
+from plugp100.discovery.discovered_device import DiscoveredDevice
 from plugp100.responses.device_state import DeviceInfo
 from plugp100.responses.tapo_exception import TapoError
 from plugp100.responses.tapo_exception import TapoException
 
 _LOGGER = logging.getLogger(__name__)
-
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -57,12 +57,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema({
+STEP_AUTH_DATA_SCHEMA = vol.Schema(
+    {
         vol.Required(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
         ): str,
         vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
-})
+    }
+)
 
 STEP_ADVANCED_CONFIGURATION = vol.Schema(
     {
@@ -116,13 +118,13 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_info: DiscoveredDevice | None = None
 
     async def async_step_integration_discovery(
-            self, discovery_info: DiscoveryInfoType
+        self, discovery_info: DiscoveryInfoType
     ) -> data_entry_flow.FlowResult:
         """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST],
             discovery_info[CONF_MAC],
-            self.context[CONF_DISCOVERED_DEVICE_INFO]
+            self.context[CONF_DISCOVERED_DEVICE_INFO],
         )
 
     async def async_step_user(
@@ -143,7 +145,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.first_step_data = FirstStepData(device_info, user_input)
                     return await self.async_step_advanced_config()
                 else:
-                    return await self._async_create_config_entry_from_device_info(device_info, user_input)
+                    return await self._async_create_config_entry_from_device_info(
+                        device_info, user_input
+                    )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
                 _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
@@ -189,12 +193,13 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def _async_handle_discovery(
-        self, host: str, device_id: str, discovered_device: DiscoveredDevice,
+        self,
+        host: str,
+        device_id: str,
+        discovered_device: DiscoveredDevice,
     ) -> data_entry_flow.FlowResult:
         self._discovered_info = discovered_device
-        await self.async_set_unique_id(
-            device_id, raise_on_progress=False
-        )
+        await self.async_set_unique_id(device_id, raise_on_progress=False)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -211,7 +216,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                device_info = await self._async_get_device_info_from_discovered(self._discovered_info, user_input)
+                device_info = await self._async_get_device_info_from_discovered(
+                    self._discovered_info, user_input
+                )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
                 _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
@@ -222,7 +229,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_hostname"
                 _LOGGER.exception("Failed to setup invalid host %s", str(error))
             else:
-                return await self._async_create_config_entry_from_device_info(device_info, user_input)
+                return await self._async_create_config_entry_from_device_info(
+                    device_info, user_input
+                )
 
         discovery_data = {
             "name": self._discovered_info.device_model,
@@ -237,10 +246,13 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=discovery_data,
         )
 
-    async def _async_create_config_entry_from_device_info(self, info: DeviceInfo, options: dict[str, Any]):
+    async def _async_create_config_entry_from_device_info(
+        self, info: DeviceInfo, options: dict[str, Any]
+    ):
         return self.async_create_entry(
             title=info.friendly_name,
-            data=options | {
+            data=options
+            | {
                 CONF_HOST: info.ip,
                 CONF_MAC: info.mac,
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
@@ -248,19 +260,17 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_get_device_info_from_discovered(self, discovered: DiscoveredDevice, config: dict[str, Any]) -> DeviceInfo:
-        return await self._async_get_device_info(config | {
-            CONF_HOST: discovered.ip
-        })
+    async def _async_get_device_info_from_discovered(
+        self, discovered: DiscoveredDevice, config: dict[str, Any]
+    ) -> DeviceInfo:
+        return await self._async_get_device_info(config | {CONF_HOST: discovered.ip})
 
     async def _async_get_device_info(self, config: dict[str, Any]) -> DeviceInfo:
         if not config[CONF_HOST]:
             raise InvalidHost
         try:
             session = async_create_clientsession(self.hass)
-            credential = AuthCredential(
-                config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
+            credential = AuthCredential(config[CONF_USERNAME], config[CONF_PASSWORD])
             host, port = get_host_port(config[CONF_HOST])
             client = TapoClient.create(
                 credential, address=host, port=port, http_session=session
