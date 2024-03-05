@@ -11,6 +11,9 @@
           {
             "type": "breaking",
             "release": "major"
+          },
+          { "scope": "ci",
+            "release": false
           }
         ]
       }
