@@ -56,7 +56,7 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture()
-def mock_discovery() -> DiscoveredDevice:
+def mock_discovery():
     (discovered_device, device_info) = mock_discovered_device()
     with patch(
         "custom_components.tapo.discovery_tapo_devices",
