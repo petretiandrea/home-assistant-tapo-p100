@@ -42,6 +42,12 @@ tapo:
 This will enable tapo device discovery. Not all tapo devices supports tapo discovery, so if you not find it, try adding manually.
 Also tapo integration discovery filters out not supported devices!
 
+#### Device IP Tracking
+By using DHCP home assistant discovery the feature of mac tracking is now disabled, cause HA can track it automatically now, please be sure
+to have DHCP discovery not disable on your `configuration.yaml` (by default is active).
+
+[BREAKING] Tracking mac address feature is now disabled cause not recommended by HA. The tracking is now performed by HA itself.
+
 ### Supported devices
 
 - [x] pure async home assistant's method
@@ -65,8 +71,6 @@ Also tapo integration discovery filters out not supported devices!
 
 ### Additional features
 
-- [x] tracking of ip address. Cause Tapo local discovery isn't working for a lot of Tapo devices, this integration can try to track ip address changes by reling on MAC address.
-      This requires Home Assistant to runs on the same devices network and the capability to send ARP and broadcast packets.
 - [x] manually change ip address. Now you can change the ip address of a tapo device wihtout removing and re-adding it.
 
 # How to install
