@@ -56,7 +56,7 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture()
-def mock_discovery() -> DiscoveredDevice:
+def mock_discovery():
     (discovered_device, device_info) = mock_discovered_device()
     with patch(
         "custom_components.tapo.discovery_tapo_devices",
@@ -95,7 +95,7 @@ async def setup_platform(
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
         },
-        version=6,
+        version=7,
         unique_id=state.value.info.device_id,
     )
     config_entry.add_to_hass(hass)
