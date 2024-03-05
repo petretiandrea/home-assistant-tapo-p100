@@ -102,7 +102,7 @@ class FirstStepData:
 class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tapo."""
 
-    VERSION = 4
+    VERSION = 5
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
@@ -117,7 +117,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mac_address = dr.format_mac(discovery_info.macaddress)
         if discovered_device := await discover_tapo_device(self.hass, mac_address):
             return await self._async_handle_discovery(
-                discovery_info.ip, discovered_device.mac, discovered_device
+                discovery_info.ip, mac_address, discovered_device
             )
 
     async def async_step_integration_discovery(
@@ -141,7 +141,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 device_info = await self._async_get_device_info(user_input)
-                await self.async_set_unique_id(device_info.device_id)
+                await self.async_set_unique_id(dr.format_mac(device_info.mac))
                 self._abort_if_unique_id_configured()
                 self._async_abort_entries_match({CONF_HOST: device_info.ip})
 
@@ -196,7 +196,6 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-    # TODO: use mac address as unique id
     async def _async_handle_discovery(
         self,
         host: str,
@@ -204,9 +203,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovered_device: DiscoveredDevice,
     ) -> data_entry_flow.FlowResult:
         self._discovered_info = discovered_device
-        existing_entry = await self.async_set_unique_id(
-            discovered_device.device_id, raise_on_progress=False
-        )
+        existing_entry = await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if existing_entry:
             if result := self._recover_config_on_entry_error(
                 existing_entry, discovered_device.ip
@@ -232,7 +229,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await self._async_get_device_info_from_discovered(
                     self._discovered_info, user_input
                 )
-                await self.async_set_unique_id(device_info.device_id)
+                await self.async_set_unique_id(dr.format_mac(device_info.mac))
                 self._abort_if_unique_id_configured()
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
