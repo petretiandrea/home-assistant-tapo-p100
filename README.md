@@ -35,14 +35,18 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 ## Features
 
 ### Discovery
+
 The integration now supports native tapo discovery! To enable it you must add at least one tapo device or this line to your tapo configuration file
+
 ```
 tapo:
 ```
+
 This will enable tapo device discovery. Not all tapo devices supports tapo discovery, so if you not find it, try adding manually.
 Also tapo integration discovery filters out not supported devices!
 
 #### Device IP Tracking
+
 By using DHCP home assistant discovery the feature of mac tracking is now disabled, cause HA can track it automatically now, please be sure
 to have DHCP discovery not disable on your `configuration.yaml` (by default is active).
 
@@ -113,11 +117,11 @@ This video show installation steps:
 <!---->
 
 ## Configuration by configuration.yaml
-[BREAKING] 
+
+[BREAKING]
 
 The latest version of this integration remove configuration.yaml device configuration support. This
 is due to follow home assistant best practices https://developers.home-assistant.io/docs/configuration_yaml_index/ and https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md#decision
-
 
 ## Contributions are welcome!
 

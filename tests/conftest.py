@@ -12,6 +12,7 @@ from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import TapoDevice
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from plugp100.api.hub.hub_device import HubDevice
 from plugp100.api.ledstrip_device import LedStripDevice
@@ -95,8 +96,8 @@ async def setup_platform(
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
         },
-        version=7,
-        unique_id=state.value.info.device_id,
+        version=8,
+        unique_id=dr.format_mac(state.value.info.mac),
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -157,6 +158,7 @@ def mock_plug(with_emeter: bool = False) -> MagicMock:
         device.get_current_power = AsyncMock(return_value=power)
         device.get_energy_usage = AsyncMock(return_value=energy)
 
+    device.device_id = state.value.info.device_id
     return device
 
 
@@ -184,6 +186,7 @@ def mock_hub(with_children: bool = False) -> MagicMock:
         )
         device.get_children = AsyncMock(return_value=children)
     device.__class__ = HubDevice
+    device.device_id = state.value.info.device_id
     return device
 
 
@@ -206,6 +209,8 @@ def mock_bulb(components_to_exclude: list[str] = []) -> MagicMock:
     device.get_state = AsyncMock(return_value=state)
     device.get_component_negotiation = AsyncMock(return_value=components)
     device.__class__ = LightDevice
+
+    device.device_id = state.value.info.device_id
     return device
 
 
@@ -228,6 +233,7 @@ def mock_led_strip() -> MagicMock:
     device.get_state = AsyncMock(return_value=state)
     device.get_component_negotiation = AsyncMock(return_value=components)
     device.__class__ = LedStripDevice
+    device.device_id = state.value.info.device_id
     return device
 
 
@@ -274,4 +280,6 @@ def mock_plug_strip() -> MagicMock:
     )
     device.get_children = AsyncMock(return_value=children)
     device.__class__ = PowerStripDevice
+    device.device_id = state.value.info.device_id
+
     return device

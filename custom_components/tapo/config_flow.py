@@ -203,7 +203,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovered_device: DiscoveredDevice,
     ) -> data_entry_flow.FlowResult:
         self._discovered_info = discovered_device
-        existing_entry = await self.async_set_unique_id(mac_address, raise_on_progress=False)
+        existing_entry = await self.async_set_unique_id(
+            mac_address, raise_on_progress=False
+        )
         if existing_entry:
             if result := self._recover_config_on_entry_error(
                 existing_entry, discovered_device.ip

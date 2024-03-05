@@ -6,6 +6,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+
 async def migrate_entry_to_v8(hass: HomeAssistant, config_entry: ConfigEntry):
     api = await create_api_from_config(hass, config_entry)
     new_data = {**config_entry.data}

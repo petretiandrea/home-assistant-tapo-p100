@@ -16,10 +16,10 @@ from .conftest import setup_platform
 async def test_switch_setup(hass: HomeAssistant):
     device_registry = dr.async_get(hass)
     device = mock_plug()
-    entry = await setup_platform(hass, device, [SWITCH_DOMAIN])
+    await setup_platform(hass, device, [SWITCH_DOMAIN])
     entity_id = await extract_entity_id(device, SWITCH_DOMAIN)
     state_entity = hass.states.get(entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert state_entity is not None
     assert state_entity.state == "on"
     assert state_entity.attributes["device_class"] == "outlet"
