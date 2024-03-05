@@ -22,12 +22,12 @@ from .conftest import setup_platform
 )
 async def test_switch_overheat(hass: HomeAssistant, device: MagicMock):
     device_registry = dr.async_get(hass)
-    entry = await setup_platform(hass, device, [BINARY_SENSOR_DOMAIN])
+    await setup_platform(hass, device, [BINARY_SENSOR_DOMAIN])
     entity_id = await extract_entity_id(device, BINARY_SENSOR_DOMAIN, "overheat")
     assert len(hass.states.async_all()) == 1
 
     state_entity = hass.states.get(entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert state_entity is not None
     assert state_entity.state == "off"
     assert state_entity.attributes["device_class"] == "heat"

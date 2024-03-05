@@ -9,13 +9,14 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.discovery import discovery_tapo_devices
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hass_tapo import HassTapo
-from custom_components.tapo.migrations import migrate_entry_to_v7
+from custom_components.tapo.migrations import migrate_entry_to_v8
 from custom_components.tapo.setup_helpers import create_api_from_config
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from plugp100.discovery.discovered_device import DiscoveredDevice
@@ -64,8 +65,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version != 7:
-        await migrate_entry_to_v7(hass, config_entry)
+    if config_entry.version != 8:
+        await migrate_entry_to_v8(hass, config_entry)
         _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
@@ -109,7 +110,7 @@ def async_create_discovery_flow(
             },
             data={
                 CONF_HOST: device.ip,
-                CONF_MAC: mac,
+                CONF_MAC: dr.format_mac(mac),
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
             },
         )
