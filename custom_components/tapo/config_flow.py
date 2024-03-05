@@ -11,7 +11,6 @@ from custom_components.tapo.const import CONF_DISCOVERED_DEVICE_INFO
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import CONF_PASSWORD
-from custom_components.tapo.const import CONF_TRACK_DEVICE
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from custom_components.tapo.const import DOMAIN
@@ -19,16 +18,19 @@ from custom_components.tapo.const import STEP_ADVANCED_SETTINGS
 from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from custom_components.tapo.const import STEP_INIT
 from custom_components.tapo.const import SUPPORTED_DEVICES
+from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
 from custom_components.tapo.setup_helpers import get_host_port
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.api.tapo_client import TapoClient
@@ -50,12 +52,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
         ): str,
         vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
-        vol.Optional(
-            CONF_TRACK_DEVICE,
-            description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
-            default=False,
-        ): bool,
-        vol.Optional(CONF_ADVANCED_SETTINGS, description="Advanced settings"): bool,
     }
 )
 
@@ -92,11 +88,6 @@ def step_options(entry: config_entries.ConfigEntry) -> vol.Schema:
                 description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
                 default=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S),
             ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
-            vol.Optional(
-                CONF_TRACK_DEVICE,
-                description="Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
-                default=entry.data.get(CONF_TRACK_DEVICE, False),
-            ): bool,
         }
     )
 
@@ -118,6 +109,16 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.first_step_data: Optional[FirstStepData] = None
         self._discovered_info: DiscoveredDevice | None = None
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle discovery via dhcp."""
+        mac_address = dr.format_mac(discovery_info.macaddress)
+        if discovered_device := await discover_tapo_device(self.hass, mac_address):
+            return await self._async_handle_discovery(
+                discovery_info.ip, discovered_device.mac, discovered_device
+            )
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
@@ -285,7 +286,6 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: info.ip,
                 CONF_MAC: info.mac,
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                CONF_TRACK_DEVICE: options.pop(CONF_TRACK_DEVICE, False),
             },
         )
 

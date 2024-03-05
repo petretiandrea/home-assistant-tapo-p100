@@ -34,16 +34,6 @@ from plugp100.responses.device_state import LightDeviceState
 _LOGGER = logging.getLogger(__name__)
 
 
-# async def async_setup_platform(
-#     hass: HomeAssistant,
-#     config: Dict[str, Any],
-#     async_add_entities: AddEntitiesCallback,
-#     discovery_info=None,
-# ) -> None:
-#     coordinator = await setup_from_platform_config(hass, config)
-#     _setup_from_coordinator(hass, coordinator, async_add_entities)
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):

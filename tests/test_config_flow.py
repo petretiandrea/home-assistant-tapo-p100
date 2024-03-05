@@ -1,9 +1,14 @@
+from unittest.mock import patch, AsyncMock
+
+from homeassistant.components import dhcp
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from custom_components.tapo import CONF_DISCOVERED_DEVICE_INFO
 from custom_components.tapo import CONF_HOST
 from custom_components.tapo import CONF_MAC
-from custom_components.tapo import CONF_TRACK_DEVICE
 from custom_components.tapo import DEFAULT_POLLING_RATE_S
 from custom_components.tapo import DOMAIN
+from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -12,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from plugp100.discovery.discovered_device import DiscoveredDevice
 
-from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from .conftest import IP_ADDRESS
 from .conftest import MAC_ADDRESS
 
@@ -31,7 +35,6 @@ async def test_discovery_auth(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-            CONF_TRACK_DEVICE: False,
         },
     )
     await hass.async_block_till_done()
@@ -47,10 +50,45 @@ async def test_discovery_auth(
     )
 
     assert auth_result["type"] is FlowResultType.CREATE_ENTRY
-    assert auth_result["context"]["unique_id"] == MAC_ADDRESS
+    assert auth_result["context"]["unique_id"] == mock_discovery.device_id
     assert auth_result["data"][CONF_USERNAME] == "fake_username"
     assert auth_result["data"][CONF_PASSWORD] == "fake_password"
     assert auth_result["data"][CONF_HOST] == mock_discovery.ip
-    assert auth_result["data"][CONF_TRACK_DEVICE] is False
     assert auth_result["data"][CONF_SCAN_INTERVAL] == 30
     assert auth_result["context"][CONF_DISCOVERED_DEVICE_INFO] == mock_discovery
+
+async def test_discovery_ip_change_dhcp(
+    hass: HomeAssistant, mock_discovery: DiscoveredDevice
+) -> None:
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: mock_discovery.ip,
+            CONF_USERNAME: "mock",
+            CONF_PASSWORD: "mock",
+            CONF_SCAN_INTERVAL: 5000,
+        },
+        version=7,
+        unique_id=mock_discovery.device_id,
+    )
+    with patch("plugp100.api.tapo_client.TapoClient.get_device_info", AsyncMock(side_effect=Exception("Something wrong"))):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+
+    with patch(
+            "custom_components.tapo.config_flow.discover_tapo_device",
+            AsyncMock(return_value=mock_discovery),
+    ):
+        discovery_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="127.0.0.2", macaddress=MAC_ADDRESS, hostname="hostname"
+            ),
+        )
+        assert discovery_result["type"] is FlowResultType.ABORT
+        assert discovery_result["reason"] == "already_configured"
+        assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"

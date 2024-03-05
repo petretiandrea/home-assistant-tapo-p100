@@ -7,7 +7,6 @@ from unittest.mock import patch
 import pytest
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_PASSWORD
-from custom_components.tapo.const import CONF_TRACK_DEVICE
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import TapoDevice
@@ -57,7 +56,7 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture()
-def mock_discovery() -> DiscoveredDevice:
+def mock_discovery():
     (discovered_device, device_info) = mock_discovered_device()
     with patch(
         "custom_components.tapo.discovery_tapo_devices",
@@ -95,9 +94,8 @@ async def setup_platform(
             CONF_USERNAME: "mock",
             CONF_PASSWORD: "mock",
             CONF_SCAN_INTERVAL: 5000,
-            CONF_TRACK_DEVICE: False,
         },
-        version=6,
+        version=7,
         unique_id=state.value.info.device_id,
     )
     config_entry.add_to_hass(hass)
