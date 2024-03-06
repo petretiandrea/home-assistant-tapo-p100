@@ -18,6 +18,17 @@ The core of the integration is provied by [plugp100](https://github.com/petretia
 
 Please help me to complete the [new roadmap](https://github.com/petretiandrea/home-assistant-tapo-p100/discussions/655)
 
+## Sponsors
+### Gold Sponsors
+
+<!-- gold -->
+<!-- gold -->
+
+### Silver Sponsors
+
+<!-- silver -->
+<!-- silver -->
+
 ## Warnings
 
 ### Tapo protocol
