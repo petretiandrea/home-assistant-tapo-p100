@@ -21,13 +21,11 @@ Please help me to complete the [new roadmap](https://github.com/petretiandrea/ho
 ## Sponsors
 ### Gold Sponsors
 
-<!-- gold -->
-<!-- gold -->
+<!-- gold --><!-- gold -->
 
 ### Silver Sponsors
 
-<!-- silver -->
-<!-- silver -->
+<!-- silver --><a href="https://github.com/esondag"><img src="https://github.com/esondag.png" width="60px" alt="" /></a><a href="https://github.com/g-chap"><img src="https://github.com/g-chap.png" width="60px" alt="George Chapman" /></a><a href="https://github.com/jmd-au"><img src="https://github.com/jmd-au.png" width="60px" alt="James Mac" /></a><!-- silver -->
 
 ## Warnings
 
