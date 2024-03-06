@@ -18,11 +18,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Setup Node 20.x
-        uses: actions/setup-node@4.0.2
+        uses: actions/setup-node@v4.0.2
         with:
           node-version: 20
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@4.0.0
+        uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 23.0.2
           branches: |
