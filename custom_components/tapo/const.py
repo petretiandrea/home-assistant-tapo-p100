@@ -14,6 +14,7 @@ NAME = "tapo"
 DOMAIN = "tapo"
 VERSION = "2.13.0"
 
+DISCOVERY_FEATURE_FLAG = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=10)
 DISCOVERY_TIMEOUT = 5
 

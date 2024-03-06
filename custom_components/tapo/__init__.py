@@ -25,6 +25,7 @@ from .const import CONF_DISCOVERED_DEVICE_INFO
 from .const import CONF_HOST
 from .const import CONF_MAC
 from .const import DEFAULT_POLLING_RATE_S
+from .const import DISCOVERY_FEATURE_FLAG
 from .const import DISCOVERY_INTERVAL
 from .const import DOMAIN
 from .const import HUB_PLATFORMS
@@ -36,15 +37,19 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the tapo_p100 component."""
     hass.data.setdefault(DOMAIN, {})
+    domain_config = config.get(DOMAIN, {})
+    discovery_enabled = domain_config.get(DISCOVERY_FEATURE_FLAG, True)
+    if discovery_enabled:
 
-    async def _start_discovery(_: Any = None) -> None:
-        if device_found := await discovery_tapo_devices(hass):
-            async_create_discovery_flow(hass, device_found)
+        async def _start_discovery(_: Any = None) -> None:
+            if device_found := await discovery_tapo_devices(hass):
+                async_create_discovery_flow(hass, device_found)
 
-    hass.async_create_background_task(_start_discovery(), "Initial tapo discovery")
-    async_track_time_interval(
-        hass, _start_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
-    )
+        hass.async_create_background_task(_start_discovery(), "Initial tapo discovery")
+        async_track_time_interval(
+            hass, _start_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+        )
+
     return True
 
 
