@@ -12,7 +12,7 @@ from plugp100.api.power_strip_device import PowerStripDevice
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "2.13.0"
+VERSION = "3.0.0"
 
 DISCOVERY_FEATURE_FLAG = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=10)
