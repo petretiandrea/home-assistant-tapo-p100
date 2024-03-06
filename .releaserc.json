@@ -12,9 +12,7 @@
             "type": "breaking",
             "release": "major"
           },
-          { "scope": "ci",
-            "release": false
-          }
+          { "scope": "ci", "release": false }
         ]
       }
     ],

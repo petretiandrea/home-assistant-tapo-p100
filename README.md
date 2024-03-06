@@ -22,7 +22,7 @@ Please help me to complete the [new roadmap](https://github.com/petretiandrea/ho
 
 ### Tapo protocol
 
-Tapo is updating it's devices with a new firmware which use a new protocol called KLAP. This integration support it's but if you running older version your devices maybe cannot works. So please keep this integration up to date by using HACS!
+Tapo is updating its devices with a new firmware which use a new protocol called KLAP. This integration support it's but if you running older version your devices maybe cannot works. So please keep this integration up to date by using HACS!
 
 ### Local Integration
 
@@ -38,24 +38,39 @@ For some unknown reason email with capital letter thrown an "Invalid authenticat
 
 The integration now supports native tapo discovery! To enable it you must add at least one tapo device or this line to your tapo configuration file
 
-```
+```yaml
 tapo:
+  discovery: true # you can omit "discovery" by default, with "tapo:" it will enable discovery automatically.
 ```
 
 This will enable tapo device discovery. Not all tapo devices supports tapo discovery, so if you not find it, try adding manually.
 Also tapo integration discovery filters out not supported devices!
 
+<details>
+  <summary>Screenshot</summary>
+  ![Discovery](./docs/discovery-devices.png)
+
+</details>
+
+You can disable integration discovery by editing `configuration.yaml` in the following way:
+
+```yaml
+tapo:
+  discovery: false
+```
+
 #### Device IP Tracking
 
-By using DHCP home assistant discovery the feature of mac tracking is now disabled, cause HA can track it automatically now, please be sure
-to have DHCP discovery not disable on your `configuration.yaml` (by default is active).
+By using DHCP home assistant discovery the feature of mac tracking is now disabled, cause HA can track it automatically now.
+Please be sure to have DHCP discovery not disabled on your `configuration.yaml` (by default is active).
 
 [BREAKING] Tracking mac address feature is now disabled cause not recommended by HA. The tracking is now performed by HA itself.
 
 ### Supported devices
 
 - [x] pure async home assistant's method
-- [x] support for tapo `H100` hub and siren, `H200`
+- [x] support for tapo `H100` hub and siren
+- [ ] support for tapo `H100` hub is currently Work In Progress!
 - [x] support for `T31x` temperature and humidity sensor hub's device
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
@@ -79,30 +94,12 @@ to have DHCP discovery not disable on your `configuration.yaml` (by default is a
 
 # How to install
 
-## Simplest and recomended way
-
 This integration is part of HACS store, so you don't need anymore to add this repository as a custom repository.
 You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is required**)
-
-## Old way as a custom repository (not recomended, but use if you want to use beta versions)
-
-1. Install from HACS, add this repository as custom repository
-2. Search into HACS store the tapo integration and install
-3. Full restart of home assistant is recomended
 
 This video show installation steps:
 
 [![Install Steps](http://img.youtube.com/vi/KSYldphgE5A/0.jpg)](https://youtu.be/KSYldphgE5A)
-
-## "Manual" way
-
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `tapo`.
-4. Download _all_ the files from the `custom_components/tapo/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "tapo"
 
 # How to add a Tapo device (after installing the integration)
 
@@ -122,6 +119,14 @@ This video show installation steps:
 
 The latest version of this integration remove configuration.yaml device configuration support. This
 is due to follow home assistant best practices https://developers.home-assistant.io/docs/configuration_yaml_index/ and https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md#decision
+
+## Beta versions
+
+To access to beta version, you must install it as custom
+
+1. Install from HACS, add this repository as custom repository
+2. Search into HACS store the tapo integration and install
+3. Full restart of home assistant is recommended
 
 ## Contributions are welcome!
 

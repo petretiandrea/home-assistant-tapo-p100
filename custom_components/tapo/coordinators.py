@@ -47,7 +47,7 @@ DEBOUNCER_COOLDOWN = 2
 
 @dataclass
 class HassTapoDeviceData:
-    coordinator: "TapoDataCoordinator"
+    coordinator: "TapoDeviceCoordinator"
     config_entry_update_unsub: CALLBACK_TYPE
     child_coordinators: List["TapoDataCoordinator"]
 
@@ -89,7 +89,7 @@ class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
             ),
         )
         self._states: StateMap = {}
-        self.components: Components = None
+        self.components: Components | None = None
 
     async def _negotiate_components_if_needed(self):
         if self.components is None:
@@ -130,18 +130,11 @@ class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
                 await self._negotiate_components_if_needed()
                 return await self._update_state()
         except TapoException as error:
-            self._raise_from_tapo_exception(error)
+            _raise_from_tapo_exception(error)
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error communication with API: {str(error)}") from error
         except Exception as exception:
             raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
-
-    def _raise_from_tapo_exception(self, exception: TapoException):
-        _LOGGER.error("Tapo exception: %s", str(exception))
-        if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
-            raise ConfigEntryAuthFailed from exception
-        else:
-            raise UpdateFailed(f"Error tapo exception: {exception}") from exception
 
 
 PowerStripChildrenState = dict[str, PowerStripChild]
@@ -174,3 +167,11 @@ class TapoDeviceCoordinator(TapoDataCoordinator):
         ):
             children_state = (await self.device.get_children()).get_or_raise()
             self.update_state_of(PowerStripChildrenState, children_state)
+
+
+def _raise_from_tapo_exception(exception: TapoException):
+    _LOGGER.error("Tapo exception: %s", str(exception))
+    if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+        raise ConfigEntryAuthFailed from exception
+    else:
+        raise UpdateFailed(f"Error tapo exception: {exception}") from exception

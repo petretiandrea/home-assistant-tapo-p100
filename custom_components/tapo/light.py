@@ -216,7 +216,7 @@ class TapoLight(CoordinatedTapoEntity[TapoDeviceCoordinator], LightEntity):
             ).get_or_raise()
 
 
-def _components_to_color_modes(components: Components):
+def _components_to_color_modes(components: Components) -> set[ColorMode]:
     color_modes = [ColorMode.ONOFF]
     if components.has(Component.COLOR_TEMPERATURE.value):
         color_modes.append(ColorMode.COLOR_TEMP)
@@ -224,7 +224,7 @@ def _components_to_color_modes(components: Components):
         color_modes.append(ColorMode.BRIGHTNESS)
     if components.has(Component.COLOR.value):
         color_modes.append(ColorMode.HS)
-    return color_modes
+    return set(color_modes)
 
 
 def _components_to_light_effects(components: Components):
