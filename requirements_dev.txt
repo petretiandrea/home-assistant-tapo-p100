@@ -1,6 +1,7 @@
-homeassistant==2023.8.3
+homeassistant==2024.2.0
 plugp100==4.0.3
 pre-commit==3.3.3
 reorder-python-imports==3.10.0
 flake8==6.1.0
 autoflake==2.2.1
+aiodiscover==1.6.0

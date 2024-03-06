@@ -1,0 +1,290 @@
+{
+  "component_nego": {
+    "component_list": [
+      {
+        "id": "device",
+        "ver_code": 2
+      },
+      {
+        "id": "firmware",
+        "ver_code": 2
+      },
+      {
+        "id": "quick_setup",
+        "ver_code": 3
+      },
+      {
+        "id": "time",
+        "ver_code": 1
+      },
+      {
+        "id": "wireless",
+        "ver_code": 1
+      },
+      {
+        "id": "schedule",
+        "ver_code": 2
+      },
+      {
+        "id": "countdown",
+        "ver_code": 2
+      },
+      {
+        "id": "antitheft",
+        "ver_code": 1
+      },
+      {
+        "id": "account",
+        "ver_code": 1
+      },
+      {
+        "id": "synchronize",
+        "ver_code": 1
+      },
+      {
+        "id": "sunrise_sunset",
+        "ver_code": 1
+      },
+      {
+        "id": "led",
+        "ver_code": 1
+      },
+      {
+        "id": "cloud_connect",
+        "ver_code": 1
+      },
+      {
+        "id": "iot_cloud",
+        "ver_code": 1
+      },
+      {
+        "id": "device_local_time",
+        "ver_code": 1
+      },
+      {
+        "id": "default_states",
+        "ver_code": 1
+      },
+      {
+        "id": "control_child",
+        "ver_code": 2
+      },
+      {
+        "id": "child_device",
+        "ver_code": 2
+      },
+      {
+        "id": "homekit",
+        "ver_code": 2
+      },
+      {
+        "id": "overheat_protection",
+        "ver_code": 1
+      }
+    ]
+  },
+  "get_device_info": {
+    "device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+    "fw_ver": "1.0.13 Build 230925 Rel.150200",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOPLUG",
+    "model": "P300",
+    "mac": "78-8C-B5-31-0A-35",
+    "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+    "ip": "192.168.1.7",
+    "time_diff": 60,
+    "ssid": "SG9tZS1OZXR3b3Jr",
+    "rssi": -73,
+    "signal_level": 1,
+    "longitude": 126667,
+    "latitude": 435773,
+    "lang": "en_US",
+    "avatar": "",
+    "region": "Europe/Rome",
+    "specs": "",
+    "nickname": "",
+    "has_set_location_info": true
+  },
+  "get_child_device_list": {
+    "child_device_list": [
+      {
+        "type": "SMART.TAPOPLUG",
+        "fw_ver": "1.0.13 Build 230925 Rel.150200",
+        "hw_ver": "1.0",
+        "model": "P300",
+        "mac": "788CB5310A35",
+        "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+        "fw_id": "00000000000000000000000000000000",
+        "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+        "category": "plug.powerstrip.sub-plug",
+        "status_follow_edge": true,
+        "device_id": "802284163C98749A26DE2465A10AEDFC211D169C02",
+        "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+        "overheat_status": "normal",
+        "bind_count": 1,
+        "slot_number": 3,
+        "position": 3,
+        "on_time": 524990,
+        "nickname": "cGx1ZzM=",
+        "avatar": "plug",
+        "device_on": true,
+        "default_states": {
+          "type": "last_states"
+        },
+        "region": "Europe/Rome",
+        "longitude": 126667,
+        "latitude": 435773,
+        "has_set_location_info": true
+      },
+      {
+        "type": "SMART.TAPOPLUG",
+        "fw_ver": "1.0.13 Build 230925 Rel.150200",
+        "hw_ver": "1.0",
+        "model": "P300",
+        "mac": "788CB5310A35",
+        "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+        "fw_id": "00000000000000000000000000000000",
+        "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+        "category": "plug.powerstrip.sub-plug",
+        "status_follow_edge": true,
+        "device_id": "802284163C98749A26DE2465A10AEDFC211D169C01",
+        "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+        "overheat_status": "normal",
+        "bind_count": 1,
+        "slot_number": 3,
+        "position": 2,
+        "on_time": 592773,
+        "nickname": "cGx1ZzI=s",
+        "avatar": "plug",
+        "device_on": true,
+        "default_states": {
+          "type": "last_states"
+        },
+        "region": "Europe/Rome",
+        "longitude": 126667,
+        "latitude": 435773,
+        "has_set_location_info": true
+      },
+      {
+        "type": "SMART.TAPOPLUG",
+        "fw_ver": "1.0.13 Build 230925 Rel.150200",
+        "hw_ver": "1.0",
+        "model": "P300",
+        "mac": "788CB5310A35",
+        "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+        "fw_id": "00000000000000000000000000000000",
+        "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+        "category": "plug.powerstrip.sub-plug",
+        "status_follow_edge": true,
+        "device_id": "802284163C98749A26DE2465A10AEDFC211D169C00",
+        "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+        "overheat_status": "normal",
+        "bind_count": 1,
+        "slot_number": 3,
+        "position": 1,
+        "on_time": 524987,
+        "nickname": "cGx1ZzE=",
+        "avatar": "plug",
+        "device_on": true,
+        "default_states": {
+          "type": "last_states"
+        },
+        "region": "Europe/Rome",
+        "longitude": 126667,
+        "latitude": 435773,
+        "has_set_location_info": true
+      }
+    ],
+    "start_index": 0,
+    "sum": 3
+  },
+  "get_device_info_802284163C98749A26DE2465A10AEDFC211D169C02": {
+    "type": "SMART.TAPOPLUG",
+    "fw_ver": "1.0.13 Build 230925 Rel.150200",
+    "hw_ver": "1.0",
+    "model": "P300",
+    "mac": "788CB5310A35",
+    "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+    "category": "plug.powerstrip.sub-plug",
+    "status_follow_edge": true,
+    "device_id": "802284163C98749A26DE2465A10AEDFC211D169C02",
+    "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+    "overheat_status": "normal",
+    "bind_count": 1,
+    "slot_number": 3,
+    "position": 3,
+    "on_time": 524990,
+    "nickname": "cGx1ZzM=",
+    "avatar": "plug",
+    "device_on": true,
+    "default_states": {
+      "type": "last_states"
+    },
+    "region": "Europe/Rome",
+    "longitude": 1,
+    "latitude": 1,
+    "has_set_location_info": true
+  },
+  "get_device_info_802284163C98749A26DE2465A10AEDFC211D169C01": {
+    "type": "SMART.TAPOPLUG",
+    "fw_ver": "1.0.13 Build 230925 Rel.150200",
+    "hw_ver": "1.0",
+    "model": "P300",
+    "mac": "788CB5310A35",
+    "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+    "category": "plug.powerstrip.sub-plug",
+    "status_follow_edge": true,
+    "device_id": "802284163C98749A26DE2465A10AEDFC211D169C01",
+    "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+    "overheat_status": "normal",
+    "bind_count": 1,
+    "slot_number": 3,
+    "position": 2,
+    "on_time": 592773,
+    "nickname": "cGx1ZzI=s",
+    "avatar": "plug",
+    "device_on": true,
+    "default_states": {
+      "type": "last_states"
+    },
+    "region": "Europe/Rome",
+    "longitude": 1,
+    "latitude": 1,
+    "has_set_location_info": true
+  },
+  "get_device_info_802284163C98749A26DE2465A10AEDFC211D169C00": {
+    "type": "SMART.TAPOPLUG",
+    "fw_ver": "1.0.13 Build 230925 Rel.150200",
+    "hw_ver": "1.0",
+    "model": "P300",
+    "mac": "788CB5310A35",
+    "hw_id": "553C7AE42A568240BEA222D090B68EF4",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "BCA35E01AEBC6BD91465057372DDAB74",
+    "category": "plug.powerstrip.sub-plug",
+    "status_follow_edge": true,
+    "device_id": "802284163C98749A26DE2465A10AEDFC211D169C00",
+    "original_device_id": "802284163C98749A26DE2465A10AEDFC211D169C",
+    "overheat_status": "normal",
+    "bind_count": 1,
+    "slot_number": 3,
+    "position": 1,
+    "on_time": 524987,
+    "nickname": "cGx1ZzE=",
+    "avatar": "plug",
+    "device_on": true,
+    "default_states": {
+      "type": "last_states"
+    },
+    "region": "Europe/Rome",
+    "longitude": 1,
+    "latitude": 1,
+    "has_set_location_info": true
+  }
+}

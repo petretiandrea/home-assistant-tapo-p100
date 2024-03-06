@@ -1,3 +1,4 @@
 -r requirements_dev.txt
-pytest-homeassistant-custom-component
-pytest-asyncio
+pytest-homeassistant-custom-component==0.13.99
+pytest-asyncio==0.23.4
+async-timeout==4.0.2

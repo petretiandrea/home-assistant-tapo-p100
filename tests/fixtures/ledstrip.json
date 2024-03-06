@@ -1,0 +1,186 @@
+{
+  "component_nego": {
+    "component_list": [
+      {
+        "id": "device",
+        "ver_code": 2
+      },
+      {
+        "id": "light_strip",
+        "ver_code": 1
+      },
+      {
+        "id": "light_strip_lighting_effect",
+        "ver_code": 2
+      },
+      {
+        "id": "firmware",
+        "ver_code": 2
+      },
+      {
+        "id": "quick_setup",
+        "ver_code": 3
+      },
+      {
+        "id": "inherit",
+        "ver_code": 1
+      },
+      {
+        "id": "time",
+        "ver_code": 1
+      },
+      {
+        "id": "wireless",
+        "ver_code": 1
+      },
+      {
+        "id": "schedule",
+        "ver_code": 2
+      },
+      {
+        "id": "countdown",
+        "ver_code": 2
+      },
+      {
+        "id": "antitheft",
+        "ver_code": 1
+      },
+      {
+        "id": "account",
+        "ver_code": 1
+      },
+      {
+        "id": "synchronize",
+        "ver_code": 1
+      },
+      {
+        "id": "sunrise_sunset",
+        "ver_code": 1
+      },
+      {
+        "id": "brightness",
+        "ver_code": 1
+      },
+      {
+        "id": "cloud_connect",
+        "ver_code": 1
+      },
+      {
+        "id": "color_temperature",
+        "ver_code": 1
+      },
+      {
+        "id": "default_states",
+        "ver_code": 1
+      },
+      {
+        "id": "preset",
+        "ver_code": 3
+      },
+      {
+        "id": "color",
+        "ver_code": 1
+      },
+      {
+        "id": "on_off_gradually",
+        "ver_code": 1
+      },
+      {
+        "id": "device_local_time",
+        "ver_code": 1
+      },
+      {
+        "id": "iot_cloud",
+        "ver_code": 1
+      },
+      {
+        "id": "music_rhythm",
+        "ver_code": 3
+      },
+      {
+        "id": "bulb_quick_control",
+        "ver_code": 1
+      },
+      {
+        "id": "localSmart",
+        "ver_code": 1
+      },
+      {
+        "id": "homekit",
+        "ver_code": 2
+      },
+      {
+        "id": "segment",
+        "ver_code": 1
+      },
+      {
+        "id": "segment_effect",
+        "ver_code": 1
+      },
+      {
+        "id": "auto_light",
+        "ver_code": 1
+      }
+    ]
+  },
+  "get_device_info": {
+    "device_id": "80232F6DB6945EE8A77766AAE47921B6200F8953",
+    "fw_ver": "1.1.2 Build 231212 Rel.210005",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOBULB",
+    "model": "L930",
+    "mac": "34-60-F9-D7-82-BE",
+    "hw_id": "630F72CFA5B3DE1350011A0D04DE98B5",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "295750760B3E226612F759AF641BAB8A",
+    "color_temp_range": [2500, 6500],
+    "overheated": false,
+    "ip": "192.168.11.44",
+    "time_diff": 180,
+    "ssid": "LS0t",
+    "rssi": -42,
+    "signal_level": 3,
+    "lang": "en_US",
+    "avatar": "light_strip",
+    "region": "",
+    "specs": "",
+    "nickname": "U21hcnQgTGlnaHQgU3RyaXA=",
+    "has_set_location_info": false,
+    "lighting_effect": {
+      "enable": 0,
+      "id": "TapoStrip_7UcYLeJbiaxVIXCxr21tpx",
+      "name": "Icicle",
+      "custom": 0,
+      "brightness": 100,
+      "display_colors": [[190, 100, 100]]
+    },
+    "music_rhythm_enable": false,
+    "music_rhythm_mode": "single_lamp",
+    "segment_effect": {
+      "id": "TapoStrip_5lGMt9hvNCTEuquuCrX03B",
+      "name": "energetic",
+      "custom": 0,
+      "enable": 1,
+      "brightness": 100,
+      "display_colors": [[240, 100, 100, 0]]
+    },
+    "device_on": true,
+    "brightness": 100,
+    "hue": 139,
+    "saturation": 78,
+    "color_temp": 6493,
+    "default_states": {
+      "type": "last_states",
+      "state": {
+        "segment_effect": {
+          "id": "TapoStrip_5lGMt9hvNCTEuquuCrX03B",
+          "name": "energetic",
+          "enable": 1,
+          "brightness": 100,
+          "custom": 0,
+          "display_colors": [[240, 100, 100, 0]]
+        }
+      }
+    }
+  }
+}

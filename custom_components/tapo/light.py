@@ -1,22 +1,16 @@
 import logging
-from typing import Any
 from typing import cast
-from typing import Dict
 from typing import Optional
 
+from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LIGHT
-from custom_components.tapo.const import SUPPORTED_LIGHT_EFFECTS
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import LightTapoCoordinator
-from custom_components.tapo.coordinators import TapoCoordinator
-from custom_components.tapo.entity import BaseTapoEntity
-from custom_components.tapo.helpers import get_short_model
+from custom_components.tapo.coordinators import TapoDeviceCoordinator
+from custom_components.tapo.entity import CoordinatedTapoEntity
 from custom_components.tapo.helpers import hass_to_tapo_brightness
 from custom_components.tapo.helpers import hass_to_tapo_color_temperature
 from custom_components.tapo.helpers import tapo_to_hass_brightness
 from custom_components.tapo.helpers import tapo_to_hass_color_temperature
-from custom_components.tapo.setup_helpers import setup_from_platform_config
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.light import ATTR_COLOR_TEMP
 from homeassistant.components.light import ATTR_EFFECT
@@ -30,19 +24,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
 )
+from plugp100.api.ledstrip_device import LedStripDevice
+from plugp100.api.light_device import LightDevice
 from plugp100.api.light_effect_preset import LightEffectPreset
+from plugp100.responses.components import Components
+from plugp100.responses.device_state import LedStripDeviceState
+from plugp100.responses.device_state import LightDeviceState
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
-) -> None:
-    coordinator = await setup_from_platform_config(hass, config)
-    _setup_from_coordinator(hass, coordinator, async_add_entities)
 
 
 async def async_setup_entry(
@@ -50,32 +39,17 @@ async def async_setup_entry(
 ):
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    _setup_from_coordinator(hass, data.coordinator, async_add_entities)
-
-
-def _setup_from_coordinator(
-    hass: HomeAssistant,
-    coordinator: TapoCoordinator,
-    async_add_entities: AddEntitiesCallback,
-):
-    if isinstance(coordinator, LightTapoCoordinator):
-        model = get_short_model(coordinator.device_info.model)
-        color_modes = SUPPORTED_DEVICE_AS_LIGHT.get(model)
-        effects = SUPPORTED_LIGHT_EFFECTS.get(model, [])
-        light = TapoLight(
-            coordinator, color_modes=color_modes, supported_effects=effects
-        )
+    if isinstance(data.coordinator.device, LightDevice) or isinstance(
+        data.coordinator.device, LedStripDevice
+    ):
+        light = TapoLight(data.coordinator)
         async_add_entities([light], True)
 
 
-class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
-    def __init__(
-        self,
-        coordinator: LightTapoCoordinator,
-        color_modes: set[ColorMode],
-        supported_effects: list[LightEffectPreset] = None,
-    ):
+class TapoLight(CoordinatedTapoEntity[TapoDeviceCoordinator], LightEntity):
+    def __init__(self, coordinator: TapoDeviceCoordinator):
         super().__init__(coordinator)
+        supported_effects = _components_to_light_effects(self.coordinator.components)
         self._effects = {effect.name.lower(): effect for effect in supported_effects}
         # set homeassistant light entity attributes
         self._attr_max_color_temp_kelvin = 6500
@@ -85,27 +59,39 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
         self._attr_supported_features = (
             LightEntityFeature.EFFECT if self._effects else 0
         )
-        self._attr_supported_color_modes = color_modes
+        self._attr_supported_color_modes = _components_to_color_modes(
+            self.coordinator.components
+        )
         self._attr_effect_list = list(self._effects.keys()) if self._effects else None
+        self._is_lightstrip = self.coordinator.components.has(
+            Component.LIGHT_STRIP.value
+        )
+
+    @property
+    def _light_state(self):
+        if self._is_lightstrip:
+            return self.coordinator.get_state_of(LedStripDeviceState)
+        else:
+            return self.coordinator.get_state_of(LightDeviceState)
 
     @property
     def is_on(self):
-        return self.coordinator.light_state.device_on
+        return self._light_state.device_on
 
     @property
     def brightness(self):
         current_brightness = (
-            self.coordinator.light_state.lighting_effect.brightness
+            self._light_state.lighting_effect.brightness
             if self._has_light_effect_enabled()
-            else self.coordinator.light_state.brightness
+            else self._light_state.brightness
         )
         return tapo_to_hass_brightness(current_brightness)
 
     @property
     def hs_color(self):
-        hue = self.coordinator.light_state.hue
-        saturation = self.coordinator.light_state.saturation
-        color_temp = self.coordinator.light_state.color_temp
+        hue = self._light_state.hue
+        saturation = self._light_state.saturation
+        color_temp = self._light_state.color_temp
         if (
             color_temp is None or color_temp <= 0
         ):  # returns None if color_temp is not set
@@ -115,21 +101,21 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
     @property
     def color_temp(self):
         return tapo_to_hass_color_temperature(
-            self.coordinator.light_state.color_temp, (self.min_mireds, self.max_mireds)
+            self._light_state.color_temp, (self.min_mireds, self.max_mireds)
         )
 
     @property
     def effect(self) -> Optional[str]:
         if self._has_light_effect_enabled():
-            return self.coordinator.light_state.lighting_effect.name.lower()
+            return self._light_state.lighting_effect.name.lower()
         else:
             return None
 
     def _has_light_effect_enabled(self) -> bool:
         is_enabled = (
             self._effects
-            and self.coordinator.light_state.lighting_effect is not None
-            and self.coordinator.light_state.lighting_effect.enable
+            and self._light_state.lighting_effect is not None
+            and self._light_state.lighting_effect.enable
         )
         return is_enabled
 
@@ -228,3 +214,20 @@ class TapoLight(BaseTapoEntity[LightTapoCoordinator], LightEntity):
             (
                 await self.coordinator.device.set_brightness(new_brightness)
             ).get_or_raise()
+
+
+def _components_to_color_modes(components: Components) -> set[ColorMode]:
+    color_modes = [ColorMode.ONOFF]
+    if components.has(Component.COLOR_TEMPERATURE.value):
+        color_modes.append(ColorMode.COLOR_TEMP)
+    if components.has(Component.BRIGHTNESS.value):
+        color_modes.append(ColorMode.BRIGHTNESS)
+    if components.has(Component.COLOR.value):
+        color_modes.append(ColorMode.HS)
+    return set(color_modes)
+
+
+def _components_to_light_effects(components: Components):
+    if components.has(Component.LIGHT_STRIP_EFFECTS.value):
+        return LightEffectPreset
+    return []

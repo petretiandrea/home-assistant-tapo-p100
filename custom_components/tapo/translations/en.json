@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name} ({host} - {mac})",
     "abort": {
       "already_configured": "Device is already configured"
     },
@@ -18,6 +19,14 @@
           "username": "Tapo App Username (email)",
           "track_device_mac": "Experimental: Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
           "advanced_settings": "Advanced settings"
+        }
+      },
+      "discovery_auth_confirm": {
+        "title": "Insert authentication data",
+        "description": "Enter the tapo app credentials.",
+        "data": {
+          "password": "Tapo App Password",
+          "username": "Tapo App Username (email)"
         }
       },
       "advanced_config": {

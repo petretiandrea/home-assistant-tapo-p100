@@ -1,0 +1,57 @@
+{
+  "get_device_info": {
+    "device_id": "80225A84E5F52C914E409EF8CCE7D68D20FAA0B9",
+    "fw_ver": "1.2.1 Build 230804 Rel.190922",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOPLUG",
+    "model": "P105",
+    "mac": "9C-53-22-A7-C8-35",
+    "hw_id": "96DE01611683F4A1D0B8B47C16A906EB",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "BE68AD1E42F876124BDE439023B3C796",
+    "ip": "192.168.1.40",
+    "time_diff": 60,
+    "ssid": "SG9tZS1OZXR3b3Jr",
+    "rssi": -47,
+    "signal_level": 3,
+    "auto_off_status": "on",
+    "auto_off_remain_time": 0,
+    "latitude": 437188,
+    "longitude": 128663,
+    "lang": "it_IT",
+    "avatar": "plug",
+    "region": "Europe/Rome",
+    "specs": "IT",
+    "nickname": "QWxiZXJvIE5hdGFsZQ==",
+    "has_set_location_info": true,
+    "device_on": true,
+    "on_time": 0,
+    "default_states": {
+      "type": "last_states",
+      "state": {}
+    },
+    "overheated": false
+  },
+  "component_nego": {
+    "component_list": [
+      { "id": "device", "ver_code": 2 },
+      { "id": "firmware", "ver_code": 2 },
+      { "id": "quick_setup", "ver_code": 2 },
+      { "id": "time", "ver_code": 2 },
+      { "id": "wireless", "ver_code": 2 },
+      { "id": "schedule", "ver_code": 2 },
+      { "id": "countdown", "ver_code": 2 },
+      { "id": "antitheft", "ver_code": 2 },
+      { "id": "account", "ver_code": 2 },
+      { "id": "synchronize", "ver_code": 2 },
+      { "id": "sunrise_sunset", "ver_code": 2 },
+      { "id": "led", "ver_code": 2 },
+      { "id": "cloud_connect", "ver_code": 2 },
+      { "id": "iot_cloud", "ver_code": 2 },
+      { "id": "device_local_time", "ver_code": 2 },
+      { "id": "default_states", "ver_code": 2 },
+      { "id": "auto_off", "ver_code": 2 },
+      { "id": "localSmart", "ver_code": 2 }
+    ]
+  }
+}

@@ -3,10 +3,10 @@ from typing import Any
 from typing import cast
 from typing import Optional
 
+from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import SUPPORTED_HUB_ALARM
 from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.hub.tapo_hub_coordinator import TapoHubCoordinator
+from custom_components.tapo.coordinators import TapoDeviceCoordinator
 from homeassistant.components.siren import ATTR_TONE
 from homeassistant.components.siren import ATTR_VOLUME_LEVEL
 from homeassistant.components.siren import SirenEntity
@@ -25,7 +25,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    if data.coordinator.model == SUPPORTED_HUB_ALARM:
+    if data.coordinator.components.has(Component.ALARM.value):
         available_tones = (
             (await data.coordinator.device.get_supported_alarm_tones())
             .get_or_raise()
@@ -34,7 +34,7 @@ async def async_setup_entry(
         async_add_devices([HubSiren(data.coordinator, available_tones)], True)
 
 
-class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
+class HubSiren(CoordinatorEntity[TapoDeviceCoordinator], SirenEntity):
     _attr_has_entity_name = True
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
@@ -44,7 +44,10 @@ class HubSiren(CoordinatorEntity[TapoHubCoordinator], SirenEntity):
     )
 
     def __init__(
-        self, coordinator: TapoHubCoordinator, tones: list[str], context: Any = None
+        self,
+        coordinator: TapoDeviceCoordinator,
+        tones: list[str],
+        context: Any = None,
     ) -> None:
         super().__init__(coordinator, context)
         self._attr_available_tones = tones

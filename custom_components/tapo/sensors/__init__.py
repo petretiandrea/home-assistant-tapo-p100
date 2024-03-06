@@ -1,4 +1,4 @@
-from custom_components.tapo.coordinators import TapoCoordinator
+from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.sensors.sensor_config import SensorConfig
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 from homeassistant.components.sensor import SensorDeviceClass
@@ -22,7 +22,7 @@ class TodayEnergySensorSource(TapoSensorSource):
             UnitOfEnergy.KILO_WATT_HOUR,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if coordinator.has_capability(EnergyInfo):
             return coordinator.get_state_of(EnergyInfo).today_energy / 1000
         return None
@@ -37,7 +37,7 @@ class MonthEnergySensorSource(TapoSensorSource):
             UnitOfEnergy.KILO_WATT_HOUR,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if coordinator.has_capability(EnergyInfo):
             return coordinator.get_state_of(EnergyInfo).month_energy / 1000
         return None
@@ -67,7 +67,7 @@ class CurrentEnergySensorSource(TapoSensorSource):
             UnitOfPower.WATT,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if coordinator.has_capability(EnergyInfo):
             return coordinator.get_state_of(EnergyInfo).current_power / 1000
         elif coordinator.has_capability(PowerInfo):
@@ -85,7 +85,7 @@ class SignalSensorSource(TapoSensorSource):
             is_diagnostic=True,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         try:
             return coordinator.get_state_of(DeviceInfo).rssi
         except Exception:  # pylint: disable=broad-except
@@ -101,7 +101,7 @@ class TodayRuntimeSensorSource(TapoSensorSource):
             UnitOfTime.MINUTES,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if coordinator.has_capability(EnergyInfo):
             sensor = coordinator.get_state_of(EnergyInfo)
             if sensor is not None:
@@ -118,7 +118,7 @@ class MonthRuntimeSensorSource(TapoSensorSource):
             UnitOfTime.MINUTES,
         )
 
-    def get_value(self, coordinator: TapoCoordinator) -> StateType:
+    def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if coordinator.has_capability(EnergyInfo):
             sensor = coordinator.get_state_of(EnergyInfo)
             if sensor is not None:

@@ -4,3 +4,9 @@ pythonenv*
 .coverage
 venv
 .venv
+
+coverage_re/
+pytest-coverage.txt
+pytest.xml
+
+.idea/

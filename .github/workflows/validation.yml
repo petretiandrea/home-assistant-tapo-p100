@@ -1,21 +1,50 @@
 name: Linting
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - dev
   pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
     branches:
       - main
-      - master
-      - dev
+      - next
 
 env:
   DEFAULT_PYTHON: 3.11
 
+permissions:
+  pull-requests: write
+  statuses: write
+
 jobs:
+  validate-pr-title:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            docs
+            refactor
+            chore
+            fix
+            feat
+            breaking
+          scopes: |
+            ci
+            core
+          requireScope: true
+          ignoreLabels: |
+            bot
+          subjectPattern: ^.+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+          wip: true
   pre-commit:
     runs-on: "ubuntu-latest"
     name: Pre-commit
@@ -72,6 +101,13 @@ jobs:
             --timeout=9 \
             --durations=10 \
             --cov-fail-under=40 \
-            -n auto \
+            --junitxml=pytest.xml \
+            --cov-report=term-missing:skip-covered \
+            --cov=app \
             -p no:sugar \
-            tests/unit
+            tests/ | tee pytest-coverage.txt
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml

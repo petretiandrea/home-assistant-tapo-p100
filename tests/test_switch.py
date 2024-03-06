@@ -1,53 +1,85 @@
 """Test tapo switch."""
-from unittest.mock import call
-from unittest.mock import patch
-
-from custom_components.tapo import (
-    async_setup_entry,
-)
-from custom_components.tapo.const import (
-    DEFAULT_NAME,
-)
-from custom_components.tapo.const import (
-    DOMAIN,
-)
-from custom_components.tapo.const import (
-    SWITCH,
-)
+from custom_components.tapo.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch import SERVICE_TURN_OFF
 from homeassistant.components.switch import SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_CONFIG
+from .conftest import extract_entity_id
+from .conftest import mock_plug
+from .conftest import mock_plug_strip
+from .conftest import setup_platform
 
 
-async def test_switch_services(hass):
-    """Test switch services."""
-    # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    assert await async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
+async def test_switch_setup(hass: HomeAssistant):
+    device_registry = dr.async_get(hass)
+    device = mock_plug()
+    await setup_platform(hass, device, [SWITCH_DOMAIN])
+    entity_id = await extract_entity_id(device, SWITCH_DOMAIN)
+    state_entity = hass.states.get(entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
+    assert state_entity is not None
+    assert state_entity.state == "on"
+    assert state_entity.attributes["device_class"] == "outlet"
+    assert device is not None
 
-    # Functions/objects can be patched directly in test code as well and can be used to test
-    # additional things, like whether a function was called or what arguments it was called with
-    with patch("custom_components.tapo.TapoApiClient.async_set_title") as title_func:
+
+async def test_switch_turn_on_service(hass: HomeAssistant):
+    device = mock_plug()
+    entity_id = await extract_entity_id(device, SWITCH_DOMAIN)
+    assert await setup_platform(hass, device, [SWITCH_DOMAIN]) is not None
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    device.on.assert_called_once()
+
+
+async def test_switch_turn_off_service(hass: HomeAssistant):
+    device = mock_plug()
+    entity_id = await extract_entity_id(device, SWITCH_DOMAIN)
+    assert await setup_platform(hass, device, [SWITCH_DOMAIN]) is not None
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    device.off.assert_called_once()
+
+
+async def test_plug_strip_child_onoff(hass: HomeAssistant):
+    device = mock_plug_strip()
+    await extract_entity_id(device, SWITCH_DOMAIN)
+    assert await setup_platform(hass, device, [SWITCH_DOMAIN]) is not None
+    expected_children_state = {
+        "switch.p300_plug1": {"value": "on"},
+        "switch.p300_plug2": {"value": "on"},
+        "switch.p300_plug3": {"value": "on"},
+    }
+    for children_id, state in expected_children_state.items():
+        assert hass.states.get(children_id).state == state["value"]
         await hass.services.async_call(
-            SWITCH,
-            SERVICE_TURN_OFF,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
-            blocking=True,
-        )
-        assert title_func.called
-        assert title_func.call_args == call("foo")
-
-        title_func.reset_mock()
-
-        await hass.services.async_call(
-            SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
+            {ATTR_ENTITY_ID: children_id},
             blocking=True,
         )
-        assert title_func.called
-        assert title_func.call_args == call("bar")
+        device.on.assert_called_once()
+        device.on.reset_mock()
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: children_id},
+            blocking=True,
+        )
+        device.off.assert_called_once()
+        device.off.reset_mock()
