@@ -1,12 +1,6 @@
 #/bin/bash
-
-if ! [[ $1 =~ ^[v] ]]; then
-    echo "Only version with vX.X.X are allowed"
-    exit -1
-fi
-
 GIT_TAG_VERSION=$1
-INTEGRATION_VERSION=${GIT_TAG_VERSION:1}
+INTEGRATION_VERSION=GIT_TAG_VERSION
 
 
 echo "Bumping const.py and manifest.json to version: $INTEGRATION_VERSION"
