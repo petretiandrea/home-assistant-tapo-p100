@@ -57,7 +57,8 @@ Also tapo integration discovery filters out not supported devices!
 
 <details>
   <summary>Screenshot</summary>
-  ![Discovery](./docs/discovery-devices.png)
+  
+  ![Discovery](/docs/discovery-devices.png)
 
 </details>
 
