@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.sensor import BatteryLevelSensor
-from custom_components.tapo.hub.sensor import HumitidySensor
+from custom_components.tapo.hub.sensor import HumiditySensor
 from custom_components.tapo.hub.sensor import ReportIntervalDiagnostic
 from custom_components.tapo.hub.sensor import SENSOR_MAPPING
 from custom_components.tapo.hub.sensor import TemperatureSensor
@@ -22,7 +22,7 @@ class TestSensorMappings:
 
     def test_binary_sensor_mappings(self):
         expected_mappings = {
-            T31Device: [HumitidySensor, TemperatureSensor, ReportIntervalDiagnostic],
+            T31Device: [HumiditySensor, TemperatureSensor, ReportIntervalDiagnostic],
             T110SmartDoor: [ReportIntervalDiagnostic],
             S200ButtonDevice: [ReportIntervalDiagnostic],
             T100MotionSensor: [ReportIntervalDiagnostic],

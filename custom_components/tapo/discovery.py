@@ -13,15 +13,9 @@ from plugp100.discovery.tapo_discovery import TapoDiscovery
 
 
 async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDevice]:
-    loop = asyncio.get_event_loop()
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
     discovery_tasks = [
-        loop.run_in_executor(
-            None,
-            lambda: list(
-                TapoDiscovery.scan(timeout=DISCOVERY_TIMEOUT, broadcast=str(address))
-            ),
-        )
+        TapoDiscovery.scan(timeout=DISCOVERY_TIMEOUT, broadcast=str(address))
         for address in broadcast_addresses
     ]
     return {

@@ -1,4 +1,4 @@
-from custom_components.tapo.const import HUB_PLATFORMS
+from custom_components.tapo.const import PLATFORMS
 from homeassistant.const import Platform
 
 
@@ -13,4 +13,4 @@ class TestHubPlatforms:
             Platform.NUMBER,
         ]
 
-        assert HUB_PLATFORMS == expected_platforms
+        assert PLATFORMS == expected_platforms

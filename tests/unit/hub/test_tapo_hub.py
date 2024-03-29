@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
-from custom_components.tapo.hub.tapo_hub import TapoHub
+from custom_components.tapo.hub.hass_tapo_hub import TapoHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry

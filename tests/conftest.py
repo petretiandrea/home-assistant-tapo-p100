@@ -5,20 +5,18 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
+from plugp100.new.components.energy_component import EnergyComponent
+from plugp100.new.tapodevice import TapoDevice
+from plugp100.new.tapoplug import TapoPlug
+
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_PASSWORD
 from custom_components.tapo.const import CONF_USERNAME
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import TapoDevice
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from plugp100.api.hub.hub_device import HubDevice
-from plugp100.api.ledstrip_device import LedStripDevice
-from plugp100.api.light_device import LightDevice
-from plugp100.api.plug_device import PlugDevice
-from plugp100.api.power_strip_device import PowerStripDevice
 from plugp100.common.functional.tri import Success
 from plugp100.common.functional.tri import Try
 from plugp100.discovery.discovered_device import DiscoveredDevice
@@ -87,7 +85,7 @@ async def setup_platform(
     hass: HomeAssistant, device: TapoDevice, platforms: list[str]
 ) -> MockConfigEntry:
     hass.config.components.add(DOMAIN)
-    state = await device.get_state()
+    await device.update()
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -97,22 +95,18 @@ async def setup_platform(
             CONF_SCAN_INTERVAL: 5000,
         },
         version=8,
-        unique_id=dr.format_mac(state.value.info.mac),
+        unique_id=dr.format_mac(device.mac),
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.tapo.hass_tapo.HassTapo._get_initial_device_state",
-        return_value=state.value.info,
+        "custom_components.tapo.hass_tapo.connect", return_value=AsyncMock(device)
     ):
-        with patch(
-            "custom_components.tapo.hass_tapo.create_tapo_device", return_value=device
-        ):
-            with patch.object(hass.config_entries, "async_forward_entry_setup"):
-                assert (
-                    await hass.config_entries.async_setup(config_entry.entry_id) is True
-                )
-                assert await async_setup_component(hass, DOMAIN, {}) is True
-                await hass.async_block_till_done()
+        with patch.object(hass.config_entries, "async_forward_entry_setup"):
+            assert (
+                await hass.config_entries.async_setup(config_entry.entry_id) is True
+            )
+            assert await async_setup_component(hass, DOMAIN, {}) is True
+            await hass.async_block_till_done()
 
     for platform in platforms:
         assert await hass.config_entries.async_forward_entry_setup(
@@ -145,18 +139,19 @@ def mock_plug(with_emeter: bool = False) -> MagicMock:
     components = response.get("component_nego").map(
         lambda x: Components.try_from_json(x.result)
     )
-    device = MagicMock(auto_spec=PlugDevice, name="Mocked plug device")
-    device.on = AsyncMock(return_value=Success(True))
-    device.off = AsyncMock(return_value=Success(True))
-    device.get_state = AsyncMock(return_value=state)
-    device.get_component_negotiation = AsyncMock(return_value=components)
-    device.__class__ = PlugDevice
+    device = MagicMock(auto_spec=TapoPlug, name="Mocked plug device")
+    device.turn_on = AsyncMock(return_value=Success(True))
+    device.turn_off = AsyncMock(return_value=Success(True))
+    #device.get_state = AsyncMock(return_value=state)
+    device._negotiate_components = AsyncMock(return_value=components)
+    device.update = AsyncMock()
+    device.__class__ = TapoPlug
 
     if with_emeter:
-        power = response.get("get_current_power").map(lambda x: PowerInfo(x.result))
-        energy = response.get("get_energy_usage").map(lambda x: EnergyInfo(x.result))
-        device.get_current_power = AsyncMock(return_value=power)
-        device.get_energy_usage = AsyncMock(return_value=energy)
+        emeter = MagicMock(EnergyComponent(MagicMock()))
+        emeter.update = AsyncMock()
+        emeter.power_info = response.get("get_current_power").map(lambda x: PowerInfo(x.result)).get_or_raise().current_power
+        emeter.energy_info = response.get("get_energy_usage").map(lambda x: EnergyInfo(x.result)).get_or_raise().current_power
 
     device.device_id = state.value.info.device_id
     return device
