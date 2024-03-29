@@ -1,5 +1,5 @@
 """Test tapo switch."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, ANY
 
 import pytest
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -59,15 +59,19 @@ async def test_light_color_service_call(hass: HomeAssistant, tapo_device: MagicM
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    tapo_device.off.assert_called_once()
+    tapo_device.turn_off.assert_called_once()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    tapo_device.on.assert_called_once()
-    tapo_device.set_brightness.assert_called_with(39)
+    tapo_device.turn_on.assert_called_once()
+    ## TODO: create only one set brightness method
+    if tapo_device.is_led_strip:
+        tapo_device.set_light_effect_brightness.assert_called_with(ANY, 39)
+    else:
+        tapo_device.set_brightness.assert_called_with(39)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -134,7 +138,7 @@ async def test_light_turn_on_with_attributes(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 30, ATTR_HS_COLOR: (30, 10)},
         blocking=True,
     )
-    assert tapo_device.on.called
+    assert tapo_device.turn_on.called
     tapo_device.set_hue_saturation.assert_called_with(30, 10)
     tapo_device.set_brightness.assert_called_with(12)
 
@@ -153,7 +157,7 @@ async def test_light_turn_on_with_effect(hass: HomeAssistant, tapo_device: Magic
         },
         blocking=True,
     )
-    assert tapo_device.on.called
+    assert tapo_device.turn_on.called
     tapo_device.set_light_effect.assert_called_with(
         LightEffectPreset.Christmas.to_effect()
     )
@@ -162,7 +166,7 @@ async def test_light_turn_on_with_effect(hass: HomeAssistant, tapo_device: Magic
     )
 
 
-@pytest.mark.parametrize("tapo_device", [mock_bulb(components_to_exclude=["color"])])
+@pytest.mark.parametrize("tapo_device", [mock_bulb(is_color=False)])
 async def test_color_temp_only_light(hass: HomeAssistant, tapo_device: MagicMock):
     await setup_platform(hass, tapo_device, [LIGHT_DOMAIN])
     entity_id = await extract_entity_id(tapo_device, LIGHT_DOMAIN)

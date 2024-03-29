@@ -1,17 +1,22 @@
+from plugp100.new.device_factory import connect
+
 from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
-from custom_components.tapo.setup_helpers import create_api_from_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from custom_components.tapo.setup_helpers import create_aiohttp_session, create_device_config
+
 
 async def migrate_entry_to_v8(hass: HomeAssistant, config_entry: ConfigEntry):
-    api = await create_api_from_config(hass, config_entry)
+    session = create_aiohttp_session(hass)
+    device = await connect(config=create_device_config(config_entry), session=session)
+    await device.update()
     new_data = {**config_entry.data}
     scan_interval = new_data.pop(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
-    if mac := (await api.get_device_info()).map(lambda j: j["mac"]).get_or_else(None):
+    if mac := device.mac:
         config_entry.version = 8
         hass.config_entries.async_update_entry(
             config_entry,

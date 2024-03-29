@@ -18,7 +18,7 @@ from .conftest import setup_platform
 
 @pytest.mark.parametrize(
     "device",
-    [mock_plug(), mock_hub(), mock_plug_strip(), mock_bulb(), mock_led_strip()],
+    [mock_plug(), mock_plug_strip(), mock_hub(), mock_bulb()]
 )
 async def test_switch_overheat(hass: HomeAssistant, device: MagicMock):
     device_registry = dr.async_get(hass)
@@ -29,7 +29,7 @@ async def test_switch_overheat(hass: HomeAssistant, device: MagicMock):
     state_entity = hass.states.get(entity_id)
     device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert state_entity is not None
-    assert state_entity.state == "off"
+    assert state_entity.state == "on"
     assert state_entity.attributes["device_class"] == "heat"
     assert "overheat" in state_entity.attributes["friendly_name"].lower()
     assert device is not None

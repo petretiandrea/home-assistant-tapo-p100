@@ -30,7 +30,6 @@ async def test_discovery_auth(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            CONF_DISCOVERED_DEVICE_INFO: mock_discovery,
         },
         data={
             CONF_HOST: IP_ADDRESS,
