@@ -59,6 +59,19 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
         self._is_lightstrip = device.is_led_strip
 
     @property
+    def color_mode(self) -> ColorMode | str | None:
+        if ColorMode.HS in self.supported_color_modes and self.hs_color is not None:
+            return ColorMode.HS
+        elif ColorMode.COLOR_TEMP in self.supported_color_modes and self.color_temp is not None:
+            return ColorMode.COLOR_TEMP
+        elif ColorMode.BRIGHTNESS in self.supported_color_modes and self.brightness is not None:
+            return ColorMode.BRIGHTNESS
+        elif ColorMode.ONOFF in self.supported_color_modes:
+            return ColorMode.ONOFF
+        else:
+            return ColorMode.UNKNOWN
+
+    @property
     def is_on(self):
         return self.device.is_on
 
@@ -191,15 +204,17 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
                 await self.device.set_brightness(new_brightness)
             ).get_or_raise()
 
-
+# follows https://developers.home-assistant.io/docs/core/entity/light/#color-modes
 def _components_to_color_modes(device: TapoBulb) -> set[ColorMode]:
-    color_modes = [ColorMode.ONOFF]
+    color_modes = []
     if device.is_color_temperature:
         color_modes.append(ColorMode.COLOR_TEMP)
-    if device.is_brightness:
-        color_modes.append(ColorMode.BRIGHTNESS)
     if device.is_color:
         color_modes.append(ColorMode.HS)
+    if device.is_brightness and not device.is_color_temperature and not device.is_color:
+        color_modes.append(ColorMode.BRIGHTNESS)
+    if not device.is_color_temperature and not device.is_color:
+        color_modes.append(ColorMode.ONOFF)
     return set(color_modes)
 
 
