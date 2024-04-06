@@ -50,6 +50,7 @@ class HassTapo:
             child_coordinators=[],
             device=device,
         )
+
         await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         return True
 

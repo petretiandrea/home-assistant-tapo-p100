@@ -41,7 +41,7 @@ async def async_setup_device_switch(
 
 class TapoPlugEntity(CoordinatedTapoEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
             self,

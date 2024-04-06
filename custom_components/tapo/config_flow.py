@@ -115,7 +115,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle discovery via dhcp."""
         mac_address = dr.format_mac(discovery_info.macaddress)
-        if discovered_device := await discover_tapo_device(self.hass, mac_address):
+        if discovered_device := await discover_tapo_device(discovery_info.ip):
             return await self._async_handle_discovery(
                 discovery_info.ip, mac_address, discovered_device
             )
@@ -140,7 +140,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                device = await self._async_get_device_info(user_input)
+                device = await self._async_get_device(user_input)
                 await self.async_set_unique_id(dr.format_mac(device.mac))
                 self._abort_if_unique_id_configured()
                 self._async_abort_entries_match({CONF_HOST: device.host})
@@ -228,7 +228,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                device = await self._async_get_device_info_from_discovered(
+                device = await self._async_get_device_from_discovered(
                     self._discovered_info, user_input
                 )
                 await self.async_set_unique_id(dr.format_mac(device.mac))
@@ -288,24 +288,31 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_get_device_info_from_discovered(
+    async def _async_get_device_from_discovered(
         self, discovered: DiscoveredDevice, config: dict[str, Any]
     ) -> TapoDevice:
-        return await self._async_get_device_info(config | {CONF_HOST: discovered.ip})
+        return await self._async_get_device(config | {CONF_HOST: discovered.ip}, discovered)
 
-    async def _async_get_device_info(self, config: dict[str, Any]) -> TapoDevice:
+    async def _async_get_device(
+            self,
+            config: dict[str, Any],
+            discovered_device: DiscoveredDevice | None = None,
+    ) -> TapoDevice:
         if not config[CONF_HOST]:
             raise InvalidHost
         try:
             session = create_aiohttp_session(self.hass)
             credential = AuthCredential(config[CONF_USERNAME], config[CONF_PASSWORD])
-            host, port = get_host_port(config[CONF_HOST])
-            config = DeviceConnectConfiguration(
-                credentials=credential,
-                host=host,
-                port=port,
-            )
-            device = await connect(config=config, session=session)
+            if discovered_device is None:
+                host, port = get_host_port(config[CONF_HOST])
+                config = DeviceConnectConfiguration(
+                    credentials=credential,
+                    host=host,
+                    port=port,
+                )
+                device = await connect(config=config, session=session)
+            else:
+                device = await discovered_device.get_tapo_device(credential, session)
             await device.update()
             return device
         except TapoException as error:

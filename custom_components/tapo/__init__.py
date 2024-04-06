@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except DeviceNotSupported as error:
         raise error
     except Exception as error:
-        print(error)
         raise ConfigEntryNotReady from error
 
 

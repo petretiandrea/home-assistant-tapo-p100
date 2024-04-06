@@ -4,7 +4,7 @@
   "device_type": "SMART.TAPOBULB",
   "device_model": "L530E(EU)",
   "ip": "1.2.3.4",
-  "mac": "aa-bb-cc-dd-ee-ff",
+  "mac": "1a-22-33-b4-c5-66",
   "is_support_iot_cloud": true,
   "obd_src": "tplink",
   "factory_default": false,

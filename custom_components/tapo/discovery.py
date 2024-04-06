@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from itertools import chain
 from typing import Optional
 
@@ -25,9 +26,10 @@ async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDev
 
 
 async def discover_tapo_device(
-    hass: HomeAssistant, mac: str
+        ip: str,
 ) -> Optional[DiscoveredDevice]:
-    found_devices = await discovery_tapo_devices(hass)
-    return next(
-        filter(lambda x: dr.format_mac(x.mac) == mac, found_devices.values()), None
-    )
+    try:
+        return await TapoDiscovery.single_scan(ip, DISCOVERY_TIMEOUT)
+    except:
+        logging.error("Faild during discovery of device with ip {}", ip)
+        return None

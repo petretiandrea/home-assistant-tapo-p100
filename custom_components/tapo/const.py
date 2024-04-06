@@ -98,14 +98,3 @@ If you have any issues with this you need to open an issue here:
 {ISSUE_URL}
 -------------------------------------------------------------------
 """
-
-#TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice, PowerStripDevice]
-
-
-class Component(Enum):
-    COLOR_TEMPERATURE = "color_temperature"
-    BRIGHTNESS = "brightness"
-    COLOR = "color"
-    LIGHT_STRIP = "light_strip"
-    LIGHT_STRIP_EFFECTS = "light_strip_lighting_effect"
-    ALARM = "alarm"

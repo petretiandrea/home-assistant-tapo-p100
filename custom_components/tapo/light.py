@@ -16,11 +16,9 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
 )
 from plugp100.api.light_effect_preset import LightEffectPreset
-from plugp100.new.components.light_component import LightComponent
 from plugp100.new.components.light_effect_component import LightEffectComponent
 from plugp100.new.tapobulb import TapoBulb
 
-from custom_components.tapo.const import Component
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
@@ -194,14 +192,13 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
             ).get_or_raise()
 
 
-# TODO: split to more componenets on TapoBulb library
 def _components_to_color_modes(device: TapoBulb) -> set[ColorMode]:
     color_modes = [ColorMode.ONOFF]
-    if device.has_component(LightComponent) and device.components.has(Component.COLOR_TEMPERATURE.value):
+    if device.is_color_temperature:
         color_modes.append(ColorMode.COLOR_TEMP)
-    if device.has_component(LightComponent) and device.components.has(Component.BRIGHTNESS.value):
+    if device.is_brightness:
         color_modes.append(ColorMode.BRIGHTNESS)
-    if device.has_component(LightComponent) and device.components.has(Component.COLOR.value):
+    if device.is_color:
         color_modes.append(ColorMode.HS)
     return set(color_modes)
 

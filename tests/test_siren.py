@@ -12,9 +12,9 @@ from tests.conftest import setup_platform
 async def test_hub_siren_on(hass: HomeAssistant):
     device = mock_hub()
     await setup_platform(hass, device, PLATFORMS)
-    entity_id = "siren.smart_hub_siren"
+    entity_id = "siren.nickname_siren"
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == "on"
     await hass.services.async_call(
         SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
@@ -25,9 +25,9 @@ async def test_hub_siren_on(hass: HomeAssistant):
 async def test_hub_siren_off(hass: HomeAssistant):
     device = mock_hub()
     await setup_platform(hass, device, PLATFORMS)
-    entity_id = "siren.smart_hub_siren"
+    entity_id = "siren.nickname_siren"
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == "on"
     await hass.services.async_call(
         SIREN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )

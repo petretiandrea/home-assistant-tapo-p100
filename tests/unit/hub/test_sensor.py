@@ -1,80 +1,60 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock, AsyncMock
 
-from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.sensor import BatteryLevelSensor
-from custom_components.tapo.hub.sensor import HumiditySensor
-from custom_components.tapo.hub.sensor import ReportIntervalDiagnostic
-from custom_components.tapo.hub.sensor import SENSOR_MAPPING
-from custom_components.tapo.hub.sensor import TemperatureSensor
+import pytest
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
-from plugp100.api.hub.ke100_device import KE100Device
-from plugp100.api.hub.s200b_device import S200ButtonDevice
-from plugp100.api.hub.t100_device import T100MotionSensor
-from plugp100.api.hub.t110_device import T110SmartDoor
-from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
+from plugp100.new.child.tapohubchildren import TapoHubChildDevice
+from plugp100.new.components.battery_component import BatteryComponent
+from plugp100.new.components.humidity_component import HumidityComponent
+from plugp100.new.components.report_mode_component import ReportModeComponent
+from plugp100.new.components.temperature_component import TemperatureComponent
+
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.hub.sensor import BatteryLevelSensor, COMPONENT_MAPPING
+from tests.conftest import _mock_hub_child_device
 
 
 class TestSensorMappings:
     coordinator = Mock(TapoDataCoordinator)
 
-    def test_binary_sensor_mappings(self):
+    def test_sensor_mappings(self):
+
         expected_mappings = {
-            T31Device: [HumiditySensor, TemperatureSensor, ReportIntervalDiagnostic],
-            T110SmartDoor: [ReportIntervalDiagnostic],
-            S200ButtonDevice: [ReportIntervalDiagnostic],
-            T100MotionSensor: [ReportIntervalDiagnostic],
-            WaterLeakDevice: [ReportIntervalDiagnostic],
-            KE100Device: [TemperatureSensor, BatteryLevelSensor],
+            HumidityComponent: 'HumiditySensor',
+            TemperatureComponent: 'TemperatureSensor',
+            ReportModeComponent: 'ReportIntervalDiagnostic',
+            BatteryComponent: 'BatteryLevelSensor'
         }
 
-        assert SENSOR_MAPPING == expected_mappings
+        assert COMPONENT_MAPPING == expected_mappings
 
+def _mock_battery_component(mock_device: MagicMock) -> MagicMock:
+    battery_component = MagicMock(BatteryComponent())
+    battery_component.battery_percentage = 100
+    battery_component.is_battery_low = False
+    battery_component.update = AsyncMock(return_value=None)
+    mock_device.add_component(battery_component)
+    return mock_device
 
 class TestBatteryLevelSensor:
-    coordinator = Mock(TapoDataCoordinator)
+    @pytest.fixture(autouse=True)
+    def init_data(self):
+        self.coordinator = Mock(TapoDataCoordinator)
+        self.device = _mock_battery_component(_mock_hub_child_device(MagicMock(auto_spec=TapoHubChildDevice)))
+        self.battery_sensor = BatteryLevelSensor(coordinator=self.coordinator, device=self.device)
 
     def test_unique_id(self):
-        base_data = Mock()
-        base_data.base_info.device_id = "hub1234"
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = BatteryLevelSensor(coordinator=self.coordinator)
-
-        result = subject.unique_id
-
-        assert result == "hub1234_Battery_Percentage"
+        assert self.battery_sensor.unique_id == "123_Battery_Percentage"
 
     def test_device_class(self):
-        subject = BatteryLevelSensor(coordinator=self.coordinator)
-
-        result = subject.device_class
-
-        assert result == SensorDeviceClass.BATTERY
+        assert self.battery_sensor.device_class == SensorDeviceClass.BATTERY
 
     def test_state_class(self):
-        subject = BatteryLevelSensor(coordinator=self.coordinator)
-
-        result = subject.state_class
-
-        assert result == SensorStateClass.MEASUREMENT
+        assert self.battery_sensor.state_class == SensorStateClass.MEASUREMENT
 
     def test_native_unit_of_measurement(self):
-        subject = BatteryLevelSensor(coordinator=self.coordinator)
-
-        result = subject.native_unit_of_measurement
-
-        assert result == PERCENTAGE
+        assert self.battery_sensor.native_unit_of_measurement == PERCENTAGE
 
     def test_native_value(self):
-        base_data = Mock()
-        base_data.battery_percentage = 20
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = BatteryLevelSensor(coordinator=self.coordinator)
-
-        result = subject.native_value
-
-        assert result == 20
+        assert self.battery_sensor.native_value == 100

@@ -23,7 +23,7 @@ async def async_setup_entry(
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     if isinstance(data.device, TapoHub):
-        if data.coordinator.device.has_component(AlarmComponent):
+        if data.coordinator.device.has_alarm:
             available_tones = (
                 (await data.device.get_supported_alarm_tones())
                 .get_or_raise()

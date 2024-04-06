@@ -50,7 +50,6 @@ class HassTapoHub:
         child_coordinators = await self.setup_children(
             hass, registry, self.hub.children, polling_rate
         )
-        print("Coordinators", child_coordinators)
         hass.data[DOMAIN][self.entry.entry_id] = HassTapoDeviceData(
             coordinator=hub_coordinator,
             config_entry_update_unsub=self.entry.add_update_listener(
