@@ -79,28 +79,3 @@ class TapoHubChildCoordinator(TapoDataCoordinator):
         elif isinstance(self.device, KE100Device):
             base_state = (await self.device.get_device_state()).get_or_raise()
             self.update_state_of(HubChildCommonState, base_state)
-
-
-C = TypeVar("C", bound=TapoDataCoordinator)
-
-
-class BaseTapoHubChildEntity(CoordinatorEntity[C]):
-    _attr_has_entity_name = True
-    _attr_name = None
-
-    def __init__(self, coordinator: C):
-        super().__init__(coordinator)
-        self._base_data = self.coordinator.get_state_of(HubChildCommonState)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        return DeviceInfo(identifiers={(DOMAIN, self._base_data.base_info.device_id)})
-
-    @property
-    def unique_id(self):
-        return self._base_data.base_info.device_id
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self._base_data = self.coordinator.get_state_of(HubChildCommonState)
-        self.async_write_ha_state()

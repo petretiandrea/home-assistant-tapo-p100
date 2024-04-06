@@ -6,6 +6,22 @@ from typing import Optional
 
 import aiohttp
 import voluptuous as vol
+from homeassistant import config_entries
+from homeassistant import data_entry_flow
+from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import DiscoveryInfoType
+from plugp100.common.credentials import AuthCredential
+from plugp100.discovery.discovered_device import DiscoveredDevice
+from plugp100.new.device_factory import DeviceConnectConfiguration, connect
+from plugp100.new.tapodevice import TapoDevice
+from plugp100.responses.tapo_exception import TapoError
+from plugp100.responses.tapo_exception import TapoException
+
 from custom_components.tapo.const import CONF_ADVANCED_SETTINGS
 from custom_components.tapo.const import CONF_DISCOVERED_DEVICE_INFO
 from custom_components.tapo.const import CONF_HOST
@@ -22,23 +38,7 @@ from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
-from custom_components.tapo.setup_helpers import get_host_port
-from homeassistant import config_entries
-from homeassistant import data_entry_flow
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
-from plugp100.api.tapo_client import TapoClient
-from plugp100.common.credentials import AuthCredential
-from plugp100.discovery.discovered_device import DiscoveredDevice
-from plugp100.responses.device_state import DeviceInfo
-from plugp100.responses.tapo_exception import TapoError
-from plugp100.responses.tapo_exception import TapoException
+from custom_components.tapo.setup_helpers import get_host_port, create_aiohttp_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ def step_options(entry: config_entries.ConfigEntry) -> vol.Schema:
 
 @dataclasses.dataclass(frozen=False)
 class FirstStepData:
-    state: Optional[DeviceInfo]
+    device: Optional[TapoDevice]
     user_input: Optional[dict[str, Any]]
 
 
@@ -115,7 +115,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle discovery via dhcp."""
         mac_address = dr.format_mac(discovery_info.macaddress)
-        if discovered_device := await discover_tapo_device(self.hass, mac_address):
+        if discovered_device := await discover_tapo_device(discovery_info.ip):
             return await self._async_handle_discovery(
                 discovery_info.ip, mac_address, discovered_device
             )
@@ -140,17 +140,17 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                device_info = await self._async_get_device_info(user_input)
-                await self.async_set_unique_id(dr.format_mac(device_info.mac))
+                device = await self._async_get_device(user_input)
+                await self.async_set_unique_id(dr.format_mac(device.mac))
                 self._abort_if_unique_id_configured()
-                self._async_abort_entries_match({CONF_HOST: device_info.ip})
+                self._async_abort_entries_match({CONF_HOST: device.host})
 
                 if user_input.get(CONF_ADVANCED_SETTINGS, False):
-                    self.first_step_data = FirstStepData(device_info, user_input)
+                    self.first_step_data = FirstStepData(device, user_input)
                     return await self.async_step_advanced_config()
                 else:
                     return await self._async_create_config_entry_from_device_info(
-                        device_info, user_input
+                        device, user_input
                     )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
@@ -185,7 +185,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             polling_rate = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
             return self.async_create_entry(
-                title=self.first_step_data.state.friendly_name,
+                title=self.first_step_data.device.nickname, #.friendly_name,
                 data=self.first_step_data.user_input
                 | {CONF_SCAN_INTERVAL: polling_rate},
             )
@@ -228,10 +228,10 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                device_info = await self._async_get_device_info_from_discovered(
+                device = await self._async_get_device_from_discovered(
                     self._discovered_info, user_input
                 )
-                await self.async_set_unique_id(dr.format_mac(device_info.mac))
+                await self.async_set_unique_id(dr.format_mac(device.mac))
                 self._abort_if_unique_id_configured()
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
@@ -244,7 +244,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Failed to setup invalid host %s", str(error))
             else:
                 return await self._async_create_config_entry_from_device_info(
-                    device_info, user_input
+                    device, user_input
                 )
 
         discovery_data = {
@@ -276,38 +276,45 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return None
 
     async def _async_create_config_entry_from_device_info(
-        self, info: DeviceInfo, options: dict[str, Any]
+        self, device: TapoDevice, options: dict[str, Any]
     ):
         return self.async_create_entry(
-            title=info.friendly_name,
+            title=device.nickname,
             data=options
             | {
-                CONF_HOST: info.ip,
-                CONF_MAC: info.mac,
+                CONF_HOST: device.host,
+                CONF_MAC: device.mac,
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
             },
         )
 
-    async def _async_get_device_info_from_discovered(
+    async def _async_get_device_from_discovered(
         self, discovered: DiscoveredDevice, config: dict[str, Any]
-    ) -> DeviceInfo:
-        return await self._async_get_device_info(config | {CONF_HOST: discovered.ip})
+    ) -> TapoDevice:
+        return await self._async_get_device(config | {CONF_HOST: discovered.ip}, discovered)
 
-    async def _async_get_device_info(self, config: dict[str, Any]) -> DeviceInfo:
+    async def _async_get_device(
+            self,
+            config: dict[str, Any],
+            discovered_device: DiscoveredDevice | None = None,
+    ) -> TapoDevice:
         if not config[CONF_HOST]:
             raise InvalidHost
         try:
-            session = async_create_clientsession(self.hass)
+            session = create_aiohttp_session(self.hass)
             credential = AuthCredential(config[CONF_USERNAME], config[CONF_PASSWORD])
-            host, port = get_host_port(config[CONF_HOST])
-            client = TapoClient.create(
-                credential, address=host, port=port, http_session=session
-            )
-            return (
-                (await client.get_device_info())
-                .map(lambda x: DeviceInfo(**x))
-                .get_or_raise()
-            )
+            if discovered_device is None:
+                host, port = get_host_port(config[CONF_HOST])
+                config = DeviceConnectConfiguration(
+                    credentials=credential,
+                    host=host,
+                    port=port,
+                )
+                device = await connect(config=config, session=session)
+            else:
+                device = await discovered_device.get_tapo_device(credential, session)
+            await device.update()
+            return device
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:

@@ -18,7 +18,7 @@ from .conftest import setup_platform
 
 @pytest.mark.parametrize(
     "device",
-    [mock_plug(), mock_hub(), mock_plug_strip(), mock_bulb(), mock_led_strip()],
+    [mock_plug(), mock_plug_strip(), mock_hub(), mock_bulb() ]
 )
 async def test_signal_sensor(hass: HomeAssistant, device: MagicMock):
     device_registry = dr.async_get(hass)
