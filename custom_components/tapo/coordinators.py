@@ -1,11 +1,9 @@
 import logging
 from abc import ABC
-from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Type
 from typing import TypeVar
 
@@ -13,24 +11,16 @@ import aiohttp
 import async_timeout
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from plugp100.api.tapo_client import TapoClient
 from plugp100.new.tapodevice import TapoDevice
 from plugp100.new.tapohub import TapoHub
 from plugp100.responses.child_device_list import PowerStripChild
-from plugp100.responses.components import Components
-from plugp100.responses.tapo_exception import TapoError
 from plugp100.responses.tapo_exception import TapoException
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LED_STRIP
-from custom_components.tapo.const import SUPPORTED_DEVICE_AS_LIGHT
-from custom_components.tapo.const import SUPPORTED_DEVICE_AS_SWITCH
-from custom_components.tapo.const import SUPPORTED_HUB_DEVICE_MODEL
-from custom_components.tapo.const import SUPPORTED_POWER_STRIP_DEVICE_MODEL
+from custom_components.tapo.helpers import _raise_from_tapo_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,10 +56,10 @@ StateMap = Dict[Type[T], T]
 
 class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     def __init__(
-        self,
-        hass: HomeAssistant,
-        device: TapoDevice,
-        polling_interval: timedelta,
+            self,
+            hass: HomeAssistant,
+            device: TapoDevice,
+            polling_interval: timedelta,
     ):
         self._device = device
         super().__init__(
@@ -95,21 +85,16 @@ class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     async def _async_update_data(self) -> StateMap:
         try:
             async with async_timeout.timeout(10):
-                return await self.device.update()
+                return await self.poll_update()
         except TapoException as error:
-            _raise_from_tapo_exception(error)
+            _raise_from_tapo_exception(error, _LOGGER)
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error communication with API: {str(error)}") from error
         except Exception as exception:
             raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
 
+    async def poll_update(self):
+        return await self.device.update()
+
 
 PowerStripChildrenState = dict[str, PowerStripChild]
-
-
-def _raise_from_tapo_exception(exception: TapoException):
-    _LOGGER.error("Tapo exception: %s", str(exception))
-    if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
-        raise ConfigEntryAuthFailed from exception
-    else:
-        raise UpdateFailed(f"Error tapo exception: {exception}") from exception

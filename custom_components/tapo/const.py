@@ -70,6 +70,7 @@ PLATFORMS = [
     Platform.SIREN,
     Platform.CLIMATE,
     Platform.NUMBER,
+    Platform.UPDATE,
 ]
 
 
