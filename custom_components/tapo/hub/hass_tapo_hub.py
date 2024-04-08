@@ -114,26 +114,6 @@ class HassTapoHub:
 
         return coordinators
 
-
-#
-# def _create_child_device(child_state: HubChildBaseInfo, hub: HubDevice):
-#     model = child_state.model.lower()
-#     device_id = child_state.device_id
-#     if "t31" in model:
-#         return T31Device(hub, device_id)
-#     elif "t110" in model:
-#         return T110SmartDoor(hub, device_id)
-#     elif "s200" in model:
-#         return S200ButtonDevice(hub, device_id)
-#     elif "t100" in model:
-#         return T100MotionSensor(hub, device_id)
-#     elif "ke100" in model:
-#         return KE100Device(hub, device_id)
-#     elif any(supported in model for supported in ["s220", "s210"]):
-#         return SwitchChildDevice(hub, device_id)
-#     return None
-
-
 async def _on_options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

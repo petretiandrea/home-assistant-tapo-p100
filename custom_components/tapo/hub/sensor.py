@@ -34,8 +34,9 @@ COMPONENT_MAPPING = {
     BatteryComponent: 'BatteryLevelSensor'
 }
 
+
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
@@ -56,9 +57,9 @@ class HumiditySensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        coordinator: TapoDataCoordinator,
-        device: TapoDevice
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
     ):
         super().__init__(coordinator, device)
         self._attr_name = "Humidity"
@@ -92,9 +93,9 @@ class TemperatureSensor(CoordinatedTapoEntity, SensorEntity):
     _temperature_component: TemperatureComponent
 
     def __init__(
-        self,
-        coordinator: TapoDataCoordinator,
-        device: TapoDevice
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
     ):
         super().__init__(coordinator, device)
         self._attr_name = "Temperature"
@@ -130,9 +131,9 @@ class BatteryLevelSensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        coordinator: TapoDataCoordinator,
-        device: TapoDevice
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
     ):
         super().__init__(coordinator, device)
         self._attr_name = "Battery Percentage"
@@ -161,9 +162,9 @@ class BatteryLevelSensor(CoordinatedTapoEntity, SensorEntity):
 class ReportIntervalDiagnostic(CoordinatedTapoEntity, SensorEntity):
 
     def __init__(
-        self,
-        coordinator: TapoDataCoordinator,
-        device: TapoDevice
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
     ):
         super().__init__(coordinator, device)
         self._attr_name = "Report Interval"
@@ -188,5 +189,3 @@ class ReportIntervalDiagnostic(CoordinatedTapoEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return self.device.get_component(ReportModeComponent).report_interval_seconds
-
-

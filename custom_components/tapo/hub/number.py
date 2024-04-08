@@ -26,9 +26,10 @@ async def async_setup_entry(
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
-        if isinstance(child_coordinator.device, KE100Device):
+        device = child_coordinator.device
+        if isinstance(device, KE100Device):
             async_add_entities(
-                [TRVTemperatureOffset(child_coordinator, child_coordinator.device)],
+                [TRVTemperatureOffset(child_coordinator, device)],
                 True
             )
 
