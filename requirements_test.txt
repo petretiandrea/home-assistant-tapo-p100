@@ -2,3 +2,4 @@
 pytest-homeassistant-custom-component==0.13.109
 pytest-asyncio>=0.23.4
 async-timeout>=4.0.2
+aiodhcpwatcher>=1.0.1
