@@ -101,6 +101,8 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 ### Additional features
 
 - [x] manually change ip address. Now you can change the ip address of a tapo device without removing and re-adding it.
+- [x] Diagnostic settings 
+- [x] Firmware update control
 
 # How to install
 
