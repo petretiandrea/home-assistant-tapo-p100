@@ -209,7 +209,7 @@ def _components_to_color_modes(device: TapoBulb) -> set[ColorMode]:
         color_modes.append(ColorMode.HS)
     if device.is_brightness and not device.is_color_temperature and not device.is_color:
         color_modes.append(ColorMode.BRIGHTNESS)
-    else:
+    if not device.is_color_temperature and not device.is_color:
         color_modes.append(ColorMode.ONOFF)
     return set(color_modes)
 
