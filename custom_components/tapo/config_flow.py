@@ -33,7 +33,6 @@ from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.const import STEP_ADVANCED_SETTINGS
 from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from custom_components.tapo.const import STEP_INIT
-from custom_components.tapo.const import SUPPORTED_DEVICES
 from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
@@ -352,4 +351,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 def is_supported_device(discovered_device: DiscoveredDevice) -> bool:
     model = discovered_device.device_model.lower()
-    return len(list(filter(lambda x: x in model, SUPPORTED_DEVICES))) > 0
+    kind = discovered_device.device_type.upper()
+    if kind == "SMART.IPCAMERA" or "CAMERA" in kind:
+        _LOGGER.info("Found device model: %s, but type not supported %s", model, kind)
+        return False
+    return True
