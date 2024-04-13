@@ -1,40 +1,51 @@
-from typing import cast
 from typing import Optional
+from typing import cast
 
-from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
-from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.api.hub.ke100_device import KE100Device
-from plugp100.api.hub.s200b_device import S200ButtonDevice
-from plugp100.api.hub.switch_child_device import SwitchChildDevice
-from plugp100.api.hub.t100_device import T100MotionSensor
-from plugp100.api.hub.t110_device import T110SmartDoor
-from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
+from plugp100.new.components.battery_component import BatteryComponent
+from plugp100.new.components.motion_sensor_component import MotionSensorComponent
+from plugp100.new.components.smart_door_component import SmartDoorComponent
+from plugp100.new.components.water_leak_component import WaterLeakComponent
+from plugp100.new.tapodevice import TapoDevice
+
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.entity import CoordinatedTapoEntity
+
+COMPONENT_MAPPING = {
+    SmartDoorComponent: 'SmartDoorSensor',
+    WaterLeakComponent: 'WaterLeakSensor',
+    MotionSensorComponent: 'MotionSensor',
+    BatteryComponent: 'LowBatterySensor'
+}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
-        sensor_factories = SENSOR_MAPPING.get(type(child_coordinator.device), [])
-        async_add_entities(
-            [factory(child_coordinator) for factory in sensor_factories], True
-        )
+        sensors = [
+            eval(cls)(child_coordinator, child_coordinator.device)
+            for (component, cls) in COMPONENT_MAPPING.items()
+            if child_coordinator.device.has_component(component)
+        ]
+        async_add_entities(sensors, True)
 
 
-class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+class SmartDoorSensor(CoordinatedTapoEntity, BinarySensorEntity):
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -42,18 +53,18 @@ class SmartDoorSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .is_open
-        )
+        return self.device.get_component(SmartDoorComponent).is_open
 
 
-class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
+class WaterLeakSensor(CoordinatedTapoEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -61,17 +72,16 @@ class WaterLeakSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .water_leak_status
-            != "normal"
-        )
+        return self.device.get_component(WaterLeakComponent).water_leak_status != "normal"
 
 
-class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+class MotionSensor(CoordinatedTapoEntity, BinarySensorEntity):
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -79,16 +89,18 @@ class MotionSensor(BaseTapoHubChildEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .detected
-        )
+        return self.device.get_component(MotionSensorComponent).detected
 
 
-class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+class LowBatterySensor(CoordinatedTapoEntity, BinarySensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
         self._attr_name = "Battery Low"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -102,19 +114,4 @@ class LowBatterySensor(BaseTapoHubChildEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .base_info.at_low_battery
-        )
-
-
-SENSOR_MAPPING = {
-    T31Device: [LowBatterySensor],
-    T110SmartDoor: [SmartDoorSensor, LowBatterySensor],
-    S200ButtonDevice: [LowBatterySensor],
-    T100MotionSensor: [MotionSensor, LowBatterySensor],
-    SwitchChildDevice: [LowBatterySensor],
-    WaterLeakDevice: [WaterLeakSensor, LowBatterySensor],
-    KE100Device: [LowBatterySensor],
-}
+        return self.device.get_component(BatteryComponent).is_battery_low

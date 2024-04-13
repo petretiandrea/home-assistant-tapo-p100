@@ -10,7 +10,7 @@ from custom_components.tapo.discovery import discovery_tapo_devices
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hass_tapo import HassTapo
 from custom_components.tapo.migrations import migrate_entry_to_v8
-from custom_components.tapo.setup_helpers import create_api_from_config
+from custom_components.tapo.setup_helpers import create_device_config
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -28,7 +28,6 @@ from .const import DEFAULT_POLLING_RATE_S
 from .const import DISCOVERY_FEATURE_FLAG
 from .const import DISCOVERY_INTERVAL
 from .const import DOMAIN
-from .const import HUB_PLATFORMS
 from .const import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,8 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up tapo from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        api = await create_api_from_config(hass, entry)
-        device = HassTapo(entry, api)
+        device_config = create_device_config(entry)
+        device = HassTapo(entry, device_config)
         return await device.initialize_device(hass)
     except DeviceNotSupported as error:
         raise error
@@ -79,25 +78,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    platform_to_unload = (
-        PLATFORMS if not entry.data.get("is_hub", False) else HUB_PLATFORMS
-    )
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platform_to_unload
-            ]
-        )
-    )
-    if unload_ok:
-        _LOGGER.info("Unloaded entry for %s", str(entry.entry_id))
-        data = cast(
-            Optional[HassTapoDeviceData], hass.data[DOMAIN].pop(entry.entry_id, None)
-        )
-        if data:
-            data.config_entry_update_unsub()
+    data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
+    if data and unload_ok:
+        device = data.coordinator.device
+        data.config_entry_update_unsub()
     return unload_ok
 
 
@@ -117,5 +104,6 @@ def async_create_discovery_flow(
                 CONF_HOST: device.ip,
                 CONF_MAC: dr.format_mac(mac),
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
+                CONF_DISCOVERED_DEVICE_INFO: device.as_dict
             },
         )

@@ -1,61 +1,53 @@
 import logging
 from datetime import timedelta
 
-from custom_components.tapo.const import CONF_HOST
-from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
-from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import PLATFORMS
-from custom_components.tapo.coordinators import create_tapo_device
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDeviceCoordinator
-from custom_components.tapo.errors import DeviceNotSupported
-from custom_components.tapo.helpers import get_short_model
-from custom_components.tapo.hub.tapo_hub import TapoHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from plugp100.api.hub.hub_device import HubDevice
-from plugp100.api.tapo_client import TapoClient
-from plugp100.responses.device_state import DeviceInfo as TapoDeviceInfo
+from plugp100.discovery import DiscoveredDevice
+from plugp100.new.device_factory import connect, DeviceConnectConfiguration
+from plugp100.new.tapodevice import TapoDevice
 
-from .const import TapoDevice
+from custom_components.tapo.const import DEFAULT_POLLING_RATE_S, CONF_DISCOVERED_DEVICE_INFO
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.const import PLATFORMS
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.hub.hass_tapo_hub import TapoHub, HassTapoHub
+from custom_components.tapo.setup_helpers import create_aiohttp_session
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class HassTapo:
-    def __init__(self, entry: ConfigEntry, client: TapoClient) -> None:
+    def __init__(self, entry: ConfigEntry, config: DeviceConnectConfiguration) -> None:
         self.entry = entry
-        self.client = client
+        self.config = config
 
     async def initialize_device(self, hass: HomeAssistant) -> bool:
-        polling_rate = timedelta(
-            seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
-        )
-        host = self.entry.data.get(CONF_HOST)
-        initial_state = await self._get_initial_device_state()
-        model = get_short_model(initial_state.model)
-        _LOGGER.info("Detected model of %s: %s", str(host), str(model))
-        if tapo_device := create_tapo_device(model, self.client):
-            if isinstance(tapo_device, HubDevice):
-                hub = TapoHub(self.entry, tapo_device)
-                return await hub.initialize_hub(hass)
-            else:
-                return await self._initialize_device(hass, tapo_device, polling_rate)
+        session = create_aiohttp_session(hass)
+        if discover_data := self.entry.data.get(CONF_DISCOVERED_DEVICE_INFO):
+            _LOGGER.info("Found discovered data, avoid to guess protocol")
+            discovered_device = DiscoveredDevice.from_dict(discover_data)
+            device = await discovered_device.get_tapo_device(credentials=self.config.credentials, session=session)
         else:
-            raise DeviceNotSupported(f"Device {host} with mode {model} not supported!")
+            device = await connect(config=self.config, session=session)
 
-    async def _get_initial_device_state(self) -> TapoDeviceInfo:
-        return (
-            (await self.client.get_device_info())
-            .map(lambda x: TapoDeviceInfo(**x))
-            .get_or_raise()
-        )
+        await device.update()
+        _LOGGER.info("Detected model of %s: %s", str(device.host), str(device.model))
+        if isinstance(device, TapoHub):
+            hub = HassTapoHub(self.entry, device)
+            return await hub.initialize_hub(hass)
+        else:
+            polling_rate = timedelta(
+                seconds=self.entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
+            )
+            return await self._initialize_device(hass, device, polling_rate)
 
     async def _initialize_device(
-        self, hass: HomeAssistant, device: TapoDevice, polling_rate: timedelta
+            self, hass: HomeAssistant, device: TapoDevice, polling_rate: timedelta
     ):
-        coordinator = TapoDeviceCoordinator(hass, device, polling_rate)
+        coordinator = TapoDataCoordinator(hass, device, polling_rate)
         await coordinator.async_config_entry_first_refresh()  # could raise ConfigEntryNotReady
         hass.data[DOMAIN][self.entry.entry_id] = HassTapoDeviceData(
             coordinator=coordinator,
@@ -63,7 +55,9 @@ class HassTapo:
                 _on_options_update_listener
             ),
             child_coordinators=[],
+            device=device,
         )
+
         await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         return True
 

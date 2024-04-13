@@ -1,98 +1,63 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from unittest.mock import Mock
 
 import pytest
+from plugp100.common.functional.tri import Try
+from plugp100.new.child.tapohubchildren import KE100Device
+
 from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.climate import SENSOR_MAPPING
 from custom_components.tapo.hub.climate import TRVClimate
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import UnitOfTemperature
-from plugp100.api.hub.ke100_device import KE100Device
 from plugp100.responses.hub_childs.ke100_device_state import TRVState
 from plugp100.responses.temperature_unit import TemperatureUnit
 
+from tests.conftest import _mock_hub_child_device
 
-class TestSensorMappings:
-    coordinator = Mock(TapoDataCoordinator)
 
-    def test_binary_sensor_mappings(self):
-        expected_mappings = {KE100Device: [TRVClimate]}
-
-        assert SENSOR_MAPPING == expected_mappings
+# class TestSensorMappings:
+#     coordinator = Mock(TapoDataCoordinator)
+#
+#     def test_binary_sensor_mappings(self):
+#         expected_mappings = {KE100Device: [TRVClimate]}
+#
+#         assert SENSOR_MAPPING == expected_mappings
 
 
 class TestTRVClimate:
-    coordinator = Mock(TapoDataCoordinator)
+
+    @pytest.fixture(autouse=True)
+    def init_data(self):
+        self.coordinator = Mock(TapoDataCoordinator)
+        self.device = _mock_hub_child_device(MagicMock(auto_spec=KE100Device))
+        self.climate = TRVClimate(coordinator=self.coordinator, device=self.device)
+
 
     def test_unique_id(self):
-        base_data = Mock()
-        base_data.base_info.device_id = "hub1234"
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.unique_id
-
-        assert result == "hub1234_Climate"
+        assert self.climate.unique_id == "123_Climate"
 
     def test_supported_features(self):
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.supported_features
-
-        assert result == ClimateEntityFeature.TARGET_TEMPERATURE
+        assert self.climate.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
 
     def test_hvac_modes(self):
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.hvac_modes
-
-        assert result == [HVACMode.OFF, HVACMode.HEAT]
+        assert self.climate.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
 
     def test_min_temp(self):
-        base_data = Mock()
-        base_data.min_control_temperature = 5.0
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.min_temp
-
-        assert result == 5.0
+        self.device.range_control_temperature = [5.0, 30.0]
+        assert self.climate.min_temp == 5.0
 
     def test_max_temp(self):
-        base_data = Mock()
-        base_data.max_control_temperature = 30.0
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.max_temp
-
-        assert result == 30.0
+        self.device.range_control_temperature = [5.0, 30.0]
+        assert self.climate.max_temp == 30.0
 
     def test_current_temperature(self):
-        base_data = Mock()
-        base_data.current_temperature = 20.1
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.current_temperature
-
-        assert result == 20.1
+        self.device.temperature = 20.1
+        assert self.climate.current_temperature == 20.1
 
     def test_target_temperature(self):
-        base_data = Mock()
-        base_data.target_temperature = 22.0
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.target_temperature
-
-        assert result == 22.0
+        self.device.target_temperature = 22.0
+        assert self.climate.target_temperature == 22.0
 
     @pytest.mark.parametrize(
         "trv_temperature_unit, expected_unit_of_temperature",
@@ -106,67 +71,38 @@ class TestTRVClimate:
         trv_temperature_unit: TemperatureUnit,
         expected_unit_of_temperature: UnitOfTemperature,
     ):
-        base_data = Mock()
-        base_data.temperature_unit = trv_temperature_unit
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.temperature_unit
-
-        assert result == expected_unit_of_temperature
+        self.device.temperature_unit = trv_temperature_unit
+        assert self.climate.temperature_unit == expected_unit_of_temperature
 
     @pytest.mark.parametrize(
         "trv_state, expected_hvac_mode",
         [(TRVState.HEATING, HVACMode.HEAT), (TRVState.OFF, HVACMode.OFF)],
     )
     def test_hvac_mode(self, trv_state: TRVState, expected_hvac_mode: HVACMode):
-        base_data = Mock()
-        base_data.trv_state = trv_state
-        self.coordinator.get_state_of.return_value = base_data
-
-        subject = TRVClimate(coordinator=self.coordinator)
-
-        result = subject.hvac_mode
-
-        assert result == expected_hvac_mode
+        self.device.state = trv_state
+        assert self.climate.hvac_mode == expected_hvac_mode
 
     @pytest.mark.asyncio
     async def test_async_hvac_mode_heat(self):
-        async_coordinator = AsyncMock(TapoDataCoordinator)
-        device = AsyncMock()
-        async_coordinator.device = device
+        self.device.set_frost_protection_off = AsyncMock(return_value=Try.of(True))
+        self.device.set_frost_protection_on = AsyncMock(return_value=Try.of(True))
+        await self.climate.async_set_hvac_mode(HVACMode.HEAT)
 
-        subject = TRVClimate(coordinator=async_coordinator)
-
-        await subject.async_set_hvac_mode(HVACMode.HEAT)
-
-        device.set_frost_protection_on.set_frost_protection_off()
-        async_coordinator.async_request_refresh.assert_called_once()
+        self.device.set_frost_protection_on.assert_not_called()
+        self.device.set_frost_protection_off.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_async_hvac_mode_off(self):
-        async_coordinator = AsyncMock(TapoDataCoordinator)
-        device = AsyncMock()
-        async_coordinator.device = device
+        self.device.set_frost_protection_off = AsyncMock(return_value=Try.of(True))
+        self.device.set_frost_protection_on = AsyncMock(return_value=Try.of(True))
+        await self.climate.async_set_hvac_mode(HVACMode.OFF)
 
-        subject = TRVClimate(coordinator=async_coordinator)
-
-        await subject.async_set_hvac_mode(HVACMode.OFF)
-
-        device.set_frost_protection_on.set_frost_protection_on()
-        async_coordinator.async_request_refresh.assert_called_once()
+        self.device.set_frost_protection_off.assert_not_called()
+        self.device.set_frost_protection_on.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_async_set_temperature(self):
         temp_args = {"temperature": 18}
-        async_coordinator = AsyncMock(TapoDataCoordinator)
-        device = AsyncMock()
-        async_coordinator.device = device
-
-        subject = TRVClimate(coordinator=async_coordinator)
-
-        await subject.async_set_temperature(**temp_args)
-
-        device.set_target_temp.assert_called_once_with(temp_args)
-        async_coordinator.async_request_refresh.assert_called_once()
+        self.device.set_target_temp = AsyncMock(return_value=Try.of(True))
+        await self.climate.async_set_temperature(**temp_args)
+        self.device.set_target_temp.assert_called_once_with(temp_args)

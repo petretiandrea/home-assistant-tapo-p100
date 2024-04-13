@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   release:
@@ -26,7 +27,7 @@ jobs:
         with:
           semantic_version: 23.0.2
           branches: |
-            [ 'main' ]
+            [ 'main', {name: 'dev', channel: 'dev', prerelease: true} ]
           extra_plugins: |
             @semantic-release/commit-analyzer@11.1.0
             @semantic-release/release-notes-generator@12.1.0

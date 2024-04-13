@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from unittest.mock import patch
 
 from custom_components.tapo import CONF_DISCOVERED_DEVICE_INFO
@@ -18,6 +18,7 @@ from homeassistant.helpers import device_registry as dr
 from plugp100.discovery.discovered_device import DiscoveredDevice
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from plugp100.new.tapodevice import TapoDevice
 from .conftest import IP_ADDRESS
 from .conftest import MAC_ADDRESS
 
@@ -30,18 +31,20 @@ async def test_discovery_auth(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            CONF_DISCOVERED_DEVICE_INFO: mock_discovery,
+
         },
         data={
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
+            CONF_DISCOVERED_DEVICE_INFO: mock_discovery.as_dict,
         },
     )
     await hass.async_block_till_done()
     assert result["type"] == "form"
     assert result["step_id"] == STEP_DISCOVERY_REQUIRE_AUTH
 
+    mock_discovery.get_tapo_device = AsyncMock(return_value=MagicMock(TapoDevice))
     auth_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -56,7 +59,7 @@ async def test_discovery_auth(
     assert auth_result["data"][CONF_PASSWORD] == "fake_password"
     assert auth_result["data"][CONF_HOST] == mock_discovery.ip
     assert auth_result["data"][CONF_SCAN_INTERVAL] == 30
-    assert auth_result["context"][CONF_DISCOVERED_DEVICE_INFO] == mock_discovery
+    assert auth_result["data"][CONF_DISCOVERED_DEVICE_INFO] == mock_discovery.as_dict
 
 
 async def test_discovery_ip_change_dhcp(

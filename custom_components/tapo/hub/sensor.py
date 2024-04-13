@@ -1,14 +1,9 @@
 from datetime import date
 from datetime import datetime
-from typing import cast
 from typing import Optional
 from typing import Union
+from typing import cast
 
-from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.tapo_hub_child_coordinator import BaseTapoHubChildEntity
-from custom_components.tapo.hub.tapo_hub_child_coordinator import HubChildCommonState
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorStateClass
@@ -20,31 +15,53 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.api.hub.ke100_device import KE100Device
-from plugp100.api.hub.s200b_device import S200ButtonDevice
-from plugp100.api.hub.t100_device import T100MotionSensor
-from plugp100.api.hub.t110_device import T110SmartDoor
-from plugp100.api.hub.t31x_device import T31Device
-from plugp100.api.hub.water_leak_device import WaterLeakSensor as WaterLeakDevice
+from plugp100.new.components.battery_component import BatteryComponent
+from plugp100.new.components.humidity_component import HumidityComponent
+from plugp100.new.components.report_mode_component import ReportModeComponent
+from plugp100.new.components.temperature_component import TemperatureComponent
+from plugp100.new.tapodevice import TapoDevice
 from plugp100.responses.temperature_unit import TemperatureUnit
+
+from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.coordinators import HassTapoDeviceData
+from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.entity import CoordinatedTapoEntity
+
+COMPONENT_MAPPING = {
+    HumidityComponent: 'HumiditySensor',
+    TemperatureComponent: 'TemperatureSensor',
+    ReportModeComponent: 'ReportIntervalDiagnostic',
+    BatteryComponent: 'BatteryLevelSensor'
+}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
-        sensor_factories = SENSOR_MAPPING.get(type(child_coordinator.device), [])
-        async_add_entities(
-            [factory(child_coordinator) for factory in sensor_factories], True
-        )
+        sensors = [
+            eval(cls)(child_coordinator, child_coordinator.device)
+            for (component, cls) in COMPONENT_MAPPING.items()
+            if child_coordinator.device.has_component(component)
+        ]
+        # temporary workaround to avoid getting battery percentage on not supported devices
+        if battery := child_coordinator.device.get_component(BatteryComponent):
+            if battery.battery_percentage == -1:
+                sensors = list(filter(lambda x: not isinstance(x, BatteryLevelSensor), sensors))
+
+        async_add_entities(sensors, True)
 
 
-class HumitidySensor(BaseTapoHubChildEntity, SensorEntity):
+class HumiditySensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
         self._attr_name = "Humidity"
 
     @property
@@ -65,19 +82,24 @@ class HumitidySensor(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .current_humidity
-        )
+        if humidity := self.device.get_component(HumidityComponent):
+            return humidity.current_humidity
+        return None
 
 
-class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
+class TemperatureSensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+    _temperature_component: TemperatureComponent
+
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
         self._attr_name = "Temperature"
+        self._temperature_component = device.get_component(TemperatureComponent)
 
     @property
     def unique_id(self):
@@ -93,32 +115,27 @@ class TemperatureSensor(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def native_unit_of_measurement(self) -> Optional[str]:
-        temp_unit = (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .temperature_unit
-        )
-        if temp_unit == TemperatureUnit.CELSIUS:
+        if self._temperature_component.temperature_unit == TemperatureUnit.CELSIUS:
             return UnitOfTemperature.CELSIUS
-        elif temp_unit == TemperatureUnit.FAHRENHEIT:
+        elif self._temperature_component.temperature_unit == TemperatureUnit.FAHRENHEIT:
             return UnitOfTemperature.FAHRENHEIT
         else:
             return None
 
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .current_temperature
-        )
+        return self._temperature_component.current_temperature
 
 
-class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
+class BatteryLevelSensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
         self._attr_name = "Battery Percentage"
 
     @property
@@ -139,16 +156,17 @@ class BatteryLevelSensor(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .battery_percentage
-        )
+        return self.device.get_component(BatteryComponent).battery_percentage
 
 
-class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
-    def __init__(self, coordinator: TapoDataCoordinator):
-        super().__init__(coordinator)
+class ReportIntervalDiagnostic(CoordinatedTapoEntity, SensorEntity):
+
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TapoDevice
+    ):
+        super().__init__(coordinator, device)
         self._attr_name = "Report Interval"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -170,18 +188,4 @@ class ReportIntervalDiagnostic(BaseTapoHubChildEntity, SensorEntity):
 
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
-        return (
-            cast(TapoDataCoordinator, self.coordinator)
-            .get_state_of(HubChildCommonState)
-            .report_interval_seconds
-        )
-
-
-SENSOR_MAPPING = {
-    T31Device: [HumitidySensor, TemperatureSensor, ReportIntervalDiagnostic],
-    T110SmartDoor: [ReportIntervalDiagnostic],
-    S200ButtonDevice: [ReportIntervalDiagnostic],
-    T100MotionSensor: [ReportIntervalDiagnostic],
-    WaterLeakDevice: [ReportIntervalDiagnostic],
-    KE100Device: [TemperatureSensor, BatteryLevelSensor],
-}
+        return self.device.get_component(ReportModeComponent).report_interval_seconds

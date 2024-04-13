@@ -80,7 +80,7 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 
 - [x] pure async home assistant's method
 - [x] support for tapo `H100` hub and siren
-- [ ] support for tapo `H100` hub is currently Work In Progress!
+- [ ] support for tapo `H200` hub is currently Work In Progress!
 - [x] support for `T31x` temperature and humidity sensor hub's device
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
@@ -101,6 +101,8 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 ### Additional features
 
 - [x] manually change ip address. Now you can change the ip address of a tapo device without removing and re-adding it.
+- [x] Diagnostic settings 
+- [x] Firmware update control
 
 # How to install
 

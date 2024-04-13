@@ -4,11 +4,6 @@ from enum import Enum
 from typing import Union
 
 from homeassistant.const import Platform
-from plugp100.api.hub.hub_device import HubDevice
-from plugp100.api.ledstrip_device import LedStripDevice
-from plugp100.api.light_device import LightDevice
-from plugp100.api.plug_device import PlugDevice
-from plugp100.api.power_strip_device import PowerStripDevice
 
 NAME = "tapo"
 DOMAIN = "tapo"
@@ -67,16 +62,17 @@ SUPPORTED_DEVICES = (
 ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LIGHT]
-
-HUB_PLATFORMS = [
-    Platform.SIREN,
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
+PLATFORMS = [
     Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SIREN,
     Platform.CLIMATE,
     Platform.NUMBER,
+    Platform.UPDATE,
 ]
+
 
 CONF_HOST = "host"
 CONF_MAC = "mac"
@@ -103,16 +99,3 @@ If you have any issues with this you need to open an issue here:
 {ISSUE_URL}
 -------------------------------------------------------------------
 """
-
-TapoDevice = Union[LightDevice, PlugDevice, LedStripDevice, HubDevice, PowerStripDevice]
-
-
-class Component(Enum):
-    ENERGY_MONITORING = "energy_monitoring"
-    CONTROL_CHILD = "control_child"
-    COLOR_TEMPERATURE = "color_temperature"
-    BRIGHTNESS = "brightness"
-    COLOR = "color"
-    LIGHT_STRIP = "light_strip"
-    LIGHT_STRIP_EFFECTS = "light_strip_lighting_effect"
-    ALARM = "alarm"
