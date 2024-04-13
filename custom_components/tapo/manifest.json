@@ -6,7 +6,7 @@
   "iot_class": "local_polling",
   "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
-  "requirements": ["plugp100==5.1.1"],
+  "requirements": ["plugp100==5.1.3"],
   "dependencies": ["network"],
   "dhcp": [
     {

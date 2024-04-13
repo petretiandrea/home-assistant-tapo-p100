@@ -61,7 +61,8 @@ def mock_discovery():
             "get_tapo_device",
             side_effect=AsyncMock(return_value=device),
         ):
-            yield discovered_device
+            with patch("plugp100.discovery.discovered_device.DiscoveredDevice.get_tapo_device", side_effect=AsyncMock(return_value=device)):
+                yield discovered_device
 
 async def setup_platform(
     hass: HomeAssistant, device: TapoDevice, platforms: list[str]

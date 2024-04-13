@@ -35,10 +35,8 @@ async def test_light_color_state(hass: HomeAssistant, tapo_device: MagicMock):
     state_entity = hass.states.get(entity_id)
     assert state_entity.state == "on"
     assert state_entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
-        ColorMode.BRIGHTNESS,
         ColorMode.COLOR_TEMP,
         ColorMode.HS,
-        ColorMode.ONOFF,
     ]
     assert state_entity.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state_entity.attributes[ATTR_BRIGHTNESS] == 255  # means 100 on tapo
@@ -172,9 +170,7 @@ async def test_color_temp_only_light(hass: HomeAssistant, tapo_device: MagicMock
     entity_id = await extract_entity_id(tapo_device, LIGHT_DOMAIN)
     state_entity = hass.states.get(entity_id)
     assert state_entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
-        ColorMode.BRIGHTNESS,
         ColorMode.COLOR_TEMP,
-        ColorMode.ONOFF,
     ]
     assert state_entity.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     await hass.services.async_call(
