@@ -81,6 +81,9 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
 
     @property
     def hs_color(self):
+        if self.device.hs is None:
+            return None
+
         (hue, saturation) = (self.device.hs.hue, self.device.hs.saturation)
         color_temp = self.device.color_temp
         if (
