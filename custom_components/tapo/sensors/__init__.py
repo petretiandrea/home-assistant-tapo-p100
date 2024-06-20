@@ -23,7 +23,7 @@ class TodayEnergySensorSource(TapoSensorSource):
 
     def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if energy := coordinator.device.get_component(EnergyComponent):
-            return energy.energy_info.today_energy / 1000
+            return energy.energy_info.today_energy / 1000 if energy.energy_info else None
         return None
 
 
@@ -38,7 +38,7 @@ class MonthEnergySensorSource(TapoSensorSource):
 
     def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if energy := coordinator.device.get_component(EnergyComponent):
-            return energy.energy_info.month_energy / 1000
+            return energy.energy_info.month_energy / 1000 if energy.energy_info else None
         return None
 
 
