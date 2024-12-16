@@ -25,7 +25,7 @@ Please help me to complete the [new roadmap](https://github.com/petretiandrea/ho
 
 ### Silver Sponsors
 
-<!-- silver --><a href="https://github.com/jmd-au"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;3538381?u&#x3D;494144f37b23bd452ac754b437df5ea0732a3bc7&amp;v&#x3D;4" width="60px" alt="James Mac" /></a><a href="https://github.com/vinogradovkonst"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;11144779?u&#x3D;f3e32fad1b0bab6a5860d80a34eeef6d3ce24943&amp;v&#x3D;4" width="60px" alt="Konstantin Vinogradov" /></a><!-- silver -->
+<!-- silver --><a href="https://github.com/jmd-au"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;3538381?u&#x3D;494144f37b23bd452ac754b437df5ea0732a3bc7&amp;v&#x3D;4" width="60px" alt="User avatar: James Mac" /></a><a href="https://github.com/vinogradovkonst"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;11144779?u&#x3D;f3e32fad1b0bab6a5860d80a34eeef6d3ce24943&amp;v&#x3D;4" width="60px" alt="User avatar: Konstantin Vinogradov" /></a><!-- silver -->
 
 ## Warnings
 
