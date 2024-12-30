@@ -25,7 +25,7 @@ Please help me to complete the [new roadmap](https://github.com/petretiandrea/ho
 
 ### Silver Sponsors
 
-<!-- silver --><a href="https://github.com/jmd-au"><img src="https:&#x2F;&#x2F;github.com&#x2F;jmd-au.png" width="60px" alt="User avatar: James Mac" /></a><a href="https://github.com/vinogradovkonst"><img src="https:&#x2F;&#x2F;github.com&#x2F;vinogradovkonst.png" width="60px" alt="User avatar: Konstantin Vinogradov" /></a><!-- silver -->
+<!-- silver --><a href="https://github.com/jmd-au"><img src="https:&#x2F;&#x2F;github.com&#x2F;jmd-au.png" width="60px" alt="User avatar: James Mac" /></a><!-- silver -->
 
 ## Warnings
 
