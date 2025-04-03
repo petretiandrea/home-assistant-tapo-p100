@@ -17,7 +17,6 @@ async def migrate_entry_to_v8(hass: HomeAssistant, config_entry: ConfigEntry):
     new_data = {**config_entry.data}
     scan_interval = new_data.pop(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
     if mac := device.mac:
-        # config_entry.version = 8
         hass.config_entries.async_update_entry(
             config_entry,
             data={
