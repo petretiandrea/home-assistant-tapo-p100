@@ -42,7 +42,7 @@ COMPONENT_MAPPING = {
     HumidityComponent: 'HumiditySensor',
     TemperatureComponent: 'TemperatureSensor',
     ReportModeComponent: 'ReportIntervalDiagnostic',
-    BatteryComponent: 'BatteryLevelSensor'
+    BatteryComponent: 'BatteryLevelSensor',
     TriggerLogComponent: 'TriggerEvent'
 }
 
