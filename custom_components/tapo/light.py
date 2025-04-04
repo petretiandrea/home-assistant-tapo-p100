@@ -52,7 +52,7 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
         self._attr_max_mireds = kelvin_to_mired(self._attr_min_color_temp_kelvin)
         self._attr_min_mireds = kelvin_to_mired(self._attr_max_color_temp_kelvin)
         self._attr_supported_features = (
-            LightEntityFeature.EFFECT if self._effects else LightEntityFeature(0)
+            {LightEntityFeature.EFFECT} if self._effects else set()
         )
         self._attr_supported_color_modes = _components_to_color_modes(device)
         self._attr_effect_list = list(self._effects.keys()) if self._effects else None
