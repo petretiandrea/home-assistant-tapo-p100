@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Setup Node 20.x
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@v4.3.0
         with:
           node-version: 20
       - name: Semantic Release
