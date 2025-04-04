@@ -22,11 +22,11 @@
         }
       },
       "discovery_auth_confirm": {
-        "title": "Voer de authenticatiegegevens in",
-        "description": "Voer de inloggegevens van de Tapo-app in.",
+        "title": "Neues Gerät hinzufügen",
+        "description": "Geben Sie die Authentifizierungsinformationen ein.",
         "data": {
-          "password": "Wachtwoord van de Tapo-app",
-          "username": "Gebruikersnaam van de Tapo-app (e-mail)"
+          "password": "Tapo App Passwort",
+          "username": "Tapo App Benutzername (E-Mail)"
         }
       },
       "advanced_config": {
