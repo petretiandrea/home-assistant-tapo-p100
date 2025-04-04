@@ -3,7 +3,7 @@ from typing import Optional
 from typing import cast
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.light import ATTR_COLOR_TEMP
+from homeassistant.components.light import ATTR_COLOR_TEMP_KELVIN
 from homeassistant.components.light import ATTR_EFFECT
 from homeassistant.components.light import ATTR_HS_COLOR
 from homeassistant.components.light import ColorMode
@@ -109,7 +109,7 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         color = kwargs.get(ATTR_HS_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         effect = kwargs.get(ATTR_EFFECT)
         tapo_brightness = hass_to_tapo_brightness(brightness)
         tapo_color_temp = hass_to_tapo_color_temperature(
