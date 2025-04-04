@@ -8,7 +8,7 @@ from custom_components.tapo import DEFAULT_POLLING_RATE_S
 from custom_components.tapo import DOMAIN
 from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from homeassistant import config_entries
-from homeassistant.components import dhcp
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.const import CONF_USERNAME
@@ -93,7 +93,7 @@ async def test_discovery_ip_change_dhcp(
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="127.0.0.2", macaddress=MAC_ADDRESS, hostname="hostname"
             ),
         )

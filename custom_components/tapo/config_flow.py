@@ -8,7 +8,7 @@ import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
-from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL
