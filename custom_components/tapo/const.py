@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 NAME = "tapo"
 DOMAIN = "tapo"
-VERSION = "3.1.9"
+VERSION = "3.2.0"
 
 DISCOVERY_FEATURE_FLAG = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=10)
