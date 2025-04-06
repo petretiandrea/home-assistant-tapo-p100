@@ -25,12 +25,6 @@
     ],
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/exec",
-      {
-        "publishCmd": "./bump-version.sh ${nextRelease.version}"
-      }
-    ],
-    [
       "@semantic-release/git",
       {
         "assets": [

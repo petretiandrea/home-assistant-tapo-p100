@@ -22,6 +22,27 @@ jobs:
         uses: actions/setup-node@v4.0.2
         with:
           node-version: 20
+      - name: Semantic Release (Dry Run)
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          semantic_version: 23.0.2
+          branches: |
+            [ 'main', {name: 'dev', channel: 'dev', prerelease: true} ]
+          extra_plugins: |
+            @semantic-release/commit-analyzer@11.1.0
+            @semantic-release/release-notes-generator@12.1.0
+            @semantic-release/git@10.0.1
+            @semantic-release/github@9.2.6
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Version Properties
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          ./bump-version.sh ${{ steps.semantic.outputs.new_release_version }}
+
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v4
         with:
@@ -33,6 +54,5 @@ jobs:
             @semantic-release/release-notes-generator@12.1.0
             @semantic-release/git@10.0.1
             @semantic-release/github@9.2.6
-            @semantic-release/exec@6.0.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
