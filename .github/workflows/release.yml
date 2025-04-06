@@ -11,17 +11,20 @@ jobs:
   release:
     name: "Release"
     runs-on: "ubuntu-latest"
+    environment: release
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
+          token: ${{ secrets.GIT_GITHUB_TOKEN }}
           persist-credentials: false
       - name: Setup Node 20.x
         uses: actions/setup-node@v4.0.2
         with:
           node-version: 20
+
       - name: Semantic Release (Dry Run)
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
@@ -36,7 +39,7 @@ jobs:
             @semantic-release/github@9.2.6
           dry_run: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_GITHUB_TOKEN }}
 
       - name: Update Version Properties
         if: steps.semantic.outputs.new_release_published == 'true'
@@ -55,4 +58,4 @@ jobs:
             @semantic-release/git@10.0.1
             @semantic-release/github@9.2.6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_GITHUB_TOKEN }}
