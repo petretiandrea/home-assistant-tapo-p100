@@ -25,7 +25,6 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.UPDATE,
-    Platform.EVENT
 ]
 
 
