@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node 20.x
         uses: actions/setup-node@v4.0.2
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Semantic Release (Dry Run)
         id: semantic
