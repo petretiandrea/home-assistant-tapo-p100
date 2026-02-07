@@ -7,6 +7,8 @@
     "error": {
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid credentials",
+      "invalid_hostname": "Invalid hostname",
+      "unsupported_encryption": "Device uses unsupported encryption (TPAP). Open Tapo app > Me > Third-Party Services > enable 'Third-Party Compatibility', then retry.",
       "unknown": "Unexpected error"
     },
     "step": {

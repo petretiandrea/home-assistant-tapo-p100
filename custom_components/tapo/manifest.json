@@ -2,10 +2,10 @@
   "domain": "tapo",
   "name": "TP-Link Tapo",
   "config_flow": true,
-  "version": "3.2.1",
+  "version": "3.3.0",
   "iot_class": "local_polling",
-  "documentation": "https://github.com/petretiandrea/home-assistant-tapo-p100",
-  "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
+  "documentation": "https://github.com/razvanmacovei/home-assistant-tapo-p100",
+  "issue_tracker": "https://github.com/razvanmacovei/home-assistant-tapo-p100/issues",
   "requirements": ["plugp100==5.1.5"],
   "dependencies": ["network"],
   "dhcp": [
@@ -14,5 +14,5 @@
     }
   ],
   "integration_type": "device",
-  "codeowners": ["@petretiandrea"]
+  "codeowners": ["@razvanmacovei"]
 }

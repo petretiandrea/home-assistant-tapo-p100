@@ -37,6 +37,7 @@ from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect
 from custom_components.tapo.errors import InvalidAuth
 from custom_components.tapo.errors import InvalidHost
+from custom_components.tapo.errors import UnsupportedEncryption
 from custom_components.tapo.setup_helpers import get_host_port, create_aiohttp_session
 
 _LOGGER = logging.getLogger(__name__)
@@ -152,6 +153,14 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self._async_create_config_entry_from_device_info(
                         device, user_input
                     )
+            except UnsupportedEncryption as error:
+                errors["base"] = "unsupported_encryption"
+                _LOGGER.error(
+                    "Device uses unsupported encryption protocol (%s). "
+                    "Enable 'Third-Party Compatibility' in the Tapo app: "
+                    "Me > Third-Party Services > Third-Party Compatibility",
+                    error.encrypt_type,
+                )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
                 _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
@@ -233,6 +242,14 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 await self.async_set_unique_id(dr.format_mac(device.mac))
                 self._abort_if_unique_id_configured()
+            except UnsupportedEncryption as error:
+                errors["base"] = "unsupported_encryption"
+                _LOGGER.error(
+                    "Device uses unsupported encryption protocol (%s). "
+                    "Enable 'Third-Party Compatibility' in the Tapo app: "
+                    "Me > Third-Party Services > Third-Party Compatibility",
+                    error.encrypt_type,
+                )
             except InvalidAuth as error:
                 errors["base"] = "invalid_auth"
                 _LOGGER.exception("Failed to setup, invalid auth %s", str(error))
@@ -301,11 +318,27 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> TapoDevice:
         if not config[CONF_HOST]:
             raise InvalidHost
+        # Check if the discovered device uses an unsupported encryption protocol
+        if discovered_device is not None:
+            encrypt_type = _get_encrypt_type(discovered_device)
+            if encrypt_type and encrypt_type.lower() not in ("klap", "aes"):
+                raise UnsupportedEncryption(encrypt_type)
         try:
             session = create_aiohttp_session(self.hass)
             credential = AuthCredential(config[CONF_USERNAME], config[CONF_PASSWORD])
             if discovered_device is None:
                 host, port = get_host_port(config[CONF_HOST])
+                # Try a quick discovery to detect unsupported encryption
+                try:
+                    probed = await discover_tapo_device(host)
+                    if probed is not None:
+                        encrypt_type = _get_encrypt_type(probed)
+                        if encrypt_type and encrypt_type.lower() not in ("klap", "aes"):
+                            raise UnsupportedEncryption(encrypt_type)
+                except UnsupportedEncryption:
+                    raise
+                except Exception:
+                    pass  # Discovery probe failed, continue with normal connect
                 config = DeviceConnectConfiguration(
                     credentials=credential,
                     host=host,
@@ -316,9 +349,12 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await discovered_device.get_tapo_device(credential, session)
             await device.update()
             return device
+        except UnsupportedEncryption:
+            raise
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:
+            _check_for_unsupported_protocol_error(error)
             raise CannotConnect from error
 
     def _raise_from_tapo_exception(self, exception: TapoException):
@@ -356,3 +392,18 @@ def is_supported_device(discovered_device: DiscoveredDevice) -> bool:
         _LOGGER.info("Found device model: %s, but type not supported %s", model, kind)
         return False
     return True
+
+
+def _get_encrypt_type(device: DiscoveredDevice) -> str | None:
+    """Extract the encryption type from a discovered device."""
+    schema = getattr(device, "mgt_encrypt_schm", None)
+    if schema is not None:
+        return getattr(schema, "encrypt_type", None)
+    return None
+
+
+def _check_for_unsupported_protocol_error(error: Exception) -> None:
+    """Raise UnsupportedEncryption if the error indicates an unsupported protocol."""
+    error_msg = str(error).lower()
+    if "failed to determine the right tapo protocol" in error_msg:
+        raise UnsupportedEncryption("unknown (possibly TPAP)") from error
