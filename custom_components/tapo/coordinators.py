@@ -91,6 +91,13 @@ class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error communication with API: {str(error)}") from error
         except Exception as exception:
+            error_msg = str(exception).lower()
+            if "failed to determine the right tapo protocol" in error_msg:
+                raise UpdateFailed(
+                    "Device uses unsupported encryption (possibly TPAP). "
+                    "Open Tapo app > Me > Third-Party Services > "
+                    "enable 'Third-Party Compatibility', then reload the integration."
+                ) from exception
             raise UpdateFailed(f"Unexpected exception: {str(exception)}") from exception
 
     async def poll_update(self):

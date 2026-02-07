@@ -16,3 +16,14 @@ class InvalidAuth(exceptions.HomeAssistantError):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate there is an invalid hostname."""
+
+
+class UnsupportedEncryption(exceptions.HomeAssistantError):
+    """Error to indicate device uses unsupported encryption (e.g. TPAP)."""
+
+    def __init__(self, encrypt_type: str = "unknown", *args: object) -> None:
+        self.encrypt_type = encrypt_type
+        super().__init__(
+            f"Device uses unsupported encryption protocol: {encrypt_type}",
+            *args,
+        )

@@ -13,7 +13,7 @@ DISCOVERY_FEATURE_FLAG = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=10)
 DISCOVERY_TIMEOUT = 5
 
-ISSUE_URL = "https://github.com/petretiandrea/home-assistant-tapo-p100/issues"
+ISSUE_URL = "https://github.com/razvanmacovei/home-assistant-tapo-p100/issues"
 
 # list the platforms that you want to support.
 PLATFORMS = [

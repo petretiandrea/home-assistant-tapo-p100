@@ -62,6 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except DeviceNotSupported as error:
         raise error
     except Exception as error:
+        error_msg = str(error).lower()
+        if "failed to determine the right tapo protocol" in error_msg:
+            _LOGGER.error(
+                "Device at %s uses unsupported encryption (possibly TPAP). "
+                "Open Tapo app > Me > Third-Party Services > "
+                "enable 'Third-Party Compatibility', then reload.",
+                entry.data.get("host", "unknown"),
+            )
         raise ConfigEntryNotReady from error
 
 
