@@ -106,23 +106,22 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 
 # How to install
 
-This integration is part of HACS store, so you don't need to add this repository as a custom repository any more.
-You can find it directly on HACS Store: search for `tapo` and you will find `Tapo Controller`. (**HACS >= 1.6.0 is required**)
+This integration is part of HACS store, so you don't need to add this repository as a custom repository any more. (**HACS >= 1.6.0 is required**)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=petretiandrea&repository=home-assistant-tapo-p100)
 
-This video shows installation steps:
+Or find and install it directly on HACS Store by searching for `Tapo Controller`.
 
-[![Install Steps](http://img.youtube.com/vi/KSYldphgE5A/0.jpg)](https://youtu.be/KSYldphgE5A)
+You need to restart your Home Assistant afterwards!
 
 # How to add a Tapo device (after installing the integration)
 
 ## Using UI
 
 1. Be sure the integration is installed successfully
-2. Go to integrations menu
-3. Search for `Tapo` integration
-4. Insert host (ip address), username and password for control your tapo device (the same used for tapo app).
+2. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tapo)
+3. Insert host (ip address), username and password for control your tapo device (the same used for tapo app).
    If you have a problem in this phase, like "invalid auth" error, please see [#122](https://github.com/petretiandrea/home-assistant-tapo-p100/issues/122), and if error persists write a comment in the same issue
-5. Wait for connection. The integration will automatically recognize if the tapo device is a switch or light or something else :)
+4. Wait for connection. The integration will automatically recognize if the tapo device is a switch or light or something else :)
 <!---->
 
 ## Configuration by configuration.yaml
@@ -134,11 +133,7 @@ is to follow home assistant best practices https://developers.home-assistant.io/
 
 ## Beta versions
 
-To access to the beta version, you must install it as a custom repository
-
-1. Install from HACS, add this repository as custom repository
-2. Search into HACS store the tapo integration and install
-3. Full restart of home assistant is recommended
+To use a beta version, you simply need to download and install a beta version from HACS the same way as a release version.
 
 ## Contributions are welcome!
 
