@@ -43,6 +43,8 @@ async def async_setup_entry(
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     _setup_from_coordinator(hass, data.coordinator, async_add_entities)
+    for child_coordinator in data.child_coordinators:
+        _setup_socket_sensors(child_coordinator, async_add_entities)
     if data.coordinator.is_hub:
         await async_setup_hub_sensors(hass, entry, async_add_entities)
 
@@ -58,6 +60,19 @@ def _setup_from_coordinator(
             [TapoSensor(coordinator, coordinator.device, factory()) for factory in SUPPORTED_ENERGY_SENSOR]
         )
     async_add_entities(sensors, True)
+
+
+def _setup_socket_sensors(
+    coordinator: TapoDataCoordinator,
+    async_add_entities: AddEntitiesCallback,
+):
+    # Strip sockets don't expose wifi stats, so only energy sensors are registered.
+    if coordinator.device.has_component(EnergyComponent):
+        sensors = [
+            TapoSensor(coordinator, coordinator.device, factory())
+            for factory in SUPPORTED_ENERGY_SENSOR
+        ]
+        async_add_entities(sensors, True)
 
 
 class TapoSensor(CoordinatedTapoEntity, SensorEntity):
