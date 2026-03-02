@@ -55,19 +55,7 @@ class HassTapo:
 
         child_coordinators = []
         if isinstance(device, TapoPlug) and device.is_strip:
-            sockets = device.sockets
-            _LOGGER.debug(
-                "Strip %s has %d sockets: %s",
-                device.device_id,
-                len(sockets),
-                [(s._child_id, s.nickname) for s in sockets],
-            )
-            for socket in sockets:
-                _LOGGER.debug(
-                    "Setting up energy coordinator for socket child_id=%s nickname=%s",
-                    socket._child_id,
-                    socket.nickname,
-                )
+            for socket in device.sockets:
                 # Register ChildEnergyComponent under the EnergyComponent key so that
                 # has_component/get_component(EnergyComponent) work transparently downstream.
                 socket._active_components[EnergyComponent] = ChildEnergyComponent(
@@ -77,14 +65,11 @@ class HassTapo:
                 try:
                     await socket_coordinator.async_config_entry_first_refresh()
                     child_coordinators.append(socket_coordinator)
-                    _LOGGER.debug(
-                        "Energy coordinator ready for socket child_id=%s", socket._child_id
-                    )
                 except Exception:
                     _LOGGER.warning(
-                        "Failed to set up energy coordinator for socket child_id=%s nickname=%s; skipping",
-                        socket._child_id,
+                        "Failed to set up energy coordinator for socket %s (%s); skipping",
                         socket.nickname,
+                        socket._child_id,
                         exc_info=True,
                     )
 
