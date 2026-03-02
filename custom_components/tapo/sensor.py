@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from datetime import datetime
 from typing import Optional
@@ -26,6 +27,8 @@ from custom_components.tapo.sensors import TodayRuntimeSensorSource
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
 from custom_components.tapo.hub.sensor import async_setup_entry as async_setup_hub_sensors
 
+_LOGGER = logging.getLogger(__name__)
+
 # Supported sensors: Today energy and current power
 SUPPORTED_ENERGY_SENSOR = [
     CurrentEnergySensorSource,
@@ -43,7 +46,14 @@ async def async_setup_entry(
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     _setup_from_coordinator(hass, data.coordinator, async_add_entities, is_strip=bool(data.child_coordinators))
+    _LOGGER.debug("Setting up sensors for %d socket child coordinators", len(data.child_coordinators))
     for child_coordinator in data.child_coordinators:
+        _LOGGER.debug(
+            "Socket sensor setup: child_id=%s nickname=%s has_energy=%s",
+            child_coordinator.device._child_id,
+            child_coordinator.device.nickname,
+            child_coordinator.device.has_component(EnergyComponent),
+        )
         _setup_socket_sensors(child_coordinator, async_add_entities)
     if data.coordinator.is_hub:
         await async_setup_hub_sensors(hass, entry, async_add_entities)
