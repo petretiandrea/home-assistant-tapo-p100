@@ -69,7 +69,7 @@ def _setup_socket_sensors(
     # Strip sockets don't expose wifi stats, so only energy sensors are registered.
     if coordinator.device.has_component(EnergyComponent):
         sensors = [
-            TapoSensor(coordinator, coordinator.device, factory())
+            SocketTapoSensor(coordinator, coordinator.device, factory())
             for factory in SUPPORTED_ENERGY_SENSOR
         ]
         async_add_entities(sensors, True)
@@ -111,3 +111,24 @@ class TapoSensor(CoordinatedTapoEntity, SensorEntity):
     @property
     def native_value(self) -> Union[StateType, date, datetime]:
         return self._sensor_source.get_value(self.coordinator)
+
+
+class SocketTapoSensor(TapoSensor):
+    """Sensor for a power strip child socket.
+
+    Registers each socket as a child device of the strip via via_device,
+    preventing all socket sensors being lumped under the parent due to
+    the shared MAC address.
+    """
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.device.device_id)},
+            "name": self.device.nickname,
+            "model": self.device.model,
+            "manufacturer": "TP-Link",
+            "sw_version": self.device.firmware_version,
+            "hw_version": self.device.device_info.hardware_version,
+            "via_device": (DOMAIN, self.device._parent_info.device_id),
+        }
