@@ -42,7 +42,7 @@ async def async_setup_entry(
 ):
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    _setup_from_coordinator(hass, data.coordinator, async_add_entities)
+    _setup_from_coordinator(hass, data.coordinator, async_add_entities, is_strip=bool(data.child_coordinators))
     for child_coordinator in data.child_coordinators:
         _setup_socket_sensors(child_coordinator, async_add_entities)
     if data.coordinator.is_hub:
@@ -53,9 +53,10 @@ def _setup_from_coordinator(
     hass: HomeAssistant,
     coordinator: TapoDataCoordinator,
     async_add_entities: AddEntitiesCallback,
+    is_strip: bool = False,
 ):
     sensors = [TapoSensor(coordinator, coordinator.device, SignalSensorSource())]
-    if coordinator.device.has_component(EnergyComponent):
+    if not is_strip and coordinator.device.has_component(EnergyComponent):
         sensors.extend(
             [TapoSensor(coordinator, coordinator.device, factory()) for factory in SUPPORTED_ENERGY_SENSOR]
         )
@@ -125,7 +126,7 @@ class SocketTapoSensor(TapoSensor):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": f"Socket {self.device.raw_state.get('position', self.device.nickname)}",
+            "name": self.device.nickname,
             "model": self.device.model,
             "manufacturer": "TP-Link",
             "sw_version": self.device.firmware_version,
