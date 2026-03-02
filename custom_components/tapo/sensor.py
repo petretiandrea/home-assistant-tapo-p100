@@ -125,7 +125,7 @@ class SocketTapoSensor(TapoSensor):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.nickname,
+            "name": f"Socket {self.device.raw_state.get('position', self.device.nickname)}",
             "model": self.device.model,
             "manufacturer": "TP-Link",
             "sw_version": self.device.firmware_version,
