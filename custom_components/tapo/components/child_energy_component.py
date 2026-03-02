@@ -25,9 +25,10 @@ class ChildEnergyComponent(DeviceComponent):
         power = await self._client.control_child(self._child_id, TapoRequest.get_current_power())
 
         if energy.is_success():
-            # Merge current_power into the energy dict so EnergyInfo.current_power works
             energy_dict = dict(energy.value)
-            energy_dict["current_power"] = power.value.get("current_power", 0) if power.is_success() else 0
+            # get_current_power returns watts; multiply by 1000 to match the milliwatt
+            # convention that EnergyInfo/CurrentEnergySensorSource expects.
+            energy_dict["current_power"] = (power.value.get("current_power", 0) * 1000) if power.is_success() else 0
             self._energy_info = EnergyInfo(energy_dict)
         else:
             self._energy_info = None
