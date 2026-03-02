@@ -127,19 +127,21 @@ class TapoSensor(CoordinatedTapoEntity, SensorEntity):
 class SocketTapoSensor(TapoSensor):
     """Sensor for a power strip child socket.
 
-    Uses _child_id (not device_id, which returns the parent strip's MAC for all
-    sockets) as the unique device identifier so that each socket gets its own
-    HA device entry.
+    Each socket has a unique device_id (e.g. parent_id + "00", "01", ...) so
+    using it as the sole identifier (without a MAC connection) prevents HA from
+    merging all sockets into the strip device via the shared MAC address.
+    The matching identifier in TapoPlugEntity.device_info ensures the switch and
+    sensors for each socket are grouped under the same HA device.
     """
 
     @property
     def unique_id(self):
-        return self.device._child_id + "_" + self._sensor_config.name.replace(" ", "_")
+        return self.device.device_id + "_" + self._sensor_config.name.replace(" ", "_")
 
     @property
     def device_info(self):
         return {
-            "identifiers": {(DOMAIN, self.device._child_id)},
+            "identifiers": {(DOMAIN, self.device.device_id)},
             "name": self.device.nickname,
             "model": self.device.model,
             "manufacturer": "TP-Link",
