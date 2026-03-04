@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 from typing import Optional
 from typing import Union
 from typing import cast
@@ -7,12 +8,17 @@ from typing import cast
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.number import NumberMode
+from homeassistant.components.number import RestoreNumber
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE
 from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.new.child.tapohubchildren import KE100Device
+from plugp100.new.child.tapohubchildren import KE100Device, TriggerButtonDevice
+from plugp100.new.components.trigger_log_component import TriggerLogComponent
 from plugp100.responses.temperature_unit import TemperatureUnit
 
 from custom_components.tapo.const import DOMAIN
@@ -30,6 +36,13 @@ async def async_setup_entry(
         if isinstance(device, KE100Device):
             async_add_entities(
                 [TRVTemperatureOffset(child_coordinator, device)],
+                True
+            )
+        elif isinstance(device, TriggerButtonDevice) and device.has_component(
+            TriggerLogComponent
+        ):
+            async_add_entities(
+                [PollUtilization(child_coordinator, device)],
                 True
             )
 
@@ -87,3 +100,49 @@ class TRVTemperatureOffset(CoordinatedTapoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         (await self.device.set_temp_offset(int(value))).get_or_raise()
         await self.coordinator.async_request_refresh()
+
+
+DEFAULT_POLL_UTILIZATION = 35  # percent
+
+
+class PollUtilization(CoordinatedTapoEntity, RestoreNumber):
+    """Max hub utilization target for the adaptive polling algorithm.
+
+    Lower = less aggressive polling (more stable, slower response).
+    Higher = more aggressive polling (faster response, more hub load).
+    The PollLatencySensor reads this value to compute the polling interval.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Poll Utilization"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:speedometer"
+    _attr_native_min_value = 5
+    _attr_native_max_value = 50
+    _attr_native_step = 5
+    _attr_mode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(
+            self,
+            coordinator: TapoDataCoordinator,
+            device: TriggerButtonDevice,
+    ) -> None:
+        super().__init__(coordinator, device)
+        self._attr_native_value = float(DEFAULT_POLL_UTILIZATION)
+
+    @property
+    def unique_id(self):
+        return super().unique_id + "_poll_utilization"
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_number_data()) and last.native_value is not None:
+            self._attr_native_value = last.native_value
+        # Store on coordinator so PollLatencySensor can read it
+        self.coordinator._poll_utilization_pct = self._attr_native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self._attr_native_value = value
+        self.coordinator._poll_utilization_pct = value
+        self.async_write_ha_state()
