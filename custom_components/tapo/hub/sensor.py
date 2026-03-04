@@ -14,7 +14,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.const import PERCENTAGE
 from homeassistant.const import UnitOfTemperature
 from homeassistant.const import UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from plugp100.new.child.tapohubchildren import TriggerButtonDevice
@@ -244,6 +245,20 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
         self._ema_jitter_ms: float | None = None
         self._computed_interval_ms: float | None = None
         self._cycles_since_change: int = 0
+        self._ha_started: bool = False
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self.hass.state is CoreState.running:
+            self._ha_started = True
+        else:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+            )
+
+    @callback
+    def _on_ha_started(self, _event) -> None:
+        self._ha_started = True
 
     @property
     def _u_max(self) -> float:
@@ -284,6 +299,8 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        if not self._ha_started:
+            return
         self.hass.async_create_task(self._measure_latency())
         self.async_write_ha_state()
 

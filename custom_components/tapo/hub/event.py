@@ -4,7 +4,8 @@ from typing import cast
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.new.child.tapohubchildren import TriggerButtonDevice
 from plugp100.new.components.trigger_log_component import TriggerLogComponent
@@ -85,9 +86,25 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
         super().__init__(coordinator, device)
         self._device: TriggerButtonDevice = device
         self._last_event_id: int | None = None
+        self._ha_started: bool = False
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self.hass.state is CoreState.running:
+            self._ha_started = True
+        else:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+            )
+
+    @callback
+    def _on_ha_started(self, _event) -> None:
+        self._ha_started = True
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        if not self._ha_started:
+            return
         self.hass.async_create_task(self._poll_and_fire_events())
         self.async_write_ha_state()
 
