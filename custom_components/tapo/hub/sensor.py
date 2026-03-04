@@ -306,7 +306,11 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
 
     async def _measure_latency(self) -> None:
         try:
-            _, latency_ms = await fetch_event_logs(self.coordinator, self._device)
+            _, latency_ms = await fetch_event_logs(
+                self.coordinator, self._device,
+                hass=self.hass,
+                entry_id=getattr(self.coordinator, "_hub_entry_id", None),
+            )
             self._latency_ms = round(latency_ms, 1)
         except Exception:
             self._latency_ms = None

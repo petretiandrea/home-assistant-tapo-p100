@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from typing import cast
@@ -26,15 +27,50 @@ _LOGGER = logging.getLogger(__name__)
 _CACHE_VALIDITY_S = 0.2
 
 
-async def fetch_event_logs(coordinator, device, page_size=5):
+def _get_hub_lock(hass, entry_id):
+    """Get or create a per-hub asyncio.Lock to serialize event log fetches.
+
+    All child devices on the same hub share one lock so HTTP requests
+    to the hub never overlap, which keeps latency low.
+    """
+    key = f"tapo_hub_event_lock_{entry_id}"
+    lock = hass.data.get(key)
+    if lock is None:
+        lock = asyncio.Lock()
+        hass.data[key] = lock
+    return lock
+
+
+async def fetch_event_logs(coordinator, device, page_size=5, hass=None, entry_id=None):
     """Fetch event logs with per-cycle caching on the coordinator.
 
     Returns (logs, latency_ms). The first caller in each update cycle
     does the actual HTTP request; subsequent callers get the cached result.
+    A per-hub lock serializes requests across child devices.
     """
     cache = getattr(coordinator, "_event_log_cache", None)
     now = time.monotonic()
 
+    if cache and (now - cache["timestamp"]) < _CACHE_VALIDITY_S:
+        return cache["logs"], cache["latency_ms"]
+
+    # Acquire hub-level lock if available
+    lock = None
+    if hass and entry_id:
+        lock = _get_hub_lock(hass, entry_id)
+
+    if lock:
+        async with lock:
+            return await _do_fetch(coordinator, device, page_size)
+    else:
+        return await _do_fetch(coordinator, device, page_size)
+
+
+async def _do_fetch(coordinator, device, page_size):
+    """Perform the actual HTTP fetch and update cache."""
+    # Re-check cache inside the lock in case another device just fetched
+    cache = getattr(coordinator, "_event_log_cache", None)
+    now = time.monotonic()
     if cache and (now - cache["timestamp"]) < _CACHE_VALIDITY_S:
         return cache["logs"], cache["latency_ms"]
 
@@ -110,7 +146,11 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
 
     async def _poll_and_fire_events(self) -> None:
         try:
-            logs, _ = await fetch_event_logs(self.coordinator, self._device)
+            logs, _ = await fetch_event_logs(
+                self.coordinator, self._device,
+                hass=self.hass,
+                entry_id=getattr(self.coordinator, "_hub_entry_id", None),
+            )
         except Exception:
             _LOGGER.debug("Failed to fetch event logs for %s", self._device.device_id)
             return

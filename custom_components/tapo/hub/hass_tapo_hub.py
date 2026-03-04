@@ -94,6 +94,7 @@ class HassTapoHub:
         ]
 
         for coordinator in coordinators:
+            coordinator._hub_entry_id = self.entry.entry_id
             await coordinator.async_config_entry_first_refresh()
 
         device_entries = [
