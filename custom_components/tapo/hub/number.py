@@ -1,6 +1,5 @@
 from datetime import date
 from datetime import datetime
-from datetime import timedelta
 from typing import Optional
 from typing import Union
 from typing import cast
@@ -13,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.const import PERCENTAGE
 from homeassistant.const import UnitOfTemperature
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
