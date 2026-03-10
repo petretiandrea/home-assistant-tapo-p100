@@ -20,8 +20,6 @@ scene:
       light.striscia_luminosa_smart:
         min_color_temp_kelvin: 2500
         max_color_temp_kelvin: 6500
-        min_mireds: 153
-        max_mireds: 400
         effect_list:
           - bubblingcauldron
           - aurora
@@ -70,8 +68,6 @@ scene:
       light.striscia_luminosa_smart:
         min_color_temp_kelvin: 2500
         max_color_temp_kelvin: 6500
-        min_mireds: 153
-        max_mireds: 400
         effect_list:
           - bubblingcauldron
           - aurora
@@ -122,8 +118,6 @@ scene:
       light.striscia_luminosa_smart:
         min_color_temp_kelvin: 2500
         max_color_temp_kelvin: 6500
-        min_mireds: 153
-        max_mireds: 400
         effect_list:
           - bubblingcauldron
           - aurora

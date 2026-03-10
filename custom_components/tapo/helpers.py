@@ -4,12 +4,6 @@ from typing import TypeVar
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-)
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
 from plugp100.common.functional.tri import Try
 from plugp100.responses.tapo_exception import TapoException, TapoError
 
@@ -39,15 +33,13 @@ def tapo_to_hass_brightness(brightness: float | None) -> float | None:
         return round((brightness * 255) / 100)
     return brightness
 
-
-# Mireds and Kelving are min, max tuple
 def hass_to_tapo_color_temperature(
-        color_temp: int | None, mireds: (int, int), kelvin: (int, int)
+        color_temp: int | None, kelvin: (int, int)
 ) -> int | None:
     if color_temp is not None:
-        constraint_color_temp = clamp(color_temp, mireds[0], mireds[1])
+        constraint_color_temp = clamp(color_temp, kelvin[0], kelvin[1])
         return clamp(
-            mired_to_kelvin(constraint_color_temp),
+            constraint_color_temp,
             min_value=kelvin[0],
             max_value=kelvin[1],
         )
@@ -55,13 +47,13 @@ def hass_to_tapo_color_temperature(
 
 
 def tapo_to_hass_color_temperature(
-        color_temp: int | None, mireds: (int, int)
+        color_temp: int | None, colors: (int, int)
 ) -> int | None:
     if color_temp is not None and color_temp > 0:
         return clamp(
-            kelvin_to_mired(color_temp),
-            min_value=mireds[0],
-            max_value=mireds[1],
+            color_temp,
+            min_value=colors[0],
+            max_value=colors[1],
         )
     return None
 
