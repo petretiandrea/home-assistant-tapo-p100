@@ -14,7 +14,7 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Device Info**
 Please execute this python script. You can save it as `main.py` and run it by using `python main.py`.
-Be sure to have the latest version of `plugp100` library, by installing it through `pip install plugp100`.
+Be sure to have the latest version of the `plugp100` library, for example with `uv pip install plugp100`.
 
 ```python
 import asyncio

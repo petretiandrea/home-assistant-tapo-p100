@@ -11,7 +11,7 @@ on:
       - next
 
 env:
-  DEFAULT_PYTHON: 3.12
+  DEFAULT_PYTHON: "3.14.2"
 
 permissions:
   pull-requests: write
@@ -52,23 +52,19 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v6.0.2
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v6.2.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          enable-cache: true
 
-      - name: Upgrade pip
-        run: |
-          pip install --constraint=.github/workflows/constraints.txt pip
-          pip --version
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        run: uv python install ${{ env.DEFAULT_PYTHON }}
 
-      - name: Install Python modules
-        run: |
-          pip install --constraint=.github/workflows/constraints.txt pre-commit black flake8 reorder-python-imports autoflake
+      - name: Install dev dependencies
+        run: uv sync --frozen --group dev
 
       - name: Run pre-commit on all files
-        run: |
-          pre-commit run --files custom_components/* --show-diff-on-failure --color=always
+        run: uv run pre-commit run --all-files --show-diff-on-failure --color=always
   hacs:
     runs-on: "ubuntu-latest"
     name: HACS Validation
@@ -87,24 +83,26 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v6.0.2
-      - name: Setup Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v6.2.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          enable-cache: true
+
+      - name: Setup Python ${{ env.DEFAULT_PYTHON }}
+        run: uv python install ${{ env.DEFAULT_PYTHON }}
+
       - name: Install requirements
-        run: |
-          pip install --constraint=.github/workflows/constraints.txt pip
-          pip install -r requirements_test.txt
+        run: uv sync --frozen --group dev
+
       - name: Unit tests suite
         run: |
-          pytest \
+          uv run pytest \
             --timeout=9 \
             --durations=10 \
             --cov-fail-under=40 \
             --junitxml=pytest.xml \
             --cov-report=term-missing:skip-covered \
-            --cov=app \
-            -p no:sugar \
             tests/ | tee pytest-coverage.txt
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main

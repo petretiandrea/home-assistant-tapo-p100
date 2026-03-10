@@ -7,7 +7,7 @@
   "name": "tapo integration development",
   "appPort": ["9123:8123"],
   "containerUser": "root",
-  "postCreateCommand": "pip install -r requirements_dev.txt",
+  "postCreateCommand": "uv sync --group dev",
   "containerEnv": { "DEVCONTAINER": "1" },
   "capAdd": ["CAP_NET_RAW", "CAP_NET_BROADCAST", "CAP_NET_BIND_SERVICE"],
   "runArgs": ["--network=bridge"],
@@ -23,11 +23,10 @@
         "files.eol": "\n",
         "editor.tabSize": 4,
         "terminal.integrated.shell.linux": "/bin/bash",
-        "python.pythonPath": "/usr/bin/python3",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
         "python.analysis.autoSearchPaths": false,
         "python.linting.pylintEnabled": true,
         "python.linting.enabled": true,
-        "python.formatting.provider": "black",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -35,7 +34,7 @@
         "python.testing.pytestArgs": ["tests", "--no-cov"],
         "python.testing.unittestEnabled": false,
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestPath": "pytest"
+        "python.testing.pytestPath": "${containerWorkspaceFolder}/.venv/bin/pytest"
       }
     }
   }

@@ -140,6 +140,17 @@ To use a beta version, you simply need to download and install a beta version fr
 
 Open a pull request, every contribution are welcome.
 
+## Development
+
+This repository now uses `uv` for local development instead of `pip`.
+
+```bash
+uv sync --group dev
+uv run hass
+uv run pytest tests/
+uv run pre-commit run --all-files
+```
+
 ---
 
 [integration_blueprint]: https://github.com/custom-components/integration_blueprint

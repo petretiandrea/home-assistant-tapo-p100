@@ -14,7 +14,7 @@ action="$1"  # Get the first argument passed to the script
 if [[ "$action" == "setversion" ]]; then
     read -p "Enter Home Assistant version: " version
     echo "Installing Home Assistant version $version"
-    pip install "homeassistant==$version"
+    uv pip install --python .venv/bin/python "homeassistant==$version"
 elif [[ "$action" == "run" ]]; then
     mkdir -p /tmp/config/custom_components
 
@@ -36,8 +36,8 @@ elif [[ "$action" == "run" ]]; then
     fi
 
     echo "Start Home Assistant"
-    hass --script ensure_config -c /tmp/config
-    hass -c /tmp/config
+    uv run hass --script ensure_config -c /tmp/config
+    uv run hass -c /tmp/config
 else
     echo "Unknown action: $action"
     echo "Usage: $0 [run|setversion <version>]"
