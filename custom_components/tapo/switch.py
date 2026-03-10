@@ -53,6 +53,23 @@ class TapoPlugEntity(CoordinatedTapoEntity, SwitchEntity):
         self._attr_name = f"{self.device.nickname}"
 
     @property
+    def device_info(self):
+        if isinstance(self._plug, TapoStripSocket):
+            # Strip sockets all share the strip's MAC, so including the MAC connection
+            # in device_info causes HA to merge all socket devices into the strip device.
+            # Use only the unique per-socket identifier and link via via_device instead.
+            return {
+                "identifiers": {(DOMAIN, self.device.device_id)},
+                "name": self.device.nickname,
+                "model": self.device.model,
+                "manufacturer": "TP-Link",
+                "sw_version": self.device.firmware_version,
+                "hw_version": self.device.device_info.hardware_version,
+                "via_device": (DOMAIN, self._plug._parent_info.device_id),
+            }
+        return self._device_info
+
+    @property
     def is_on(self) -> Optional[bool]:
         return self._plug.is_on
 
