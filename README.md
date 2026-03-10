@@ -85,7 +85,7 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
 - [x] support for `S220`, `S210` switch hub's device
-- [x] partial support for `S200B` button hub's device (actually no events are reported to HA)
+- [x] support for `S200B` button and `S200D` dial hub's device (button press and dial rotation events reported to HA, double-click not supported)
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`, `P110M`)
 - [x] support for tapo powerstrip (`P304M`) with individual socket support and energy monitoring via [PR #933](https://github.com/petretiandrea/home-assistant-tapo-p100/pull/933)

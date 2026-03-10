@@ -10,10 +10,11 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.new.hub_device_tracker import HubDeviceEvent, DeviceAdded
+from plugp100.new.child.tapohubchildren import TriggerButtonDevice
 from plugp100.new.tapodevice import TapoDevice
 from plugp100.new.tapohub import TapoHub
 
-from custom_components.tapo.const import DEFAULT_POLLING_RATE_S, PLATFORMS
+from custom_components.tapo.const import DEFAULT_BUTTON_POLLING_RATE_MS, DEFAULT_POLLING_RATE_S, PLATFORMS
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import TapoDataCoordinator, HassTapoDeviceData
 
@@ -82,12 +83,18 @@ class HassTapoHub:
             devices: List[TapoDevice],
             polling_rate: timedelta,
     ) -> List[TapoDataCoordinator]:
+        button_polling_rate = timedelta(milliseconds=DEFAULT_BUTTON_POLLING_RATE_MS)
         coordinators = [
-            TapoDataCoordinator(hass, child_device, polling_rate)
+            TapoDataCoordinator(
+                hass,
+                child_device,
+                button_polling_rate if isinstance(child_device, TriggerButtonDevice) else polling_rate,
+            )
             for child_device in devices
         ]
 
         for coordinator in coordinators:
+            coordinator._hub_entry_id = self.entry.entry_id
             await coordinator.async_config_entry_first_refresh()
 
         device_entries = [
