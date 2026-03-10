@@ -11,13 +11,28 @@
   "containerEnv": { "DEVCONTAINER": "1" },
   "capAdd": ["CAP_NET_RAW", "CAP_NET_BROADCAST", "CAP_NET_BIND_SERVICE"],
   "runArgs": ["--network=bridge"],
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": ["ffmpeg", "libturbojpeg0", "libpcap-dev"]
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.python",
+        "charliermarsh.ruff",
+        "davidanson.vscode-markdownlint",
+        "EditorConfig.EditorConfig",
+        "esbenp.prettier-vscode",
+        "GitHub.copilot",
         "github.vscode-pull-request-github",
-        "ryanluker.vscode-coverage-gutters",
-        "ms-python.vscode-pylance"
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode-remote.remote-containers",
+        "redhat.vscode-yaml"
       ],
       "settings": {
         "files.eol": "\n",
@@ -34,7 +49,30 @@
         "python.testing.pytestArgs": ["tests", "--no-cov"],
         "python.testing.unittestEnabled": false,
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestPath": "${containerWorkspaceFolder}/.venv/bin/pytest"
+        "python.testing.pytestPath": "${containerWorkspaceFolder}/.venv/bin/pytest",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[jsontranslation]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": false
+        }
       }
     }
   }
