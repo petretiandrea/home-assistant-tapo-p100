@@ -13,7 +13,7 @@ packages = ["custom_components.tapo"]
 dev = [
     { include-group = "test" },
     "homeassistant==2026.3.0",
-    "plugp100==5.1.6",
+    "plugp100==6.0.0.dev2",
     "aiodiscover==1.6.0",
     "pre-commit==3.3.3",
     "ruff==0.9.0",

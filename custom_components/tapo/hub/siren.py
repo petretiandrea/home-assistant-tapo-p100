@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.requests.set_device_info.play_alarm_params import PlayAlarmParams
-from plugp100.new.components.alarm_component import AlarmComponent
-from plugp100.new.tapohub import TapoHub
+from plugp100.components.alarm import AlarmComponent
+from plugp100.devices.hub import TapoHub
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator

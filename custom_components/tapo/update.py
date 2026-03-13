@@ -7,9 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.responses.firmware import LatestFirmware, FirmwareDownloadProgress, FirmwareDownloadStatus
-from plugp100.responses.tapo_exception import TapoException
+from plugp100.devices.base import TapoDevice
+from plugp100.errors import TapoException
+from plugp100.models.firmware import LatestFirmware, FirmwareDownloadProgress, FirmwareDownloadStatus
 
 from custom_components.tapo import DOMAIN, HassTapoDeviceData
 from custom_components.tapo.coordinators import TapoDataCoordinator

@@ -6,8 +6,9 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.new.child.tapostripsocket import TapoStripSocket
-from plugp100.new.tapoplug import TapoPlug
+from plugp100.devices.children.strip_socket import TapoStripSocket
+from plugp100.devices.plug import TapoPlug
+
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator

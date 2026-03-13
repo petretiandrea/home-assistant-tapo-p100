@@ -15,9 +15,10 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.new.child.tapohubchildren import KE100Device, TriggerButtonDevice
-from plugp100.new.components.trigger_log_component import TriggerLogComponent
-from plugp100.responses.temperature_unit import TemperatureUnit
+from plugp100.components.trigger_log import TriggerLogComponent
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
+from plugp100.devices.children.trv import KE100Device
+from plugp100.models.temperature import TemperatureUnit
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

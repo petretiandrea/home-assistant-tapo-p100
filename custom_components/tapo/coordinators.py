@@ -14,10 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.new.tapohub import TapoHub
-from plugp100.responses.child_device_list import PowerStripChild
-from plugp100.responses.tapo_exception import TapoException
+from plugp100.devices.base import TapoDevice
+from plugp100.devices.hub import TapoHub
+from plugp100.errors import InvalidAuthentication, TapoException
+from plugp100.models.child import PowerStripChild
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.helpers import _raise_from_tapo_exception
@@ -86,7 +86,7 @@ class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
         try:
             async with async_timeout.timeout(10):
                 return await self.poll_update()
-        except TapoException as error:
+        except (InvalidAuthentication, TapoException) as error:
             _raise_from_tapo_exception(error, _LOGGER)
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error communication with API: {str(error)}") from error

@@ -8,9 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.new.child.tapohubchildren import KE100Device
-from plugp100.responses.hub_childs.ke100_device_state import TRVState
-from plugp100.responses.temperature_unit import TemperatureUnit
+from plugp100.devices.children.trv import KE100Device
+from plugp100.models.hub_children.trv import TRVState
+from plugp100.models.temperature import TemperatureUnit
+
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

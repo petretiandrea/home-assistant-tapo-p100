@@ -4,11 +4,9 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from plugp100.discovery import DiscoveredDevice
-from plugp100.new.components.energy_component import EnergyComponent
-from plugp100.new.device_factory import connect, DeviceConnectConfiguration
-from plugp100.new.tapoplug import TapoPlug
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.components.energy import EnergyComponent
+from plugp100.discovery import DiscoveredDevice, connect_discovered_device
+from plugp100.devices import DeviceConnectConfiguration, TapoDevice, TapoPlug, connect
 
 from custom_components.tapo.components.child_energy_component import ChildEnergyComponent
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S, CONF_DISCOVERED_DEVICE_INFO
@@ -32,7 +30,11 @@ class HassTapo:
         if discover_data := self.entry.data.get(CONF_DISCOVERED_DEVICE_INFO):
             _LOGGER.info("Found discovered data, avoid to guess protocol")
             discovered_device = DiscoveredDevice.from_dict(discover_data)
-            device = await discovered_device.get_tapo_device(credentials=self.config.credentials, session=session)
+            device = await connect_discovered_device(
+                discovered_device=discovered_device,
+                credentials=self.config.credentials,
+                session=session,
+            )
         else:
             device = await connect(config=self.config, session=session)
 

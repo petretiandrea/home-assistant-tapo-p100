@@ -10,8 +10,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.new.components.energy_component import EnergyComponent
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.components.energy import EnergyComponent
+from plugp100.devices.base import TapoDevice
+
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

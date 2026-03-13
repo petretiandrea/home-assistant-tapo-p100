@@ -9,10 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
-from plugp100.new.hub_device_tracker import HubDeviceEvent, DeviceAdded
-from plugp100.new.child.tapohubchildren import TriggerButtonDevice
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.new.tapohub import TapoHub
+from plugp100.devices.base import TapoDevice
+from plugp100.devices.hub import TapoHub
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
+from plugp100.events.hub_device_tracker import DeviceAdded, HubDeviceEvent
 
 from custom_components.tapo.const import DEFAULT_BUTTON_POLLING_RATE_MS, DEFAULT_POLLING_RATE_S, PLATFORMS
 from custom_components.tapo.const import DOMAIN

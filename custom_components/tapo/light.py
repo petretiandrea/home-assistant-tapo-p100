@@ -13,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.light_effect_preset import LightEffectPreset
-from plugp100.new.components.light_effect_component import LightEffectComponent
-from plugp100.new.tapobulb import TapoBulb
+from plugp100.components.light_effect import LightEffectComponent
+from plugp100.devices.bulb import TapoBulb
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
