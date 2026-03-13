@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from plugp100.common.credentials import AuthCredential
-from plugp100.new.device_factory import DeviceConnectConfiguration
+from plugp100.devices.factory import DeviceConnectConfiguration
 
 from custom_components.tapo.const import CONF_HOST
 from custom_components.tapo.const import CONF_PASSWORD

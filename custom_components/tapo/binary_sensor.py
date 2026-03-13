@@ -5,8 +5,9 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from plugp100.new.components.overheat_component import OverheatComponent
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.components.overheat import OverheatComponent
+from plugp100.devices.base import TapoDevice
+
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

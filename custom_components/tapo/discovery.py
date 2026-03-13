@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
 )
-from plugp100.discovery.discovered_device import DiscoveredDevice
-from plugp100.discovery.tapo_discovery import TapoDiscovery
+from plugp100.discovery import DiscoveredDevice, TapoDiscovery
+
 
 
 async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDevice]:

@@ -5,7 +5,8 @@ from typing import TypeVar
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from plugp100.common.functional.tri import Try
-from plugp100.responses.tapo_exception import TapoException, TapoError
+from plugp100.errors import InvalidAuthentication, TapoError, TapoException
+
 
 T = TypeVar("T")
 
@@ -58,9 +59,10 @@ def tapo_to_hass_color_temperature(
     return None
 
 
-def _raise_from_tapo_exception(exception: TapoException, logger: Logger):
+def _raise_from_tapo_exception(exception: Exception, logger: Logger):
     logger.error("Tapo exception: %s", str(exception))
-    if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+    if isinstance(exception, InvalidAuthentication):
         raise ConfigEntryAuthFailed from exception
-    else:
-        raise UpdateFailed(f"Error tapo exception: {exception}") from exception
+    if isinstance(exception, TapoException) and exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+        raise ConfigEntryAuthFailed from exception
+    raise UpdateFailed(f"Error tapo exception: {exception}") from exception

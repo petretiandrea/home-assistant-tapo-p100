@@ -8,13 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.new.child.tapohubchildren import TriggerButtonDevice
-from plugp100.new.components.trigger_log_component import TriggerLogComponent
-from plugp100.responses.hub_childs.s200b_device_state import (
-    RotationEvent,
-    S200BEvent,
-    SingleClickEvent,
-)
+from plugp100.components.trigger_log import TriggerLogComponent
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
+from plugp100.models.hub_children.button import RotationEvent, S200BEvent, SingleClickEvent
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator

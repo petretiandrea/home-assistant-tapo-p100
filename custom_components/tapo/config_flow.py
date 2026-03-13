@@ -16,11 +16,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.common.credentials import AuthCredential
-from plugp100.discovery.discovered_device import DiscoveredDevice
-from plugp100.new.device_factory import DeviceConnectConfiguration, connect
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.responses.tapo_exception import TapoError
-from plugp100.responses.tapo_exception import TapoException
+from plugp100.discovery import DiscoveredDevice, connect_discovered_device
+from plugp100.devices import DeviceConnectConfiguration, TapoDevice, connect
+from plugp100.errors import InvalidAuthentication, TapoError, TapoException
 
 from custom_components.tapo.const import CONF_ADVANCED_SETTINGS
 from custom_components.tapo.const import CONF_DISCOVERED_DEVICE_INFO
@@ -313,9 +311,11 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 device = await connect(config=config, session=session)
             else:
-                device = await discovered_device.get_tapo_device(credential, session)
+                device = await connect_discovered_device(discovered_device, credential, session)
             await device.update()
             return device
+        except InvalidAuthentication as error:
+            raise InvalidAuth from error
         except TapoException as error:
             self._raise_from_tapo_exception(error)
         except (aiohttp.ClientError, Exception) as error:
@@ -325,8 +325,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.error("Tapo exception %s", str(exception.error_code))
         if exception.error_code == TapoError.INVALID_CREDENTIAL.value:
             raise InvalidAuth from exception
-        else:
-            raise CannotConnect from exception
+        raise CannotConnect from exception
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

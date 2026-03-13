@@ -7,11 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from plugp100.new.components.battery_component import BatteryComponent
-from plugp100.new.components.motion_sensor_component import MotionSensorComponent
-from plugp100.new.components.smart_door_component import SmartDoorComponent
-from plugp100.new.components.water_leak_component import WaterLeakComponent
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.components.battery import BatteryComponent
+from plugp100.components.motion_sensor import MotionSensorComponent
+from plugp100.components.smart_door import SmartDoorComponent
+from plugp100.components.water_leak import WaterLeakComponent
+from plugp100.devices.base import TapoDevice
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

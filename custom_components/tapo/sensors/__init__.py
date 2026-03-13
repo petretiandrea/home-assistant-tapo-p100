@@ -5,7 +5,7 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.const import UnitOfPower
 from homeassistant.const import UnitOfTime
 from homeassistant.helpers.typing import StateType
-from plugp100.new.components.energy_component import EnergyComponent
+from plugp100.components.energy import EnergyComponent
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.sensors.sensor_config import SensorConfig

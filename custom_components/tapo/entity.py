@@ -5,7 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.devices.base import TapoDevice
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import TapoDataCoordinator

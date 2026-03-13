@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from plugp100.discovery.discovered_device import DiscoveredDevice
+from plugp100.discovery import DiscoveredDevice
 
 from .const import CONF_DISCOVERED_DEVICE_INFO
 from .const import CONF_HOST

@@ -18,14 +18,14 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from plugp100.new.child.tapohubchildren import TriggerButtonDevice
-from plugp100.new.components.battery_component import BatteryComponent
-from plugp100.new.components.humidity_component import HumidityComponent
-from plugp100.new.components.report_mode_component import ReportModeComponent
-from plugp100.new.components.temperature_component import TemperatureComponent
-from plugp100.new.components.trigger_log_component import TriggerLogComponent
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.responses.temperature_unit import TemperatureUnit
+from plugp100.components.battery import BatteryComponent
+from plugp100.components.humidity import HumidityComponent
+from plugp100.components.report_mode import ReportModeComponent
+from plugp100.components.temperature import TemperatureComponent
+from plugp100.components.trigger_log import TriggerLogComponent
+from plugp100.devices.base import TapoDevice
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
+from plugp100.models.temperature import TemperatureUnit
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData

@@ -1005,7 +1005,7 @@ dev = [
     { name = "aiodiscover", specifier = "==1.6.0" },
     { name = "async-timeout" },
     { name = "homeassistant", specifier = "==2026.3.0" },
-    { name = "plugp100", specifier = "==5.1.6" },
+    { name = "plugp100", specifier = "==6.0.0.dev2" },
     { name = "pre-commit", specifier = "==3.3.3" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1465,7 +1465,7 @@ wheels = [
 
 [[package]]
 name = "plugp100"
-version = "5.1.6"
+version = "6.0.0.dev2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1477,9 +1477,9 @@ dependencies = [
     { name = "semantic-version" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/fc/d50426665c07da952d5df4fdf9993fbe13a91fe4c079fd3ffa0a40b952fc/plugp100-5.1.6.tar.gz", hash = "sha256:7687648ee4a24da0d9ab699d76c44e2ed1a22e5ed01dae292c99310144e5faef", size = 60432, upload-time = "2026-03-11T20:35:12.129Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/68/cb8565b45ab02fc1be38c7fb4e936e01a1265c3369ae084cf88f1fdb213e/plugp100-6.0.0.dev2.tar.gz", hash = "sha256:45d83cfad11d425154fb36f1bb8c66dddfa0709b088d3672cc91f4f405b5f799", size = 60968, upload-time = "2026-03-13T19:03:25.833Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/7c/d4d8361da6776d42bb51cfc3a793ec9cb201245707a4f8754c0210c33f24/plugp100-5.1.6-py3-none-any.whl", hash = "sha256:d2890f70a606f90e9e519b665efb29de991209149de45519cf348c39d4204dca", size = 90759, upload-time = "2026-03-11T20:35:10.891Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/38/cb59c63a4c1319074b8b1869cde01c28b8cc5597489ea45153a0fb3a9bff/plugp100-6.0.0.dev2-py3-none-any.whl", hash = "sha256:e197a10133770d18b75b5679b3fd52e8d4a7fa787adac4d69b010050b5dc0876", size = 94598, upload-time = "2026-03-13T19:03:24.288Z" },
 ]
 
 [[package]]

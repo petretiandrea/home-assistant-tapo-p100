@@ -1,4 +1,4 @@
-from plugp100.new.device_factory import connect
+from plugp100.devices import connect
 
 from custom_components.tapo.const import CONF_MAC
 from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
