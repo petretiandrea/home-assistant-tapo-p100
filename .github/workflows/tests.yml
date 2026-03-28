@@ -17,6 +17,9 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
 
       - name: Set up Python
         run: uv python install 3.13
@@ -33,7 +36,7 @@ jobs:
         with:
           path: |
             .local/ha-venv
-          key: ha-venv-${{ runner.os }}-py313-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'requirements.txt', 'hacs.json') }}
+          key: ha-venv-${{ runner.os }}-py313-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'requirements.txt', 'hacs.json', 'custom_components/tapo/manifest.json', 'script/setup/bootstrap', 'script/setup/setup', 'script/test') }}
           restore-keys: |
             ha-venv-${{ runner.os }}-py313-ha${{ steps.ha_version.outputs.HA_VERSION }}-
             ha-venv-${{ runner.os }}-py313-
