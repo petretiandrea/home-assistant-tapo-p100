@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 import logging
 from typing import Optional, Union, cast
 
@@ -30,7 +30,12 @@ from plugp100.models.temperature import TemperatureUnit
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
-from custom_components.tapo.hub.event import fetch_event_logs
+from custom_components.tapo.hub.event import (
+    AdaptivePollingState,
+    EventLogPollResult,
+    fetch_event_logs,
+    get_hub_event_log_poller,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,34 +196,12 @@ class ReportIntervalDiagnostic(CoordinatedTapoEntity, SensorEntity):
 
 
 class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
-    """Measures poll latency and adaptively tunes the polling interval.
-
-    Budget-based utilization control:
-      interval = clamp((L + 2*J) / u_max, I_min, I_max)
-    where L = EWMA of latency, J = EWMA of jitter (absolute deviation).
-    This keeps request utilization (latency/interval) at or below u_max.
-
-    Hysteresis prevents thrashing: interval only changes when the target
-    differs from current by more than HYSTERESIS_PCT, and not more often
-    than every COOLDOWN_CYCLES cycles.
-    """
+    """Diagnostic view of the shared adaptive polling state."""
 
     _attr_has_entity_name = True
     _attr_name = "Poll Latency"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:connection"
-
-    # Smoothing
-    EMA_ALPHA = 0.3  # EWMA smoothing factor (higher = more reactive)
-    # Budget
-    DEFAULT_U_MAX = 0.35  # fallback if number entity hasn't loaded yet
-    JITTER_WEIGHT = 2.0  # how much jitter inflates the budget
-    # Bounds
-    MIN_INTERVAL_MS = 300
-    MAX_INTERVAL_MS = 5000
-    # Hysteresis
-    HYSTERESIS_PCT = 0.15  # ignore target changes smaller than 15%
-    COOLDOWN_CYCLES = 5  # minimum cycles between interval adjustments
 
     def __init__(
         self,
@@ -227,15 +210,20 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
     ):
         super().__init__(coordinator, device)
         self._device: TriggerButtonDevice = device
-        self._latency_ms: float | None = None
-        self._ema_ms: float | None = None
-        self._ema_jitter_ms: float | None = None
-        self._computed_interval_ms: float | None = None
-        self._cycles_since_change: int = 0
         self._ha_started: bool = False
+        self._event_log_poller = None
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        self._event_log_poller = get_hub_event_log_poller(
+            self.hass,
+            self.coordinator,
+            self._device,
+            getattr(self.coordinator, "_hub_entry_id", None),
+        )
+        self.async_on_remove(
+            self._event_log_poller.add_listener(self._handle_event_log_result)
+        )
         if self.hass.state is CoreState.running:
             self._ha_started = True
         else:
@@ -246,14 +234,6 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
     @callback
     def _on_ha_started(self, _event) -> None:
         self._ha_started = True
-
-    @property
-    def _u_max(self) -> float:
-        """Read utilization target from the PollUtilization number entity via coordinator."""
-        pct = getattr(self.coordinator, "_poll_utilization_pct", None)
-        if pct is not None:
-            return pct / 100.0
-        return self.DEFAULT_U_MAX
 
     @property
     def unique_id(self):
@@ -273,28 +253,49 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        return self._latency_ms
+        return self._adaptive_state.latency_ms
 
     @property
     def extra_state_attributes(self):
         return {
-            "ema_latency_ms": round(self._ema_ms, 1) if self._ema_ms else None,
-            "ema_jitter_ms": round(self._ema_jitter_ms, 1)
-            if self._ema_jitter_ms
+            "ema_latency_ms": round(self._adaptive_state.ema_ms, 1)
+            if self._adaptive_state.ema_ms
             else None,
-            "computed_interval_ms": round(self._computed_interval_ms, 1)
-            if self._computed_interval_ms
+            "ema_jitter_ms": round(self._adaptive_state.ema_jitter_ms, 1)
+            if self._adaptive_state.ema_jitter_ms
             else None,
-            "utilization": round(self._ema_ms / self._computed_interval_ms, 3)
-            if self._ema_ms and self._computed_interval_ms
+            "computed_interval_ms": round(self._adaptive_state.computed_interval_ms, 1)
+            if self._adaptive_state.computed_interval_ms
+            else None,
+            "utilization": round(
+                self._adaptive_state.ema_ms / self._adaptive_state.computed_interval_ms,
+                3,
+            )
+            if self._adaptive_state.ema_ms and self._adaptive_state.computed_interval_ms
             else None,
         }
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not self._ha_started:
+        if not self._ha_started or not self.enabled:
             return
-        self.hass.async_create_task(self._measure_latency())
+        if self._event_log_poller is None:
+            self._event_log_poller = get_hub_event_log_poller(
+                self.hass,
+                self.coordinator,
+                self._device,
+                getattr(self.coordinator, "_hub_entry_id", None),
+            )
+        self._event_log_poller.schedule_refresh()
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_event_log_result(self, result: EventLogPollResult | None) -> None:
+        if not self.enabled:
+            return
+        if result is None:
+            self.async_write_ha_state()
+            return
         self.async_write_ha_state()
 
     async def _measure_latency(self) -> None:
@@ -305,50 +306,16 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
                 hass=self.hass,
                 entry_id=getattr(self.coordinator, "_hub_entry_id", None),
             )
-            self._latency_ms = round(latency_ms, 1)
         except Exception:
-            self._latency_ms = None
             self.async_write_ha_state()
             return
 
-        # Bootstrap
-        if self._ema_ms is None:
-            self._ema_ms = latency_ms
-            self._ema_jitter_ms = 0.0
-            self._computed_interval_ms = max(
-                self.MIN_INTERVAL_MS, latency_ms / self._u_max
-            )
-            self.coordinator.update_interval = timedelta(
-                milliseconds=self._computed_interval_ms
-            )
-            self.async_write_ha_state()
-            return
-
-        # Update smoothed latency and jitter
-        self._ema_ms = self.EMA_ALPHA * latency_ms + (1 - self.EMA_ALPHA) * self._ema_ms
-        jitter = abs(latency_ms - self._ema_ms)
-        self._ema_jitter_ms = (
-            self.EMA_ALPHA * jitter + (1 - self.EMA_ALPHA) * self._ema_jitter_ms
-        )
-
-        # Budget-based target: keep utilization <= U_MAX
-        effective_latency = self._ema_ms + self.JITTER_WEIGHT * self._ema_jitter_ms
-        target = effective_latency / self._u_max
-        target = max(self.MIN_INTERVAL_MS, min(self.MAX_INTERVAL_MS, target))
-
-        # Hysteresis + cooldown: only change if meaningful and not too frequent
-        self._cycles_since_change += 1
-        pct_change = (
-            abs(target - self._computed_interval_ms) / self._computed_interval_ms
-        )
-        if (
-            pct_change > self.HYSTERESIS_PCT
-            and self._cycles_since_change >= self.COOLDOWN_CYCLES
-        ):
-            self._computed_interval_ms = target
-            self._cycles_since_change = 0
-
-        self.coordinator.update_interval = timedelta(
-            milliseconds=self._computed_interval_ms
-        )
         self.async_write_ha_state()
+
+    @property
+    def _adaptive_state(self) -> AdaptivePollingState:
+        state = getattr(self.coordinator, "_adaptive_polling_state", None)
+        if state is None:
+            state = AdaptivePollingState()
+            self.coordinator._adaptive_polling_state = state
+        return state
