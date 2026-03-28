@@ -83,6 +83,23 @@ async def test_light_color_service_call(hass: HomeAssistant, tapo_device: MagicM
     tapo_device.set_color_temperature.assert_not_called()
 
 
+@pytest.mark.parametrize("tapo_device", [mock_bulb(), mock_led_strip()])
+async def test_light_turn_on_without_attributes(
+    hass: HomeAssistant, tapo_device: MagicMock
+):
+    await setup_platform(hass, tapo_device, [LIGHT_DOMAIN])
+    entity_id = await extract_entity_id(tapo_device, LIGHT_DOMAIN)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    tapo_device.turn_on.assert_called()
+
+
 @pytest.mark.parametrize("tapo_device", [mock_led_strip()])
 async def test_light_color_effects(hass: HomeAssistant, tapo_device: MagicMock):
     await setup_platform(hass, tapo_device, [LIGHT_DOMAIN])

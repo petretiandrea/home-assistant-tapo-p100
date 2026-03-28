@@ -62,7 +62,7 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
             return ColorMode.HS
         elif (
             ColorMode.COLOR_TEMP in self.supported_color_modes
-            and self.color_temp is not None
+            and self.color_temp_kelvin is not None
         ):
             return ColorMode.COLOR_TEMP
         elif (
@@ -97,15 +97,11 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
                 return hue, saturation
 
     @property
-    def color_temp(self):
+    def color_temp_kelvin(self):
         return tapo_to_hass_color_temperature(
             self.device.color_temp,
             (self.min_color_temp_kelvin, self.max_color_temp_kelvin),
         )
-
-    @property
-    def color_temp_kelvin(self):
-        return self.device.color_temp
 
     @property
     def effect(self) -> Optional[str]:
