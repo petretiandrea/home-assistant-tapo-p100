@@ -14,6 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.light_effect_preset import LightEffectPreset
+from plugp100.api.requests.set_device_info.set_light_color_info_params import (
+    LightColorDeviceInfoParams,
+)
+from plugp100.common.functional.tri import Try
+from plugp100.components.light import LightComponent
 from plugp100.components.light_effect import LightEffectComponent
 from plugp100.devices.bulb import TapoBulb
 
@@ -168,7 +173,7 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
         elif hue_saturation is not None and ColorMode.HS in self.supported_color_modes:
             hue = int(hue_saturation[0])
             saturation = int(hue_saturation[1])
-            (await self.device.set_hue_saturation(hue, saturation)).get_or_raise()
+            (await self._set_hue_saturation(hue, saturation)).get_or_raise()
         elif (
             color_temp is not None
             and ColorMode.COLOR_TEMP in self.supported_color_modes
@@ -199,6 +204,19 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
             ).get_or_raise()
         else:
             (await self.device.set_brightness(new_brightness)).get_or_raise()
+
+    async def _set_hue_saturation(self, hue: int, saturation: int) -> Try[bool]:
+        """Set HS while avoiding invalid payloads for near-white selections."""
+        if saturation > 0:
+            return await self.device.set_hue_saturation(hue, saturation)
+
+        light_component = self.device.get_component(LightComponent)
+        if light_component is None:
+            return await self.device.set_hue_saturation(hue, saturation)
+
+        return await light_component._client.set_device_info(
+            LightColorDeviceInfoParams(hue=hue, saturation=saturation)
+        )
 
 
 # follows https://developers.home-assistant.io/docs/core/entity/light/#color-modes
