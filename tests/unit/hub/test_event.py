@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 from plugp100.common.functional.tri import Success
 from plugp100.devices.children.trigger_button import TriggerButtonDevice
 from plugp100.models.hub_children.button import (
+    DoubleClickEvent,
     RotationEvent,
     SingleClickEvent,
 )
@@ -12,6 +13,7 @@ import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.event import (
+    EVENT_DOUBLE_CLICK,
     EVENT_ROTATION,
     EVENT_SINGLE_CLICK,
     AdaptivePollingState,
@@ -241,7 +243,7 @@ class TestTapoButtonEvent:
         assert self.entity._attr_name == "Button Event"
 
     def test_event_types(self):
-        assert self.entity._attr_event_types == [EVENT_SINGLE_CLICK]
+        assert self.entity._attr_event_types == [EVENT_SINGLE_CLICK, EVENT_DOUBLE_CLICK]
 
     def test_handle_single_click_event(self):
         self.entity._trigger_event = MagicMock()
@@ -250,6 +252,14 @@ class TestTapoButtonEvent:
         event.__class__ = SingleClickEvent
         self.entity._handle_event(event)
         self.entity._trigger_event.assert_called_once_with(EVENT_SINGLE_CLICK)
+
+    def test_handle_double_click_event(self):
+        self.entity._trigger_event = MagicMock()
+        self.entity.async_write_ha_state = MagicMock()
+        event = MagicMock(spec=DoubleClickEvent)
+        event.__class__ = DoubleClickEvent
+        self.entity._handle_event(event)
+        self.entity._trigger_event.assert_called_once_with(EVENT_DOUBLE_CLICK)
 
     def test_ignores_rotation_event(self):
         self.entity._trigger_event = MagicMock()
@@ -377,6 +387,22 @@ class TestPollAndFireEvents:
         # Same event
         await self.entity._poll_and_fire_events()
         self.entity._trigger_event.assert_not_called()
+
+    async def test_double_click_event_fires(self):
+        event1 = MagicMock(spec=SingleClickEvent)
+        event1.__class__ = SingleClickEvent
+        event1.id = 100
+        self.logs.events = [event1]
+        await self.entity._poll_and_fire_events()
+
+        self.coordinator._event_log_cache["timestamp"] = time.monotonic() - 1.0
+
+        event2 = MagicMock(spec=DoubleClickEvent)
+        event2.__class__ = DoubleClickEvent
+        event2.id = 101
+        self.logs.events = [event2, event1]
+        await self.entity._poll_and_fire_events()
+        self.entity._trigger_event.assert_called_once_with(EVENT_DOUBLE_CLICK)
 
     async def test_empty_events_does_nothing(self):
         self.logs.events = []

@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.components.trigger_log import TriggerLogComponent
 from plugp100.devices.children.trigger_button import TriggerButtonDevice
 from plugp100.models.hub_children.button import (
+    DoubleClickEvent,
     RotationEvent,
     S200BEvent,
     SingleClickEvent,
@@ -241,6 +242,7 @@ def get_hub_event_log_poller(
 
 
 EVENT_SINGLE_CLICK = "single_click"
+EVENT_DOUBLE_CLICK = "double_click"
 EVENT_ROTATION = "rotation"
 
 
@@ -371,7 +373,7 @@ class TapoButtonEvent(_TapoEventBase):
 
     _attr_name = "Button Event"
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = [EVENT_SINGLE_CLICK]
+    _attr_event_types = [EVENT_SINGLE_CLICK, EVENT_DOUBLE_CLICK]
 
     @property
     def unique_id(self):
@@ -380,6 +382,9 @@ class TapoButtonEvent(_TapoEventBase):
     def _handle_event(self, event: S200BEvent) -> None:
         if isinstance(event, SingleClickEvent):
             self._trigger_event(EVENT_SINGLE_CLICK)
+            self.async_write_ha_state()
+        elif isinstance(event, DoubleClickEvent):
+            self._trigger_event(EVENT_DOUBLE_CLICK)
             self.async_write_ha_state()
 
 
