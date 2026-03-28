@@ -1,7 +1,8 @@
 import asyncio
+from dataclasses import dataclass
 import logging
 import time
-from typing import cast
+from typing import Callable, cast
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 # Cache validity window — within the same update cycle, all entities
 # reuse the same event log fetch instead of hitting the hub 3 times.
 _CACHE_VALIDITY_S = 0.2
+
+
+@dataclass
+class EventLogPollResult:
+    logs: object
+    latency_ms: float
+
+
+EventLogListener = Callable[[EventLogPollResult | None], None]
 
 
 def _get_hub_lock(hass, entry_id):
@@ -88,6 +98,75 @@ async def _do_fetch(coordinator, device, page_size):
     return logs, latency_ms
 
 
+class HubEventLogPoller:
+    """Shared event-log poller for a trigger-button coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TapoDataCoordinator,
+        device: TriggerButtonDevice,
+        entry_id: str | None,
+    ) -> None:
+        self._hass = hass
+        self._coordinator = coordinator
+        self._device = device
+        self._entry_id = entry_id
+        self._listeners: set[EventLogListener] = set()
+        self._task: asyncio.Task | None = None
+        self._last_result: EventLogPollResult | None = None
+
+    @property
+    def last_result(self) -> EventLogPollResult | None:
+        return self._last_result
+
+    @callback
+    def add_listener(self, listener: EventLogListener) -> Callable[[], None]:
+        self._listeners.add(listener)
+
+        def _remove_listener() -> None:
+            self._listeners.discard(listener)
+
+        return _remove_listener
+
+    @callback
+    def schedule_refresh(self) -> None:
+        if self._task and not self._task.done():
+            return
+        self._task = self._hass.async_create_task(self._async_refresh())
+
+    async def _async_refresh(self) -> None:
+        result: EventLogPollResult | None = None
+        try:
+            logs, latency_ms = await fetch_event_logs(
+                self._coordinator,
+                self._device,
+                hass=self._hass,
+                entry_id=self._entry_id,
+            )
+            result = EventLogPollResult(logs=logs, latency_ms=latency_ms)
+        except Exception:
+            _LOGGER.debug("Failed to fetch event logs for %s", self._device.device_id)
+
+        self._last_result = result
+        for listener in tuple(self._listeners):
+            listener(result)
+
+
+def get_hub_event_log_poller(
+    hass: HomeAssistant,
+    coordinator: TapoDataCoordinator,
+    device: TriggerButtonDevice,
+    entry_id: str | None,
+) -> HubEventLogPoller:
+    """Get or create the shared event-log poller for a child coordinator."""
+    poller = getattr(coordinator, "_hub_event_log_poller", None)
+    if poller is None:
+        poller = HubEventLogPoller(hass, coordinator, device, entry_id)
+        coordinator._hub_event_log_poller = poller
+    return poller
+
+
 EVENT_SINGLE_CLICK = "single_click"
 EVENT_ROTATION = "rotation"
 
@@ -124,9 +203,19 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
         self._device: TriggerButtonDevice = device
         self._last_event_id: int | None = None
         self._ha_started: bool = False
+        self._event_log_poller: HubEventLogPoller | None = None
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        self._event_log_poller = get_hub_event_log_poller(
+            self.hass,
+            self.coordinator,
+            self._device,
+            getattr(self.coordinator, "_hub_entry_id", None),
+        )
+        self.async_on_remove(
+            self._event_log_poller.add_listener(self._handle_event_log_result)
+        )
         if self.hass.state is CoreState.running:
             self._ha_started = True
         else:
@@ -142,8 +231,21 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         if not self._ha_started:
             return
-        self.hass.async_create_task(self._poll_and_fire_events())
+        if self._event_log_poller is None:
+            self._event_log_poller = get_hub_event_log_poller(
+                self.hass,
+                self.coordinator,
+                self._device,
+                getattr(self.coordinator, "_hub_entry_id", None),
+            )
+        self._event_log_poller.schedule_refresh()
         self.async_write_ha_state()
+
+    @callback
+    def _handle_event_log_result(self, result: EventLogPollResult | None) -> None:
+        if result is None:
+            return
+        self._process_logs(result.logs)
 
     async def _poll_and_fire_events(self) -> None:
         try:
@@ -155,6 +257,12 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
             )
         except Exception:
             _LOGGER.debug("Failed to fetch event logs for %s", self._device.device_id)
+            return
+
+        self._process_logs(logs)
+
+    def _process_logs(self, logs) -> None:
+        if not self._ha_started:
             return
 
         if not logs.events:

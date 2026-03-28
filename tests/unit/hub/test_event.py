@@ -14,6 +14,7 @@ from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.event import (
     EVENT_ROTATION,
     EVENT_SINGLE_CLICK,
+    HubEventLogPoller,
     TapoButtonEvent,
     TapoDialEvent,
     _do_fetch,
@@ -129,6 +130,50 @@ class TestDoFetch:
         # Should return cached result without calling device
         self.device.get_event_logs.assert_not_called()
         assert latency == 50.0
+
+
+class TestHubEventLogPoller:
+    @pytest.fixture(autouse=True)
+    def init_data(self):
+        self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator._event_log_cache = None
+        self.coordinator._hub_entry_id = "entry_1"
+        self.device, self.logs = _mock_trigger_device()
+        self.hass = MagicMock()
+        self.hass.data = {}
+        self.pending_task = None
+
+        def _create_task(coro):
+            self.pending_task = asyncio.create_task(coro)
+            return self.pending_task
+
+        self.hass.async_create_task = MagicMock(side_effect=_create_task)
+        self.poller = HubEventLogPoller(
+            self.hass, self.coordinator, self.device, "entry_1"
+        )
+
+    async def test_schedule_refresh_deduplicates_inflight_work(self):
+        self.poller.schedule_refresh()
+        self.poller.schedule_refresh()
+
+        assert self.hass.async_create_task.call_count == 1
+        await self.pending_task
+        self.device.get_event_logs.assert_called_once()
+
+    async def test_schedule_refresh_notifies_all_listeners(self):
+        first_listener = MagicMock()
+        second_listener = MagicMock()
+        self.poller.add_listener(first_listener)
+        self.poller.add_listener(second_listener)
+
+        self.poller.schedule_refresh()
+        await self.pending_task
+
+        first_listener.assert_called_once()
+        second_listener.assert_called_once()
+        result = first_listener.call_args.args[0]
+        assert result.logs is self.logs
+        assert result.latency_ms >= 0
 
 
 class TestTapoButtonEvent:

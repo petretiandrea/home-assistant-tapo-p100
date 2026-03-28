@@ -30,7 +30,11 @@ from plugp100.models.temperature import TemperatureUnit
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
-from custom_components.tapo.hub.event import fetch_event_logs
+from custom_components.tapo.hub.event import (
+    EventLogPollResult,
+    fetch_event_logs,
+    get_hub_event_log_poller,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,9 +237,19 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
         self._computed_interval_ms: float | None = None
         self._cycles_since_change: int = 0
         self._ha_started: bool = False
+        self._event_log_poller = None
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        self._event_log_poller = get_hub_event_log_poller(
+            self.hass,
+            self.coordinator,
+            self._device,
+            getattr(self.coordinator, "_hub_entry_id", None),
+        )
+        self.async_on_remove(
+            self._event_log_poller.add_listener(self._handle_event_log_result)
+        )
         if self.hass.state is CoreState.running:
             self._ha_started = True
         else:
@@ -292,12 +306,31 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not self._ha_started:
+        if not self._ha_started or not self.enabled:
             return
-        self.hass.async_create_task(self._measure_latency())
+        if self._event_log_poller is None:
+            self._event_log_poller = get_hub_event_log_poller(
+                self.hass,
+                self.coordinator,
+                self._device,
+                getattr(self.coordinator, "_hub_entry_id", None),
+            )
+        self._event_log_poller.schedule_refresh()
         self.async_write_ha_state()
 
+    @callback
+    def _handle_event_log_result(self, result: EventLogPollResult | None) -> None:
+        if not self.enabled:
+            return
+        if result is None:
+            self._latency_ms = None
+            self.async_write_ha_state()
+            return
+        self._apply_latency_sample(result.latency_ms)
+
     async def _measure_latency(self) -> None:
+        if not self.enabled:
+            return
         try:
             _, latency_ms = await fetch_event_logs(
                 self.coordinator,
@@ -305,11 +338,15 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
                 hass=self.hass,
                 entry_id=getattr(self.coordinator, "_hub_entry_id", None),
             )
-            self._latency_ms = round(latency_ms, 1)
         except Exception:
             self._latency_ms = None
             self.async_write_ha_state()
             return
+
+        self._apply_latency_sample(latency_ms)
+
+    def _apply_latency_sample(self, latency_ms: float) -> None:
+        self._latency_ms = round(latency_ms, 1)
 
         # Bootstrap
         if self._ema_ms is None:

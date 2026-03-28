@@ -187,6 +187,15 @@ class TestPollLatencySensorStartupDeferral:
         self.sensor._handle_coordinator_update()
         self.sensor.hass.async_create_task.assert_called_once()
 
+    def test_handle_coordinator_update_skips_when_disabled(self):
+        self.sensor._ha_started = True
+        self.sensor.hass = MagicMock()
+        self.sensor.async_write_ha_state = MagicMock()
+        self.sensor.registry_entry = MagicMock(disabled=True)
+        self.sensor._handle_coordinator_update()
+        self.sensor.hass.async_create_task.assert_not_called()
+        self.sensor.async_write_ha_state.assert_not_called()
+
     def test_on_ha_started_callback(self):
         self.sensor._on_ha_started(None)
         assert self.sensor._ha_started is True
