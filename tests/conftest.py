@@ -12,6 +12,7 @@ from homeassistant.setup import async_setup_component
 from plugp100.api.light_effect_preset import LightEffectPreset
 from plugp100.common.functional.tri import Success, Try
 from plugp100.components.energy import EnergyComponent
+from plugp100.components.light import LightComponent as PlugLightComponent
 from plugp100.components.light_effect import LightEffectComponent
 from plugp100.components.overheat import OverheatComponent
 from plugp100.devices.base import TapoDevice
@@ -32,11 +33,6 @@ pytest_plugins = ("pytest_homeassistant_custom_component",)
 class HS:
     hue: float
     saturation: float
-
-
-class LightComponent:
-    def __init__(self, *_args, **_kwargs) -> None:
-        pass
 
 
 class AlarmTypeList(list):
@@ -210,6 +206,10 @@ def mock_bulb(is_color: bool = True) -> MagicMock:
     device.set_light_effect = AsyncMock(return_value=Try.of(True))
     device.set_light_effect_brightness = AsyncMock(return_value=Try.of(True))
     device.__class__ = TapoBulb
+    light_component = MagicMock(PlugLightComponent(MagicMock()), name="Light component")
+    light_component.update = AsyncMock(return_value=None)
+    light_component._client.set_device_info = AsyncMock(return_value=Try.of(True))
+    device.add_component(light_component)
 
     return device
 
@@ -236,8 +236,9 @@ def mock_led_strip() -> MagicMock:
     device.set_light_effect_brightness = AsyncMock(return_value=Try.of(True))
     device.__class__ = TapoBulb
 
-    light_component = MagicMock(LightComponent(MagicMock()), name="Light component")
+    light_component = MagicMock(PlugLightComponent(MagicMock()), name="Light component")
     light_component.update = AsyncMock(return_value=None)
+    light_component._client.set_device_info = AsyncMock(return_value=Try.of(True))
     effect_component = MagicMock(
         LightEffectComponent(MagicMock()), name="Light effect component"
     )

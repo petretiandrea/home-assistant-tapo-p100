@@ -20,6 +20,10 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from plugp100.api.light_effect_preset import LightEffectPreset
+from plugp100.api.requests.set_device_info.set_light_color_info_params import (
+    LightColorDeviceInfoParams,
+)
+from plugp100.components.light import LightComponent
 import pytest
 
 from .conftest import extract_entity_id, mock_bulb, mock_led_strip, setup_platform
@@ -78,6 +82,20 @@ async def test_light_color_service_call(hass: HomeAssistant, tapo_device: MagicM
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (50, 10)},
         blocking=True,
+    )
+    tapo_device.set_hue_saturation.assert_called_with(50, 10)
+    light_component = tapo_device.get_component(LightComponent)
+    light_component._client.set_device_info.assert_not_called()
+    tapo_device.set_color_temperature.assert_not_called()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (50, 0)},
+        blocking=True,
+    )
+    light_component._client.set_device_info.assert_called_with(
+        LightColorDeviceInfoParams(hue=50, saturation=0)
     )
     tapo_device.set_hue_saturation.assert_called_with(50, 10)
     tapo_device.set_color_temperature.assert_not_called()
@@ -149,6 +167,8 @@ async def test_light_turn_on_with_attributes(
     )
     assert tapo_device.turn_on.called
     tapo_device.set_hue_saturation.assert_called_with(30, 10)
+    light_component = tapo_device.get_component(LightComponent)
+    light_component._client.set_device_info.assert_not_called()
     tapo_device.set_brightness.assert_called_with(12)
 
 
