@@ -104,6 +104,10 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
         )
 
     @property
+    def color_temp_kelvin(self):
+        return self.device.color_temp
+
+    @property
     def effect(self) -> Optional[str]:
         if effect := self.device.effect:
             if effect.enable:

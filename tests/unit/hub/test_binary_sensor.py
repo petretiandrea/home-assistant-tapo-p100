@@ -1,7 +1,7 @@
-from plugp100.new.components.battery_component import BatteryComponent
-from plugp100.new.components.motion_sensor_component import MotionSensorComponent
-from plugp100.new.components.smart_door_component import SmartDoorComponent
-from plugp100.new.components.water_leak_component import WaterLeakComponent
+from plugp100.components.battery import BatteryComponent
+from plugp100.components.motion_sensor import MotionSensorComponent
+from plugp100.components.smart_door import SmartDoorComponent
+from plugp100.components.water_leak import WaterLeakComponent
 
 from custom_components.tapo.hub.binary_sensor import COMPONENT_MAPPING
 

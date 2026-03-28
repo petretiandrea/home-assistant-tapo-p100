@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 from homeassistant.components.switch import SwitchDeviceClass
 from plugp100.common.functional.tri import Try
-from plugp100.new.child.tapohubchildren import KE100Device
+from plugp100.devices.children.trv import KE100Device
 import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator

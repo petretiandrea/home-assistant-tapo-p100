@@ -1,32 +1,64 @@
 """Global fixtures for tapo integration."""
 
+from dataclasses import dataclass
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from plugp100.api.light_effect_preset import LightEffectPreset
 from plugp100.common.functional.tri import Success, Try
-from plugp100.discovery.discovered_device import DiscoveredDevice
-from plugp100.new.child.tapostripsocket import TapoStripSocket
-from plugp100.new.components.energy_component import EnergyComponent
-from plugp100.new.components.light_component import HS, LightComponent
-from plugp100.new.components.light_effect_component import LightEffectComponent
-from plugp100.new.components.overheat_component import OverheatComponent
-from plugp100.new.tapobulb import TapoBulb
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.new.tapohub import TapoHub
-from plugp100.new.tapoplug import TapoPlug
-from plugp100.responses.alarm_type_list import AlarmTypeList
-from plugp100.responses.components import Components
+from plugp100.components.energy import EnergyComponent
+from plugp100.components.light_effect import LightEffectComponent
+from plugp100.components.overheat import OverheatComponent
+from plugp100.devices.base import TapoDevice
+from plugp100.devices.bulb import TapoBulb
+from plugp100.devices.children.strip_socket import TapoStripSocket
+from plugp100.devices.hub import TapoHub
+from plugp100.devices.plug import TapoPlug
+from plugp100.discovery import DiscoveredDevice
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, load_fixture
 
 from custom_components.tapo.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)
+
+
+@dataclass
+class HS:
+    hue: float
+    saturation: float
+
+
+class LightComponent:
+    def __init__(self, *_args, **_kwargs) -> None:
+        pass
+
+
+class AlarmTypeList(list):
+    @property
+    def tones(self):
+        return list(self)
+
+
+class Components:
+    def __init__(self, component_list: list[dict[str, int]]) -> None:
+        self.component_list = [component["id"] for component in component_list]
+        self._versions = {
+            component["id"]: component["ver_code"] for component in component_list
+        }
+
+    def get_version(self, component: str) -> int:
+        return self._versions[component]
+
+    @classmethod
+    def try_from_json(cls, payload: dict[str, list[dict[str, int]]]) -> "Components":
+        return cls(payload["component_list"])
+
 
 IP_ADDRESS = "1.2.3.4"
 MAC_ADDRESS = "1a:22:33:b4:c5:66"
@@ -42,30 +74,33 @@ def expected_lingering_tasks() -> bool:
     return True
 
 
+@pytest.fixture(autouse=True)
+def disable_background_discovery():
+    with patch(
+        "custom_components.tapo.discovery_tapo_devices",
+        AsyncMock(return_value={}),
+    ):
+        yield
+
+
 @pytest.fixture()
 def mock_discovery():
     discovered_device = mock_discovered_device()
     device = _mock_base_device(MagicMock(auto_spec=TapoDevice))
     with patch(
-        "custom_components.tapo.discovery_tapo_devices",
-        AsyncMock(return_value={device.mac: discovered_device}),
+        "custom_components.tapo.config_flow.connect_discovered_device",
+        AsyncMock(return_value=device),
     ):
-        with patch.object(
-            discovered_device,
-            "get_tapo_device",
-            side_effect=AsyncMock(return_value=device),
+        with patch(
+            "custom_components.tapo.hass_tapo.connect_discovered_device",
+            AsyncMock(return_value=device),
         ):
-            with patch(
-                "plugp100.discovery.discovered_device.DiscoveredDevice.get_tapo_device",
-                side_effect=AsyncMock(return_value=device),
-            ):
-                yield discovered_device
+            yield discovered_device
 
 
 async def setup_platform(
     hass: HomeAssistant, device: TapoDevice, platforms: list[str]
 ) -> MockConfigEntry:
-    hass.config.components.add(DOMAIN)
     await device.update()
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -79,19 +114,35 @@ async def setup_platform(
         unique_id=dr.format_mac(device.mac),
     )
     config_entry.add_to_hass(hass)
+
+    original_forward = hass.config_entries.async_forward_entry_setups
+
+    async def _forward_only_requested(
+        entry: ConfigEntry, _platforms: list[str]
+    ) -> bool:
+        return await original_forward(entry, platforms)
+
     with patch(
         "custom_components.tapo.hass_tapo.connect", AsyncMock(return_value=device)
     ):
-        with patch.object(hass.config_entries, "async_forward_entry_setup"):
-            assert await hass.config_entries.async_setup(config_entry.entry_id) is True
-            assert await async_setup_component(hass, DOMAIN, {}) is True
-            await hass.async_block_till_done()
-
-    for platform in platforms:
-        assert await hass.config_entries.async_forward_entry_setup(
-            config_entry, platform
-        )
-    await hass.async_block_till_done()
+        with patch(
+            "custom_components.tapo.discovery_tapo_devices",
+            AsyncMock(return_value={}),
+        ):
+            with patch.object(
+                hass.config_entries,
+                "async_forward_entry_setups",
+                side_effect=_forward_only_requested,
+            ):
+                assert (
+                    await async_setup_component(
+                        hass,
+                        DOMAIN,
+                        {DOMAIN: {"discovery": False}},
+                    )
+                    is True
+                )
+                await hass.async_block_till_done()
 
     return config_entry
 

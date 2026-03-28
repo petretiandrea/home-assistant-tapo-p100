@@ -3,8 +3,8 @@ import time
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from plugp100.common.functional.tri import Success
-from plugp100.new.child.tapohubchildren import TriggerButtonDevice
-from plugp100.responses.hub_childs.s200b_device_state import (
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
+from plugp100.models.hub_children.button import (
     RotationEvent,
     SingleClickEvent,
 )

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
@@ -6,8 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from plugp100.discovery.discovered_device import DiscoveredDevice
-from plugp100.new.tapodevice import TapoDevice
+from plugp100.discovery import DiscoveredDevice
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.tapo import (
@@ -42,7 +41,6 @@ async def test_discovery_auth(
     assert result["type"] == "form"
     assert result["step_id"] == STEP_DISCOVERY_REQUIRE_AUTH
 
-    mock_discovery.get_tapo_device = AsyncMock(return_value=MagicMock(TapoDevice))
     auth_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -92,7 +90,9 @@ async def test_discovery_ip_change_dhcp(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=DhcpServiceInfo(
-                ip="127.0.0.2", macaddress=MAC_ADDRESS, hostname="hostname"
+                ip="127.0.0.2",
+                macaddress=MAC_ADDRESS.replace(":", ""),
+                hostname="hostname",
             ),
         )
         assert discovery_result["type"] is FlowResultType.ABORT

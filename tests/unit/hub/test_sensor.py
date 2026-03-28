@@ -4,11 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from plugp100.common.functional.tri import Success
-from plugp100.new.child.tapohubchildren import TapoHubChildDevice, TriggerButtonDevice
-from plugp100.new.components.battery_component import BatteryComponent
-from plugp100.new.components.humidity_component import HumidityComponent
-from plugp100.new.components.report_mode_component import ReportModeComponent
-from plugp100.new.components.temperature_component import TemperatureComponent
+from plugp100.components.battery import BatteryComponent
+from plugp100.components.humidity import HumidityComponent
+from plugp100.components.report_mode import ReportModeComponent
+from plugp100.components.temperature import TemperatureComponent
+from plugp100.devices.base import TapoDevice
+from plugp100.devices.children.trigger_button import TriggerButtonDevice
 import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
@@ -48,7 +49,7 @@ class TestBatteryLevelSensor:
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device = _mock_battery_component(
-            _mock_hub_child_device(MagicMock(auto_spec=TapoHubChildDevice))
+            _mock_hub_child_device(MagicMock(auto_spec=TapoDevice))
         )
         self.battery_sensor = BatteryLevelSensor(
             coordinator=self.coordinator, device=self.device
