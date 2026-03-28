@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 import time
 from typing import Callable, cast
@@ -32,6 +33,15 @@ _CACHE_VALIDITY_S = 0.2
 class EventLogPollResult:
     logs: object
     latency_ms: float
+
+
+@dataclass
+class AdaptivePollingState:
+    latency_ms: float | None = None
+    ema_ms: float | None = None
+    ema_jitter_ms: float | None = None
+    computed_interval_ms: float | None = None
+    cycles_since_change: int = 0
 
 
 EventLogListener = Callable[[EventLogPollResult | None], None]
@@ -101,6 +111,14 @@ async def _do_fetch(coordinator, device, page_size):
 class HubEventLogPoller:
     """Shared event-log poller for a trigger-button coordinator."""
 
+    EMA_ALPHA = 0.3
+    DEFAULT_U_MAX = 0.35
+    JITTER_WEIGHT = 2.0
+    MIN_INTERVAL_MS = 300
+    MAX_INTERVAL_MS = 5000
+    HYSTERESIS_PCT = 0.15
+    COOLDOWN_CYCLES = 5
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -115,10 +133,16 @@ class HubEventLogPoller:
         self._listeners: set[EventLogListener] = set()
         self._task: asyncio.Task | None = None
         self._last_result: EventLogPollResult | None = None
+        self._adaptive_state = AdaptivePollingState()
+        self._coordinator._adaptive_polling_state = self._adaptive_state
 
     @property
     def last_result(self) -> EventLogPollResult | None:
         return self._last_result
+
+    @property
+    def adaptive_state(self) -> AdaptivePollingState:
+        return self._adaptive_state
 
     @callback
     def add_listener(self, listener: EventLogListener) -> Callable[[], None]:
@@ -145,12 +169,61 @@ class HubEventLogPoller:
                 entry_id=self._entry_id,
             )
             result = EventLogPollResult(logs=logs, latency_ms=latency_ms)
+            self._apply_latency_sample(latency_ms)
         except Exception:
+            self._adaptive_state.latency_ms = None
             _LOGGER.debug("Failed to fetch event logs for %s", self._device.device_id)
 
         self._last_result = result
         for listener in tuple(self._listeners):
             listener(result)
+
+    @property
+    def _u_max(self) -> float:
+        pct = getattr(self._coordinator, "_poll_utilization_pct", None)
+        if pct is not None:
+            return pct / 100.0
+        return self.DEFAULT_U_MAX
+
+    def _apply_latency_sample(self, latency_ms: float) -> None:
+        state = self._adaptive_state
+        state.latency_ms = round(latency_ms, 1)
+
+        if state.ema_ms is None:
+            state.ema_ms = latency_ms
+            state.ema_jitter_ms = 0.0
+            state.computed_interval_ms = max(
+                self.MIN_INTERVAL_MS, latency_ms / self._u_max
+            )
+            self._coordinator.update_interval = timedelta(
+                milliseconds=state.computed_interval_ms
+            )
+            return
+
+        state.ema_ms = self.EMA_ALPHA * latency_ms + (1 - self.EMA_ALPHA) * state.ema_ms
+        jitter = abs(latency_ms - state.ema_ms)
+        state.ema_jitter_ms = (
+            self.EMA_ALPHA * jitter + (1 - self.EMA_ALPHA) * state.ema_jitter_ms
+        )
+
+        effective_latency = state.ema_ms + self.JITTER_WEIGHT * state.ema_jitter_ms
+        target = effective_latency / self._u_max
+        target = max(self.MIN_INTERVAL_MS, min(self.MAX_INTERVAL_MS, target))
+
+        state.cycles_since_change += 1
+        pct_change = (
+            abs(target - state.computed_interval_ms) / state.computed_interval_ms
+        )
+        if (
+            pct_change > self.HYSTERESIS_PCT
+            and state.cycles_since_change >= self.COOLDOWN_CYCLES
+        ):
+            state.computed_interval_ms = target
+            state.cycles_since_change = 0
+
+        self._coordinator.update_interval = timedelta(
+            milliseconds=state.computed_interval_ms
+        )
 
 
 def get_hub_event_log_poller(

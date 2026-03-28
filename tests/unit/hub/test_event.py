@@ -14,6 +14,7 @@ from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.event import (
     EVENT_ROTATION,
     EVENT_SINGLE_CLICK,
+    AdaptivePollingState,
     HubEventLogPoller,
     TapoButtonEvent,
     TapoDialEvent,
@@ -174,6 +175,56 @@ class TestHubEventLogPoller:
         result = first_listener.call_args.args[0]
         assert result.logs is self.logs
         assert result.latency_ms >= 0
+
+    async def test_schedule_refresh_updates_shared_adaptive_state(self):
+        self.poller.schedule_refresh()
+        await self.pending_task
+
+        state = self.coordinator._adaptive_polling_state
+        assert isinstance(state, AdaptivePollingState)
+        assert state.latency_ms is not None
+        assert state.ema_ms is not None
+        assert state.ema_jitter_ms == 0.0
+        assert state.computed_interval_ms >= HubEventLogPoller.MIN_INTERVAL_MS
+
+    def test_apply_latency_sample_uses_poll_utilization_from_coordinator(self):
+        self.coordinator._poll_utilization_pct = 50
+        self.poller._apply_latency_sample(120.0)
+
+        state = self.poller.adaptive_state
+        assert state.computed_interval_ms == HubEventLogPoller.MIN_INTERVAL_MS
+
+    def test_apply_latency_sample_changes_interval_after_cooldown(self):
+        self.poller._adaptive_state = AdaptivePollingState(
+            latency_ms=80.0,
+            ema_ms=200.0,
+            ema_jitter_ms=50.0,
+            computed_interval_ms=500.0,
+            cycles_since_change=HubEventLogPoller.COOLDOWN_CYCLES,
+        )
+        self.coordinator._adaptive_polling_state = self.poller._adaptive_state
+
+        self.poller._apply_latency_sample(500.0)
+
+        assert self.poller.adaptive_state.cycles_since_change == 0
+        assert self.poller.adaptive_state.computed_interval_ms != 500.0
+
+    def test_apply_latency_sample_clamps_interval_bounds(self):
+        self.poller._adaptive_state = AdaptivePollingState(
+            latency_ms=80.0,
+            ema_ms=2000.0,
+            ema_jitter_ms=500.0,
+            computed_interval_ms=300.0,
+            cycles_since_change=HubEventLogPoller.COOLDOWN_CYCLES,
+        )
+        self.coordinator._adaptive_polling_state = self.poller._adaptive_state
+
+        self.poller._apply_latency_sample(2500.0)
+
+        assert (
+            self.poller.adaptive_state.computed_interval_ms
+            <= HubEventLogPoller.MAX_INTERVAL_MS
+        )
 
 
 class TestTapoButtonEvent:
