@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# script/type-check: Run type checking tools
+#
+# Runs Pyright type checker to validate type annotations and catch type-related
+# issues. Uses 'basic' type checking mode.
+#
+# Usage:
+#   ./script/type-check
+#
+# Examples:
+#   ./script/type-check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    log_header "Activating virtual environment"
+    # shellcheck source=/dev/null
+    if [[ -f "$PWD/.local/ha-venv/bin/activate" ]]; then
+        source "$PWD/.local/ha-venv/bin/activate"
+    elif [[ -f "$HOME/.local/ha-venv/bin/activate" ]]; then
+        source "$HOME/.local/ha-venv/bin/activate"
+    else
+        log_error "Virtual environment not found in $PWD/.local/ha-venv or $HOME/.local/ha-venv"
+        exit 1
+    fi
+fi
+
+log_header "Running type checking tools"
+
+pyright
+
+log_success "Type checking completed"

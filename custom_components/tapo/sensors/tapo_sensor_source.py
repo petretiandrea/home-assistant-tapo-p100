@@ -1,6 +1,7 @@
+from homeassistant.helpers.typing import StateType
+
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.sensors.sensor_config import SensorConfig
-from homeassistant.helpers.typing import StateType
 
 
 class TapoSensorSource:

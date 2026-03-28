@@ -1,16 +1,16 @@
 from math import floor
-from typing import Optional
-from typing import cast
+from typing import Optional, cast
 
-from homeassistant.components.siren import ATTR_TONE
-from homeassistant.components.siren import ATTR_VOLUME_LEVEL
-from homeassistant.components.siren import SirenEntity
-from homeassistant.components.siren import SirenEntityFeature
+from homeassistant.components.siren import (
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+    SirenEntity,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.api.requests.set_device_info.play_alarm_params import PlayAlarmParams
-from plugp100.components.alarm import AlarmComponent
 from plugp100.devices.hub import TapoHub
 
 from custom_components.tapo.const import DOMAIN
@@ -25,11 +25,11 @@ async def async_setup_entry(
     if isinstance(data.device, TapoHub):
         if data.device.has_alarm:
             available_tones = (
-                (await data.device.get_supported_alarm_tones())
-                .get_or_raise()
-                .tones
+                (await data.device.get_supported_alarm_tones()).get_or_raise().tones
             )
-            async_add_devices([HubSiren(data.coordinator, data.device, available_tones)], True)
+            async_add_devices(
+                [HubSiren(data.coordinator, data.device, available_tones)], True
+            )
 
 
 class HubSiren(CoordinatedTapoEntity, SirenEntity):

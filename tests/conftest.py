@@ -1,17 +1,14 @@
 """Global fixtures for tapo integration."""
-import json
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
-import pytest
+import json
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from plugp100.api.light_effect_preset import LightEffectPreset
-from plugp100.common.functional.tri import Success
-from plugp100.common.functional.tri import Try
+from plugp100.common.functional.tri import Success, Try
 from plugp100.discovery.discovered_device import DiscoveredDevice
 from plugp100.new.child.tapostripsocket import TapoStripSocket
 from plugp100.new.components.energy_component import EnergyComponent
@@ -24,13 +21,10 @@ from plugp100.new.tapohub import TapoHub
 from plugp100.new.tapoplug import TapoPlug
 from plugp100.responses.alarm_type_list import AlarmTypeList
 from plugp100.responses.components import Components
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.common import load_fixture
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry, load_fixture
 
-from custom_components.tapo.const import CONF_HOST
-from custom_components.tapo.const import CONF_PASSWORD
-from custom_components.tapo.const import CONF_USERNAME
-from custom_components.tapo.const import DOMAIN
+from custom_components.tapo.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)
 
@@ -61,8 +55,12 @@ def mock_discovery():
             "get_tapo_device",
             side_effect=AsyncMock(return_value=device),
         ):
-            with patch("plugp100.discovery.discovered_device.DiscoveredDevice.get_tapo_device", side_effect=AsyncMock(return_value=device)):
+            with patch(
+                "plugp100.discovery.discovered_device.DiscoveredDevice.get_tapo_device",
+                side_effect=AsyncMock(return_value=device),
+            ):
                 yield discovered_device
+
 
 async def setup_platform(
     hass: HomeAssistant, device: TapoDevice, platforms: list[str]
@@ -85,9 +83,7 @@ async def setup_platform(
         "custom_components.tapo.hass_tapo.connect", AsyncMock(return_value=device)
     ):
         with patch.object(hass.config_entries, "async_forward_entry_setup"):
-            assert (
-                await hass.config_entries.async_setup(config_entry.entry_id) is True
-            )
+            assert await hass.config_entries.async_setup(config_entry.entry_id) is True
             assert await async_setup_component(hass, DOMAIN, {}) is True
             await hass.async_block_till_done()
 
@@ -102,6 +98,7 @@ async def setup_platform(
 
 def mock_discovered_device() -> DiscoveredDevice:
     return DiscoveredDevice.from_dict(json.loads(load_fixture("discovery.json")))
+
 
 def mock_plug(with_emeter: bool = False) -> MagicMock:
     device = _mock_base_device(MagicMock(auto_spec=TapoPlug, name="Mocked plug device"))
@@ -142,7 +139,9 @@ def mock_hub(with_children: bool = False) -> MagicMock:
 
 
 def mock_bulb(is_color: bool = True) -> MagicMock:
-    device = _mock_base_device(MagicMock(TapoBulb("", 80, MagicMock()), name="Mocked bulb device"))
+    device = _mock_base_device(
+        MagicMock(TapoBulb("", 80, MagicMock()), name="Mocked bulb device")
+    )
     device.is_color = is_color
     device.is_color_temperature = True
     device.is_led_strip = False
@@ -165,7 +164,9 @@ def mock_bulb(is_color: bool = True) -> MagicMock:
 
 
 def mock_led_strip() -> MagicMock:
-    device = _mock_base_device(MagicMock(auto_spec=TapoBulb, name="Mocked led strip device"))
+    device = _mock_base_device(
+        MagicMock(auto_spec=TapoBulb, name="Mocked led strip device")
+    )
     device.is_color = True
     device.is_color_temperature = True
     device.is_led_strip = True
@@ -186,7 +187,9 @@ def mock_led_strip() -> MagicMock:
 
     light_component = MagicMock(LightComponent(MagicMock()), name="Light component")
     light_component.update = AsyncMock(return_value=None)
-    effect_component = MagicMock(LightEffectComponent(MagicMock()), name = "Light effect component")
+    effect_component = MagicMock(
+        LightEffectComponent(MagicMock()), name="Light effect component"
+    )
     effect_component.update = AsyncMock(return_value=None)
     device.add_component(light_component)
     device.add_component(effect_component)
@@ -199,6 +202,7 @@ def _mock_overheat(device) -> MagicMock:
     overheat.overheated = False
     device.add_component(overheat)
     return device
+
 
 async def extract_entity_id(device: TapoDevice, platform: str, postfix: str = ""):
     nickname = device.nickname
@@ -218,7 +222,9 @@ def exclude_components(components: Components, to_exclude: list[str]) -> Compone
 
 
 def mock_plug_strip() -> MagicMock:
-    device = _mock_base_device(MagicMock(auto_spec=TapoPlug, name="Mocked plug strip device"))
+    device = _mock_base_device(
+        MagicMock(auto_spec=TapoPlug, name="Mocked plug strip device")
+    )
     device.turn_on = AsyncMock(return_value=Success(True))
     device.turn_off = AsyncMock(return_value=Success(True))
     device.is_on = True
@@ -229,7 +235,9 @@ def mock_plug_strip() -> MagicMock:
 
     sockets = []
     for i in range(0, 3):
-        sock = _mock_base_device(MagicMock(auto_spec=TapoStripSocket, name=f"Mocked socket {i}"))
+        sock = _mock_base_device(
+            MagicMock(auto_spec=TapoStripSocket, name=f"Mocked socket {i}")
+        )
         sock.is_on = True
         sock.turn_on = AsyncMock(return_value=Success(True))
         sock.turn_off = AsyncMock(return_value=Success(True))
@@ -241,6 +249,7 @@ def mock_plug_strip() -> MagicMock:
     device.sockets = sockets
 
     return device
+
 
 def _mock_base_device(device: MagicMock) -> MagicMock:
     device.host = "1.2.3.4"
@@ -260,15 +269,16 @@ def _mock_base_device(device: MagicMock) -> MagicMock:
     device.has_component = MagicMock(side_effect=device.registry.has_component)
     return _mock_overheat(device)
 
+
 def _mock_hub_child_device(device: MagicMock) -> MagicMock:
     device = _mock_base_device(device)
     device.parent_device_id = "parent_123"
     return device
 
-class MockComponentsRegistry:
 
+class MockComponentsRegistry:
     def __init__(self):
-        self._cs =[]
+        self._cs = []
 
     def add_component(self, c: MagicMock):
         self._cs.append(c)

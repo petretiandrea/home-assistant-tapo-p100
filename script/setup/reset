@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# script/reset: Reset development environment to fresh state
+#
+# Removes all HA-generated files in config/ directory (keeps configuration.yaml by default)
+# and re-runs complete setup (dependencies, HACS, symlinks).
+# Use --full to also reset configuration.yaml from git.
+#
+# Usage:
+#   ./script/setup/reset [--full]
+#
+# Examples:
+#   ./script/setup/reset        # Keep configuration.yaml (your local settings)
+#   ./script/setup/reset --full # Also reset configuration.yaml from git
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+FULL_RESET=false
+
+if [[ ${1:-} == --full ]]; then
+    FULL_RESET=true
+fi
+
+log_header "Resetting development environment to fresh state"
+
+# Check if config directory exists
+if [[ ! -d config ]]; then
+    log_error "config/ directory does not exist"
+    exit 1
+fi
+
+# Confirm destructive action
+echo ""
+log_warning "This will DELETE files in config/ directory!"
+if [[ $FULL_RESET == true ]]; then
+    log_step "Mode: ${BOLD}FULL RESET${NC} - All files including configuration.yaml"
+    log_step "Deleting: .storage/, custom_components/, logs, .HA_VERSION, configuration.yaml, etc."
+    log_step "Then restore: configuration.yaml from git"
+else
+    log_step "Mode: ${BOLD}STANDARD RESET${NC} - Keep configuration.yaml"
+    log_step "Deleting: .storage/, custom_components/, logs, .HA_VERSION, etc."
+    log_step "Keeping: configuration.yaml (your local settings preserved)"
+fi
+log_step "Then re-run: Complete setup (bootstrap + HACS + symlinks)"
+echo ""
+read -p "Continue? [y/N] " -n 1 -r
+echo ""
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    log_info "Reset cancelled"
+    exit 0
+fi
+
+# Remove config directory contents
+if [[ $FULL_RESET == true ]]; then
+    # Full reset: Remove everything
+    log_step "Removing all files in config/ directory"
+    rm -rf config/* config/.* 2>/dev/null || true
+
+    # Check if configuration.yaml exists in git
+    if git ls-files --error-unmatch config/configuration.yaml >/dev/null 2>&1; then
+        # Restore configuration.yaml from git
+        log_step "Restoring configuration.yaml from git repository"
+        git checkout HEAD -- config/configuration.yaml || {
+            log_error "Failed to restore configuration.yaml from git"
+            exit 1
+        }
+    else
+        log_warning "configuration.yaml is not tracked in git repository"
+    fi
+else
+    # Standard reset: Keep configuration.yaml
+    log_step "Removing all files except configuration.yaml"
+    if ! find config -mindepth 1 -depth ! -name 'configuration.yaml' -exec rm -rf {} \; 2>/dev/null; then
+        log_error "Failed to clean config/ directory"
+        exit 1
+    fi
+fi
+
+log_success "Config directory cleaned"
+
+# Re-run complete setup
+echo ""
+log_header "Running complete setup"
+log_info "This will install dependencies, HACS, and create symlinks"
+echo ""
+
+"$SCRIPT_DIR/setup" || {
+    log_error "Setup failed"
+    exit 1
+}
+
+echo ""
+log_success "Reset complete - development environment is now in fresh state"
+echo ""
+log_info "Next steps:"
+log_step "Run ${BOLD}./script/develop${NC} to start Home Assistant"
+log_step "Configure integrations via UI (including HACS if needed)"
+
+if [[ $FULL_RESET == false ]]; then
+    echo ""
+    log_info "Tip: Use './script/setup/reset --full' to also reset configuration.yaml from git"
+fi

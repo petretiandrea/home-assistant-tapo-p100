@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# script/help: Display information about available scripts
+#
+# Shows all available scripts grouped by category (development, release, setup)
+# with descriptions extracted from script headers.
+#
+# Usage:
+#   ./script/help
+#
+# Examples:
+#   ./script/help
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
+
+printf "%bDevelopment environment for %s%b\n\n" "$BOLD" "$REPO_NAME" "$NC"
+
+# Helper function to display scripts from a directory
+show_scripts() {
+    local dir="$1"
+    local prefix="$2"
+
+    find "$dir" -maxdepth 1 -type f -perm -111 -print0 2>/dev/null | sort -z | while IFS= read -r -d '' script; do
+        script_name=$(basename "$script")
+        script_path="$prefix$script_name"
+
+        description=$(awk -v prefix="# script/$script_name:" '
+            BEGIN {desc=""}
+            $0 ~ prefix {
+                line = $0
+                sub(prefix, "", line)
+                sub(/^# */, "", line)
+                desc = desc (desc ? " " : "") line
+                next
+            }
+            desc != "" {exit}
+            END {print desc}
+        ' "$script")
+
+        if [[ -z $description ]]; then
+            description="No description available"
+        fi
+        if [[ ${#description} -gt 60 ]]; then
+            description=$(echo "$description" | cut -c1-57)...
+        fi
+        printf "  %b%-25s%b %s\n" "$CYAN" "$script_path" "$NC" "$description"
+    done
+}
+
+printf "%bDevelopment scripts (daily use):%b\n\n" "$BOLD" "$NC"
+show_scripts "script" "script/"
+
+if [[ -d script/release ]]; then
+    echo ""
+    printf "%bRelease management:%b\n\n" "$BOLD" "$NC"
+    show_scripts "script/release" "script/release/"
+fi
+
+if [[ -d script/setup ]]; then
+    echo ""
+    printf "%bSetup & maintenance:%b\n\n" "$BOLD" "$NC"
+    show_scripts "script/setup" "script/setup/"
+fi
+
+echo ""

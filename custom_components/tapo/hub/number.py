@@ -1,17 +1,14 @@
-from datetime import date
-from datetime import datetime
-from typing import Optional
-from typing import Union
-from typing import cast
+from datetime import date, datetime
+from typing import Optional, Union, cast
 
-from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number import NumberMode
-from homeassistant.components.number import RestoreNumber
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
-from homeassistant.const import PERCENTAGE
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -21,29 +18,22 @@ from plugp100.devices.children.trv import KE100Device
 from plugp100.models.temperature import TemperatureUnit
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
         device = child_coordinator.device
         if isinstance(device, KE100Device):
-            async_add_entities(
-                [TRVTemperatureOffset(child_coordinator, device)],
-                True
-            )
+            async_add_entities([TRVTemperatureOffset(child_coordinator, device)], True)
         elif isinstance(device, TriggerButtonDevice) and device.has_component(
             TriggerLogComponent
         ):
-            async_add_entities(
-                [PollUtilization(child_coordinator, device)],
-                True
-            )
+            async_add_entities([PollUtilization(child_coordinator, device)], True)
 
 
 class TRVTemperatureOffset(CoordinatedTapoEntity, NumberEntity):
@@ -53,9 +43,9 @@ class TRVTemperatureOffset(CoordinatedTapoEntity, NumberEntity):
     device: KE100Device
 
     def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: KE100Device,
+        self,
+        coordinator: TapoDataCoordinator,
+        device: KE100Device,
     ) -> None:
         super().__init__(coordinator, device)
 
@@ -123,9 +113,9 @@ class PollUtilization(CoordinatedTapoEntity, RestoreNumber):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TriggerButtonDevice,
+        self,
+        coordinator: TapoDataCoordinator,
+        device: TriggerButtonDevice,
     ) -> None:
         super().__init__(coordinator, device)
         self._attr_native_value = float(DEFAULT_POLL_UTILIZATION)
@@ -136,7 +126,9 @@ class PollUtilization(CoordinatedTapoEntity, RestoreNumber):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last := await self.async_get_last_number_data()) and last.native_value is not None:
+        if (
+            last := await self.async_get_last_number_data()
+        ) and last.native_value is not None:
             self._attr_native_value = last.native_value
         # Store on coordinator so PollLatencySensor can read it
         self.coordinator._poll_utilization_pct = self._attr_native_value

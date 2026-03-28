@@ -1,9 +1,10 @@
-from typing import Any, Optional
-from typing import cast
+from typing import Any, Optional, cast
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -12,10 +13,8 @@ from plugp100.devices.children.trv import KE100Device
 from plugp100.models.hub_children.trv import TRVState
 from plugp100.models.temperature import TemperatureUnit
 
-
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
 
 
@@ -92,4 +91,3 @@ class TRVClimate(CoordinatedTapoEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         (await self.device.set_target_temp(kwargs)).get_or_raise()
         await self.coordinator.async_request_refresh()
-

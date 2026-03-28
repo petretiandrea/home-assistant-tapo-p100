@@ -1,9 +1,10 @@
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.const import UnitOfEnergy
-from homeassistant.const import UnitOfPower
-from homeassistant.const import UnitOfTime
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.helpers.typing import StateType
 from plugp100.components.energy import EnergyComponent
 
@@ -117,7 +118,9 @@ class TodayRuntimeSensorSource(TapoSensorSource):
     def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if energy := _get_energy_component(coordinator):
             info = energy.energy_info
-            return info.today_runtime if info and info.today_runtime is not None else None
+            return (
+                info.today_runtime if info and info.today_runtime is not None else None
+            )
         return None
 
 
@@ -133,5 +136,7 @@ class MonthRuntimeSensorSource(TapoSensorSource):
     def get_value(self, coordinator: TapoDataCoordinator) -> StateType:
         if energy := _get_energy_component(coordinator):
             info = energy.energy_info
-            return info.month_runtime if info and info.month_runtime is not None else None
+            return (
+                info.month_runtime if info and info.month_runtime is not None else None
+            )
         return None

@@ -10,3 +10,13 @@ pytest-coverage.txt
 pytest.xml
 
 .idea/
+.local/
+htmlcov/
+
+.claude/
+
+custom_components/hacs
+config/*
+!config/configuration.yaml
+
+node_modules/

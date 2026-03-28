@@ -1,5 +1,5 @@
-import pytest
 from homeassistant.core import HomeAssistant
+import pytest
 
 
 @pytest.fixture

@@ -1,7 +1,6 @@
 """Constants for the tapo integration."""
+
 from datetime import timedelta
-from enum import Enum
-from typing import Union
 
 from homeassistant.const import Platform
 

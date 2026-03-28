@@ -1,20 +1,20 @@
+from datetime import date, datetime, timedelta
 import logging
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
-from typing import Optional
-from typing import Union
-from typing import cast
+from typing import Optional, Union, cast
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
-from homeassistant.const import PERCENTAGE
-from homeassistant.const import UnitOfTemperature
-from homeassistant.const import UnitOfTime
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -28,23 +28,22 @@ from plugp100.devices.children.trigger_button import TriggerButtonDevice
 from plugp100.models.temperature import TemperatureUnit
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
 from custom_components.tapo.hub.event import fetch_event_logs
 
 _LOGGER = logging.getLogger(__name__)
 
 COMPONENT_MAPPING = {
-    HumidityComponent: 'HumiditySensor',
-    TemperatureComponent: 'TemperatureSensor',
-    ReportModeComponent: 'ReportIntervalDiagnostic',
-    BatteryComponent: 'BatteryLevelSensor'
+    HumidityComponent: "HumiditySensor",
+    TemperatureComponent: "TemperatureSensor",
+    ReportModeComponent: "ReportIntervalDiagnostic",
+    BatteryComponent: "BatteryLevelSensor",
 }
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
@@ -56,11 +55,16 @@ async def async_setup_entry(
         # temporary workaround to avoid getting battery percentage on not supported devices
         if battery := child_coordinator.device.get_component(BatteryComponent):
             if battery.battery_percentage == -1:
-                sensors = list(filter(lambda x: not isinstance(x, BatteryLevelSensor), sensors))
+                sensors = list(
+                    filter(lambda x: not isinstance(x, BatteryLevelSensor), sensors)
+                )
 
-        if isinstance(child_coordinator.device, TriggerButtonDevice) and \
-                child_coordinator.device.has_component(TriggerLogComponent):
-            sensors.append(PollLatencySensor(child_coordinator, child_coordinator.device))
+        if isinstance(
+            child_coordinator.device, TriggerButtonDevice
+        ) and child_coordinator.device.has_component(TriggerLogComponent):
+            sensors.append(
+                PollLatencySensor(child_coordinator, child_coordinator.device)
+            )
 
         async_add_entities(sensors, True)
 
@@ -68,11 +72,7 @@ async def async_setup_entry(
 class HumiditySensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
         self._attr_name = "Humidity"
 
@@ -104,11 +104,7 @@ class TemperatureSensor(CoordinatedTapoEntity, SensorEntity):
 
     _temperature_component: TemperatureComponent
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
         self._attr_name = "Temperature"
         self._temperature_component = device.get_component(TemperatureComponent)
@@ -142,11 +138,7 @@ class TemperatureSensor(CoordinatedTapoEntity, SensorEntity):
 class BatteryLevelSensor(CoordinatedTapoEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
         self._attr_name = "Battery Percentage"
 
@@ -172,12 +164,7 @@ class BatteryLevelSensor(CoordinatedTapoEntity, SensorEntity):
 
 
 class ReportIntervalDiagnostic(CoordinatedTapoEntity, SensorEntity):
-
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
         self._attr_name = "Report Interval"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -222,21 +209,21 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
     _attr_icon = "mdi:connection"
 
     # Smoothing
-    EMA_ALPHA = 0.3          # EWMA smoothing factor (higher = more reactive)
+    EMA_ALPHA = 0.3  # EWMA smoothing factor (higher = more reactive)
     # Budget
-    DEFAULT_U_MAX = 0.35     # fallback if number entity hasn't loaded yet
-    JITTER_WEIGHT = 2.0      # how much jitter inflates the budget
+    DEFAULT_U_MAX = 0.35  # fallback if number entity hasn't loaded yet
+    JITTER_WEIGHT = 2.0  # how much jitter inflates the budget
     # Bounds
     MIN_INTERVAL_MS = 300
     MAX_INTERVAL_MS = 5000
     # Hysteresis
-    HYSTERESIS_PCT = 0.15    # ignore target changes smaller than 15%
-    COOLDOWN_CYCLES = 5      # minimum cycles between interval adjustments
+    HYSTERESIS_PCT = 0.15  # ignore target changes smaller than 15%
+    COOLDOWN_CYCLES = 5  # minimum cycles between interval adjustments
 
     def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TriggerButtonDevice,
+        self,
+        coordinator: TapoDataCoordinator,
+        device: TriggerButtonDevice,
     ):
         super().__init__(coordinator, device)
         self._device: TriggerButtonDevice = device
@@ -292,9 +279,15 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
     def extra_state_attributes(self):
         return {
             "ema_latency_ms": round(self._ema_ms, 1) if self._ema_ms else None,
-            "ema_jitter_ms": round(self._ema_jitter_ms, 1) if self._ema_jitter_ms else None,
-            "computed_interval_ms": round(self._computed_interval_ms, 1) if self._computed_interval_ms else None,
-            "utilization": round(self._ema_ms / self._computed_interval_ms, 3) if self._ema_ms and self._computed_interval_ms else None,
+            "ema_jitter_ms": round(self._ema_jitter_ms, 1)
+            if self._ema_jitter_ms
+            else None,
+            "computed_interval_ms": round(self._computed_interval_ms, 1)
+            if self._computed_interval_ms
+            else None,
+            "utilization": round(self._ema_ms / self._computed_interval_ms, 3)
+            if self._ema_ms and self._computed_interval_ms
+            else None,
         }
 
     @callback
@@ -307,7 +300,8 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
     async def _measure_latency(self) -> None:
         try:
             _, latency_ms = await fetch_event_logs(
-                self.coordinator, self._device,
+                self.coordinator,
+                self._device,
                 hass=self.hass,
                 entry_id=getattr(self.coordinator, "_hub_entry_id", None),
             )
@@ -324,14 +318,18 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
             self._computed_interval_ms = max(
                 self.MIN_INTERVAL_MS, latency_ms / self._u_max
             )
-            self.coordinator.update_interval = timedelta(milliseconds=self._computed_interval_ms)
+            self.coordinator.update_interval = timedelta(
+                milliseconds=self._computed_interval_ms
+            )
             self.async_write_ha_state()
             return
 
         # Update smoothed latency and jitter
         self._ema_ms = self.EMA_ALPHA * latency_ms + (1 - self.EMA_ALPHA) * self._ema_ms
         jitter = abs(latency_ms - self._ema_ms)
-        self._ema_jitter_ms = self.EMA_ALPHA * jitter + (1 - self.EMA_ALPHA) * self._ema_jitter_ms
+        self._ema_jitter_ms = (
+            self.EMA_ALPHA * jitter + (1 - self.EMA_ALPHA) * self._ema_jitter_ms
+        )
 
         # Budget-based target: keep utilization <= U_MAX
         effective_latency = self._ema_ms + self.JITTER_WEIGHT * self._ema_jitter_ms
@@ -340,10 +338,17 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
 
         # Hysteresis + cooldown: only change if meaningful and not too frequent
         self._cycles_since_change += 1
-        pct_change = abs(target - self._computed_interval_ms) / self._computed_interval_ms
-        if pct_change > self.HYSTERESIS_PCT and self._cycles_since_change >= self.COOLDOWN_CYCLES:
+        pct_change = (
+            abs(target - self._computed_interval_ms) / self._computed_interval_ms
+        )
+        if (
+            pct_change > self.HYSTERESIS_PCT
+            and self._cycles_since_change >= self.COOLDOWN_CYCLES
+        ):
             self._computed_interval_ms = target
             self._cycles_since_change = 0
 
-        self.coordinator.update_interval = timedelta(milliseconds=self._computed_interval_ms)
+        self.coordinator.update_interval = timedelta(
+            milliseconds=self._computed_interval_ms
+        )
         self.async_write_ha_state()

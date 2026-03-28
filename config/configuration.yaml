@@ -1,0 +1,163 @@
+# yaml-language-server: $schema=../schemas/yaml/configuration_schema.yaml
+# Development-friendly Home Assistant configuration
+#
+# We don't use default_config to avoid HA OS-specific integrations like go2rtc
+# that expect specific container environments. Instead, we explicitly load
+# the integrations useful for custom component development.
+
+# enable discovery of tapo devices on the network - useful for development
+tapo:
+  discovery: true
+
+# https://www.home-assistant.io/integrations/homeassistant/
+homeassistant:
+  debug: true
+
+# Debugging integration
+# https://www.home-assistant.io/integrations/debugpy/
+debugpy:
+
+# Privacy & analytics settings
+# https://www.home-assistant.io/integrations/analytics/
+analytics:
+  # Analytics are disabled to prevent development instances from skewing
+  # production statistics at https://analytics.home-assistant.io
+
+# System monitoring
+# https://www.home-assistant.io/integrations/system_health/
+system_health:
+  # Provides system health information in Settings > System > Repairs
+  # Safe for development - only shows local system status
+
+# Note: The diagnostics integration is always loaded and cannot be disabled.
+# With analytics disabled, diagnostic data stays local and isn't sent anywhere.
+
+# Core integrations
+http:
+  # Development server settings for Codespaces/DevContainer
+  server_host: "0.0.0.0"
+  # Allow access from Codespaces reverse proxy
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.0/8
+    - ::1
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+    - 10.0.0.0/8
+  # CORS for development
+  cors_allowed_origins:
+    - "*"
+
+# Config UI integration - useful for development
+config:
+
+# Frontend - required for UI
+frontend:
+  # Optional: Enable custom themes
+  # themes: !include_dir_merge_named themes
+
+automation:
+
+script:
+
+scene:
+
+# Useful default_config integrations for development
+# https://www.home-assistant.io/integrations/history/
+history:
+
+# https://www.home-assistant.io/integrations/logbook/
+logbook:
+
+# https://www.home-assistant.io/integrations/conversation/
+# conversation:
+# Note: Uncomment to enable voice assistant/conversation features
+# Dependencies (hassil, home-assistant-intents) are pre-installed in bootstrap
+
+# https://www.home-assistant.io/integrations/webhook/
+webhook:
+
+# https://www.home-assistant.io/integrations/my/
+my:
+
+# https://www.home-assistant.io/integrations/recorder/
+recorder:
+  # Development-friendly database settings
+  # Reduce database size and improve performance
+  purge_keep_days: 2
+  commit_interval: 30
+  # Exclude entities you don't need history for
+  exclude:
+    domains:
+      # Sun position changes constantly, rarely needed in dev
+      - sun
+      # Backups don't need history
+      - backup
+      # Updates don't need full history tracking
+      - update
+    entity_globs:
+      # Time sensors change every second/minute
+      - sensor.time*
+      - sensor.date*
+      # Uptime sensors not interesting for development
+      - sensor.*uptime*
+      - sensor.*last_boot*
+      # Memory/CPU sensors create a lot of data
+      - sensor.*memory*
+      - sensor.*cpu*
+    event_types:
+      # Very frequent, rarely needed in development
+      - call_service
+      # System events create lots of noise
+      - system_log_event
+      # Component loading events
+      - component_loaded
+
+# https://www.home-assistant.io/integrations/logger/
+logger:
+  default: info
+  logs:
+    # Reduce noise from chatty components
+    homeassistant.components.recorder: warning
+    homeassistant.components.recorder.util: warning
+    homeassistant.components.websocket_api: warning
+    homeassistant.components.http.ban: warning
+    homeassistant.components.zeroconf: warning
+    homeassistant.components.ssdp: warning
+    homeassistant.components.bluetooth: warning
+    # Conversation can be noisy with hassil
+    homeassistant.components.conversation: warning
+    # Analytics/metrics are not interesting during development
+    homeassistant.components.analytics: error
+
+    # Hide platform setup messages (scene, binary_sensor, sensor, etc.)
+    homeassistant.components.scene: warning
+    homeassistant.components.binary_sensor: warning
+    homeassistant.components.sensor: warning
+    homeassistant.components.event: warning
+    homeassistant.components.switch: warning
+
+    # HTTP/network
+    homeassistant.components.http: warning
+
+    # Keep loader at warning level to see real issues with our integration
+    homeassistant.loader: warning
+
+    # Hide the verbose "Setting up X" messages during startup
+    # but keep warnings/errors visible
+    homeassistant.bootstrap: warning
+    homeassistant.setup: warning
+
+    # Core system - keep visible for important messages
+    homeassistant.core: info
+
+    # IMPORTANT for custom integration development:
+    # Coordinator issues (API calls, update failures)
+    homeassistant.helpers.update_coordinator: info
+    # Entity registration problems
+    homeassistant.helpers.entity_registry: info
+    # Config flow debugging (setup, options)
+    homeassistant.config_entries: info
+
+    # Your integration debug logging - shows EVERYTHING from your integration
+    custom_components.tapo: debug

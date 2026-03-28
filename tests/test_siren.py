@@ -1,11 +1,13 @@
-from custom_components.tapo.const import PLATFORMS
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
-from homeassistant.components.siren import SERVICE_TURN_OFF
-from homeassistant.components.siren import SERVICE_TURN_ON
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from tests.conftest import mock_hub
-from tests.conftest import setup_platform
+
+from custom_components.tapo.const import PLATFORMS
+from tests.conftest import mock_hub, setup_platform
 
 
 # TODO: test volume

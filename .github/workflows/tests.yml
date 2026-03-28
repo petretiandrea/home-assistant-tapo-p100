@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Get Home Assistant version
+        id: ha_version
+        run: |
+          HA_VERSION=$(grep '"homeassistant"' hacs.json | head -1 | sed 's/.*"homeassistant"\s*:\s*"\([^"]*\)".*/\1/')
+          echo "HA_VERSION=${HA_VERSION}" >> $GITHUB_OUTPUT
+          echo "Home Assistant version: ${HA_VERSION}"
+
+      - name: Cache Home Assistant virtual environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .local/ha-venv
+          key: ha-venv-${{ runner.os }}-py313-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'requirements.txt', 'hacs.json') }}
+          restore-keys: |
+            ha-venv-${{ runner.os }}-py313-ha${{ steps.ha_version.outputs.HA_VERSION }}-
+            ha-venv-${{ runner.os }}-py313-
+
+      - name: Install dependencies
+        run: bash script/setup/bootstrap
+
+      - name: Run tests
+        run: bash script/test -v --tb=short

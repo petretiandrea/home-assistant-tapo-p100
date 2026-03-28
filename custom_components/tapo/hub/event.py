@@ -10,7 +10,11 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.components.trigger_log import TriggerLogComponent
 from plugp100.devices.children.trigger_button import TriggerButtonDevice
-from plugp100.models.hub_children.button import RotationEvent, S200BEvent, SingleClickEvent
+from plugp100.models.hub_children.button import (
+    RotationEvent,
+    S200BEvent,
+    SingleClickEvent,
+)
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
@@ -83,6 +87,7 @@ async def _do_fetch(coordinator, device, page_size):
 
     return logs, latency_ms
 
+
 EVENT_SINGLE_CLICK = "single_click"
 EVENT_ROTATION = "rotation"
 
@@ -143,7 +148,8 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
     async def _poll_and_fire_events(self) -> None:
         try:
             logs, _ = await fetch_event_logs(
-                self.coordinator, self._device,
+                self.coordinator,
+                self._device,
                 hass=self.hass,
                 entry_id=getattr(self.coordinator, "_hub_entry_id", None),
             )

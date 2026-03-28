@@ -1,12 +1,10 @@
 from logging import Logger
-from typing import Optional
-from typing import TypeVar
+from typing import Optional, TypeVar
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from plugp100.common.functional.tri import Try
 from plugp100.errors import InvalidAuthentication, TapoError, TapoException
-
 
 T = TypeVar("T")
 
@@ -34,8 +32,9 @@ def tapo_to_hass_brightness(brightness: float | None) -> float | None:
         return round((brightness * 255) / 100)
     return brightness
 
+
 def hass_to_tapo_color_temperature(
-        color_temp: int | None, kelvin: (int, int)
+    color_temp: int | None, kelvin: (int, int)
 ) -> int | None:
     if color_temp is not None:
         constraint_color_temp = clamp(color_temp, kelvin[0], kelvin[1])
@@ -48,7 +47,7 @@ def hass_to_tapo_color_temperature(
 
 
 def tapo_to_hass_color_temperature(
-        color_temp: int | None, colors: (int, int)
+    color_temp: int | None, colors: (int, int)
 ) -> int | None:
     if color_temp is not None and color_temp > 0:
         return clamp(
@@ -63,6 +62,9 @@ def _raise_from_tapo_exception(exception: Exception, logger: Logger):
     logger.error("Tapo exception: %s", str(exception))
     if isinstance(exception, InvalidAuthentication):
         raise ConfigEntryAuthFailed from exception
-    if isinstance(exception, TapoException) and exception.error_code == TapoError.INVALID_CREDENTIAL.value:
+    if (
+        isinstance(exception, TapoException)
+        and exception.error_code == TapoError.INVALID_CREDENTIAL.value
+    ):
         raise ConfigEntryAuthFailed from exception
     raise UpdateFailed(f"Error tapo exception: {exception}") from exception

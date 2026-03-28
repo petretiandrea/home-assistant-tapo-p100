@@ -1,18 +1,17 @@
 """Test tapo switch."""
-import logging
 
-from custom_components.tapo.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.switch import SERVICE_TURN_OFF
-from homeassistant.components.switch import SERVICE_TURN_ON
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import extract_entity_id
-from .conftest import mock_plug
-from .conftest import mock_plug_strip
-from .conftest import setup_platform
+from custom_components.tapo.const import DOMAIN
+
+from .conftest import extract_entity_id, mock_plug, mock_plug_strip, setup_platform
 
 
 async def test_switch_setup(hass: HomeAssistant):
@@ -68,7 +67,7 @@ async def test_plug_strip_child_onoff(hass: HomeAssistant):
         "switch.nickname2": {"value": "on"},
     }
     sockets = device.sockets
-    for (sock, (children_id, state)) in zip(sockets, expected_children_state.items()):
+    for sock, (children_id, state) in zip(sockets, expected_children_state.items()):
         assert hass.states.get(children_id).state == state["value"]
         await hass.services.async_call(
             SWITCH_DOMAIN,

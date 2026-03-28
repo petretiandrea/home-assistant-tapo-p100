@@ -1,8 +1,6 @@
-from typing import Optional
-from typing import cast
+from typing import Optional, cast
 
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,20 +13,21 @@ from custom_components.tapo.entity import CoordinatedTapoEntity
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
         device = child_coordinator.device
         if isinstance(device, SwitchChildDevice):
-            async_add_entities([
-                SwitchTapoChild(child_coordinator, device)
-            ], True)
+            async_add_entities([SwitchTapoChild(child_coordinator, device)], True)
         elif isinstance(device, KE100Device):
-            async_add_entities([
-                TRVFrostProtection(child_coordinator, device),
-                TRVChildLock(child_coordinator, device)
-            ], True)
+            async_add_entities(
+                [
+                    TRVFrostProtection(child_coordinator, device),
+                    TRVChildLock(child_coordinator, device),
+                ],
+                True,
+            )
 
 
 class SwitchTapoChild(CoordinatedTapoEntity, SwitchEntity):
@@ -37,9 +36,7 @@ class SwitchTapoChild(CoordinatedTapoEntity, SwitchEntity):
     device: SwitchChildDevice
 
     def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: SwitchChildDevice
+        self, coordinator: TapoDataCoordinator, device: SwitchChildDevice
     ) -> None:
         super().__init__(coordinator, device)
 
@@ -64,11 +61,7 @@ class TRVFrostProtection(CoordinatedTapoEntity, SwitchEntity):
 
     device: KE100Device
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: KE100Device
-    ) -> None:
+    def __init__(self, coordinator: TapoDataCoordinator, device: KE100Device) -> None:
         super().__init__(coordinator, device)
 
     @property
@@ -98,11 +91,7 @@ class TRVChildLock(CoordinatedTapoEntity, SwitchEntity):
 
     device: KE100Device
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: KE100Device
-    ) -> None:
+    def __init__(self, coordinator: TapoDataCoordinator, device: KE100Device) -> None:
         super().__init__(coordinator, device)
 
     @property

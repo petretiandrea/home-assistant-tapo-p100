@@ -1,9 +1,21 @@
 """The tapo integration."""
-import asyncio
+
 import logging
-from typing import Any
-from typing import cast
-from typing import Optional
+from typing import Any, cast
+
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
+from homeassistant.helpers.event import async_track_time_interval
+from plugp100.discovery import DiscoveredDevice
+import voluptuous as vol
 
 from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.discovery import discovery_tapo_devices
@@ -11,26 +23,30 @@ from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hass_tapo import HassTapo
 from custom_components.tapo.migrations import migrate_entry_to_v8
 from custom_components.tapo.setup_helpers import create_device_config
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import discovery_flow
-from homeassistant.helpers.event import async_track_time_interval
-from plugp100.discovery import DiscoveredDevice
 
-from .const import CONF_DISCOVERED_DEVICE_INFO
-from .const import CONF_HOST
-from .const import CONF_MAC
-from .const import DEFAULT_POLLING_RATE_S
-from .const import DISCOVERY_FEATURE_FLAG
-from .const import DISCOVERY_INTERVAL
-from .const import DOMAIN
-from .const import PLATFORMS
+from .const import (
+    CONF_DISCOVERED_DEVICE_INFO,
+    CONF_HOST,
+    CONF_MAC,
+    DEFAULT_POLLING_RATE_S,
+    DISCOVERY_FEATURE_FLAG,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(DISCOVERY_FEATURE_FLAG, default=True): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -83,7 +99,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     if data and unload_ok:
-        device = data.coordinator.device
         data.config_entry_update_unsub()
     return unload_ok
 
@@ -104,6 +119,6 @@ def async_create_discovery_flow(
                 CONF_HOST: device.ip,
                 CONF_MAC: dr.format_mac(mac),
                 CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                CONF_DISCOVERED_DEVICE_INFO: device.as_dict
+                CONF_DISCOVERED_DEVICE_INFO: device.as_dict,
             },
         )

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# .devcontainer/motd: Display Message of the Day for development environment
+#
+# Displays welcome message with project info and available scripts.
+# Called automatically by shell configuration on first terminal.
+#
+# Usage:
+#   ./script/motd
+#
+# Examples:
+#   ./script/motd
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../script/.lib/output.sh"
+
+REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
+
+echo ""
+printf "%b Welcome to the %s development environment!%b\n" "$BOLD$BLUE$ROCKET" "$REPO_NAME" "$NC"
+echo ""
+printf "%b%b Project:%b %s\n" "$DIM" "$PACKAGE" "$NC" "$(pwd)"
+printf "%b%b Git branch:%b %s\n" "$DIM" "$ARROW" "$NC" "$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'Not a git repo')"
+printf "%b%b Python:%b %s\n" "$DIM" "$WRENCH" "$NC" "$(python3 --version 2>/dev/null || echo 'Not available')"
+echo ""
+
+"$SCRIPT_DIR/../script/help"
+
+echo ""
+printf "%b%b Tip:%b Run %bscript/develop%b to start Home Assistant with your custom integration.\n" "$CYAN" "$INFO" "$NC" "$BOLD" "$NC"
+printf "    Access it at %bhttp://localhost:8123%b\n" "$CYAN" "$NC"
+echo ""

@@ -1,20 +1,16 @@
-from unittest.mock import AsyncMock, MagicMock
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-import pytest
+from homeassistant.components.climate import ClimateEntityFeature, HVACMode
+from homeassistant.const import UnitOfTemperature
 from plugp100.common.functional.tri import Try
 from plugp100.new.child.tapohubchildren import KE100Device
+from plugp100.responses.hub_childs.ke100_device_state import TRVState
+from plugp100.responses.temperature_unit import TemperatureUnit
+import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.climate import TRVClimate
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate import HVACMode
-from homeassistant.const import UnitOfTemperature
-from plugp100.responses.hub_childs.ke100_device_state import TRVState
-from plugp100.responses.temperature_unit import TemperatureUnit
-
 from tests.conftest import _mock_hub_child_device
-
 
 # class TestSensorMappings:
 #     coordinator = Mock(TapoDataCoordinator)
@@ -26,19 +22,19 @@ from tests.conftest import _mock_hub_child_device
 
 
 class TestTRVClimate:
-
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device = _mock_hub_child_device(MagicMock(auto_spec=KE100Device))
         self.climate = TRVClimate(coordinator=self.coordinator, device=self.device)
 
-
     def test_unique_id(self):
         assert self.climate.unique_id == "123_Climate"
 
     def test_supported_features(self):
-        assert self.climate.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
+        assert (
+            self.climate.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
     def test_hvac_modes(self):
         assert self.climate.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]

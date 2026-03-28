@@ -1,16 +1,13 @@
-from unittest.mock import AsyncMock, MagicMock
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-import pytest
 from homeassistant.components.switch import SwitchDeviceClass
 from plugp100.common.functional.tri import Try
 from plugp100.new.child.tapohubchildren import KE100Device
+import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.switch import TRVChildLock
-from custom_components.tapo.hub.switch import TRVFrostProtection
+from custom_components.tapo.hub.switch import TRVChildLock, TRVFrostProtection
 from tests.conftest import _mock_hub_child_device
-
 
 # TODO: convert to try setup config entry
 # class TestSensorMappings:
@@ -26,12 +23,13 @@ from tests.conftest import _mock_hub_child_device
 
 
 class TestTRVFrostProtection:
-
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device = _mock_hub_child_device(MagicMock(auto_spec=KE100Device))
-        self.frost_protection = TRVFrostProtection(coordinator=self.coordinator, device=self.device)
+        self.frost_protection = TRVFrostProtection(
+            coordinator=self.coordinator, device=self.device
+        )
 
     async def test_unique_id(self):
         assert self.frost_protection.unique_id == "123_Frost_Protection"

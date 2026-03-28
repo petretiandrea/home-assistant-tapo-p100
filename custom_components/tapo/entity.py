@@ -1,8 +1,7 @@
 import logging
-from homeassistant.helpers import device_registry as dr
 
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from plugp100.devices.base import TapoDevice

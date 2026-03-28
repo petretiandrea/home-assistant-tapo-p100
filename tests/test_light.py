@@ -1,29 +1,29 @@
 """Test tapo switch."""
-from unittest.mock import MagicMock, ANY
 
-import pytest
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.light import ATTR_COLOR_MODE
-from homeassistant.components.light import ATTR_COLOR_TEMP
-from homeassistant.components.light import ATTR_COLOR_TEMP_KELVIN
-from homeassistant.components.light import ATTR_EFFECT
-from homeassistant.components.light import ATTR_EFFECT_LIST
-from homeassistant.components.light import ATTR_HS_COLOR
-from homeassistant.components.light import ATTR_MAX_COLOR_TEMP_KELVIN
-from homeassistant.components.light import ATTR_MIN_COLOR_TEMP_KELVIN
-from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES
-from homeassistant.components.light import ColorMode
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.light import SERVICE_TURN_OFF
-from homeassistant.components.light import SERVICE_TURN_ON
+from unittest.mock import ANY, MagicMock
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
+    ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    ColorMode,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from plugp100.api.light_effect_preset import LightEffectPreset
+import pytest
 
-from .conftest import extract_entity_id
-from .conftest import mock_bulb
-from .conftest import mock_led_strip
-from .conftest import setup_platform
+from .conftest import extract_entity_id, mock_bulb, mock_led_strip, setup_platform
 
 
 @pytest.mark.parametrize("tapo_device", [mock_bulb(), mock_led_strip()])

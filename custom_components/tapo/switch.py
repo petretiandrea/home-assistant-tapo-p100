@@ -1,23 +1,22 @@
-from typing import Optional
-from typing import cast
+from typing import Optional, cast
 
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.devices.children.strip_socket import TapoStripSocket
 from plugp100.devices.plug import TapoPlug
 
-
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
-from custom_components.tapo.hub.switch import async_setup_entry as async_setup_hub_switch
+from custom_components.tapo.hub.switch import (
+    async_setup_entry as async_setup_hub_switch,
+)
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
@@ -28,14 +27,16 @@ async def async_setup_entry(
 
 
 async def async_setup_device_switch(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     device = data.coordinator.device
     if isinstance(device, TapoPlug):
         if device.is_strip:
             async_add_devices(
-                [TapoPlugEntity(data.coordinator, sock) for sock in device.sockets], True)
+                [TapoPlugEntity(data.coordinator, sock) for sock in device.sockets],
+                True,
+            )
         else:
             async_add_devices([TapoPlugEntity(data.coordinator, device)], True)
 
@@ -45,9 +46,9 @@ class TapoPlugEntity(CoordinatedTapoEntity, SwitchEntity):
     _attr_has_entity_name = False
 
     def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            plug: TapoPlug | TapoStripSocket,
+        self,
+        coordinator: TapoDataCoordinator,
+        plug: TapoPlug | TapoStripSocket,
     ):
         super().__init__(coordinator, plug)
         self._plug = plug

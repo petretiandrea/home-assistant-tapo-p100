@@ -4,52 +4,75 @@ version = "3.2.2"
 description = "Home Assistant custom integration for TP-Link Tapo devices"
 readme = "README.md"
 requires-python = ">=3.14.2"
-dependencies = []  # Runtime deps are managed by Home Assistant manifest requirements.
-
-[tool.setuptools]
-packages = ["custom_components.tapo"]
+dependencies = []   # runtime deps are managed by Home Assistant itself
 
 [dependency-groups]
 dev = [
     { include-group = "test" },
-    "homeassistant==2026.3.0",
+    "homeassistant==2026.3.4",
+    "hassil>=3.5.0",
+    "home-assistant-intents>=2026.3.3",
+    "aiodiscover>=1.6.0",
     "plugp100==6.0.0.dev2",
-    "aiodiscover==1.6.0",
-    "pre-commit==3.3.3",
-    "ruff==0.9.0",
+    "pre-commit",
+    "ruff>=0.9.0",
 ]
 test = [
     "pytest",
-    "pytest-asyncio",
     "pytest-cov",
-    "pytest-homeassistant-custom-component",
-    "pytest-timeout",
+    "pytest-mock",
+    "pytest-homeassistant-custom-component==0.13.320",
+    "pytest-asyncio",
     "async-timeout",
 ]
 
+# ── Ruff (replaces flake8 + isort) ────────────────────────────────────────────
+
 [tool.ruff]
+target-version = "py313"
 line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = ["E203", "E501", "W503", "W504"]
+ignore = ["E501"]
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
-known-first-party = ["custom_components.tapo", "tests"]
+known-first-party = ["custom_components.tapo"]
 combine-as-imports = true
-split-on-trailing-comma = false
+
+# ── Semantic Release ───────────────────────────────────────────────────────────
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+tag_format = "v{version}"
+commit_message = "chore(release): {version} [skip ci]"
+build_command = "python script/sync_version.py"
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.remote]
+name = "origin"
+type = "github"
+
+[tool.semantic_release.publish]
+dist_glob_patterns = []
+upload_to_vcs_release = false
+
+# ── Pytest ─────────────────────────────────────────────────────────────────────
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-norecursedirs = [".git"]
-addopts = "--strict-markers --cov=custom_components.tapo"
+addopts = "-qq --cov=custom_components.tapo"
 console_output_style = "count"
 asyncio_mode = "auto"
+testpaths = ["tests"]
+
+# ── Coverage ───────────────────────────────────────────────────────────────────
 
 [tool.coverage.run]
 branch = false
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 100

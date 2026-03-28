@@ -1,8 +1,7 @@
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.event import async_setup_entry
 
 

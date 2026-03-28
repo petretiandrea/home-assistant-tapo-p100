@@ -1,0 +1,6 @@
+.git
+.venv
+.local
+.ruff_cache
+uv.lock
+custom_components/**/brand/*.png

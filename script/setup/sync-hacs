@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# script/sync-hacs: Sync HACS-installed integrations to custom_components/
+#
+# Creates symlinks from workspace custom_components/ to integrations installed
+# by HACS in config/custom_components/. Keeps development workspace in sync with
+# test Home Assistant instance.
+#
+# Usage:
+#   ./script/setup/sync-hacs
+#
+# Examples:
+#   ./script/setup/sync-hacs
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+log_header "Syncing HACS-installed integrations"
+
+# Check if config/custom_components exists
+if [[ ! -d "$SCRIPT_DIR/../../config/custom_components" ]]; then
+    log_info "No config/custom_components directory found"
+    exit 0
+fi
+
+# Clean up broken symlinks (where target no longer exists)
+cleaned=0
+if [[ -d "$SCRIPT_DIR/../../custom_components" ]]; then
+    while IFS= read -r -d '' link; do
+        # Skip if not a symlink
+        if [[ ! -L "$link" ]]; then
+            continue
+        fi
+
+        # Check if symlink target exists
+        if [[ ! -e "$link" ]]; then
+            component=$(basename "$link")
+            rm "$link"
+            log_step "Removed broken link: $component"
+            cleaned=$((cleaned + 1))
+        fi
+    done < <(find "$SCRIPT_DIR/../../custom_components" -maxdepth 1 -type l -print0)
+fi
+
+# Create symlinks for all integrations in config/custom_components/
+# except those that already exist in custom_components/
+synced=0
+while IFS= read -r -d '' dir; do
+    component=$(basename "$dir")
+
+    # Skip if already exists and is not a symlink
+    if [[ -e "custom_components/$component" && ! -L "custom_components/$component" ]]; then
+        continue
+    fi
+
+    # Create or update symlink with relative path
+    # custom_components/$component → ../../config/custom_components/$component
+    ln -sf "../../config/custom_components/$component" "custom_components/$component"
+    log_result 0 "Linked: $component"
+    synced=$((synced + 1))
+done < <(find "$SCRIPT_DIR/../../config/custom_components" -maxdepth 1 -mindepth 1 -type d -print0)
+
+if [[ $synced -eq 0 && $cleaned -eq 0 ]]; then
+    log_info "No changes needed"
+elif [[ $synced -gt 0 && $cleaned -eq 0 ]]; then
+    log_success "Synced $synced integration(s)"
+elif [[ $synced -eq 0 && $cleaned -gt 0 ]]; then
+    log_success "Cleaned up $cleaned broken link(s)"
+else
+    log_success "Synced $synced integration(s), cleaned up $cleaned broken link(s)"
+fi

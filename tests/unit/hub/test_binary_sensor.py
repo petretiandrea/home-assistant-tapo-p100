@@ -9,10 +9,10 @@ from custom_components.tapo.hub.binary_sensor import COMPONENT_MAPPING
 class TestSensorMappings:
     def test_binary_sensor_mappings(self):
         expected_mappings = {
-            SmartDoorComponent: 'SmartDoorSensor',
-            WaterLeakComponent: 'WaterLeakSensor',
-            MotionSensorComponent: 'MotionSensor',
-            BatteryComponent: 'LowBatterySensor'
+            SmartDoorComponent: "SmartDoorSensor",
+            WaterLeakComponent: "WaterLeakSensor",
+            MotionSensorComponent: "MotionSensor",
+            BatteryComponent: "LowBatterySensor",
         }
 
         assert COMPONENT_MAPPING == expected_mappings

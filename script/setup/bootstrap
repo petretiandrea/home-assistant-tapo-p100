@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# script/bootstrap: Install/update all dependencies required to run the project
+#
+# Bootstraps the development environment by installing system packages,
+# setting up uv package manager, creating virtual environment, and installing
+# Python dependencies including Home Assistant core and development tools.
+#
+# Usage:
+#   ./script/setup/bootstrap
+#
+# Examples:
+#   ./script/setup/bootstrap
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+if [[ ${APT_UPDATE:-"0"} == "1" ]]; then
+    log_header "Updating system packages"
+    sudo apt-get update
+    sudo apt-get upgrade -y
+fi
+
+log_header "Checking for uv"
+if ! command -v uv >/dev/null 2>&1; then
+    log_info "UV not found, installing..."
+    pipx install uv
+fi
+
+log_header "Checking for Python virtual environment"
+
+# Determine venv location based on environment
+# In DevContainer: Use $HOME/.local/ha-venv (hardlinks work, avoids mount performance issues)
+# Local development: Use .local/ha-venv in workspace (isolated per project)
+# CI (GitHub Actions): Use $HOME/.local/ha-venv or workspace (both work)
+if [[ -n "${REMOTE_CONTAINERS:-}" || -n "${CODESPACES:-}" ]]; then
+    # Running in DevContainer or Codespaces
+    VENV_PATH="$HOME/.local/ha-venv"
+    VENV_IS_EXTERNAL=true
+    log_info "DevContainer/Codespaces detected - using external venv"
+elif [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    # Running in GitHub Actions
+    VENV_PATH="${GITHUB_WORKSPACE:-.}/.local/ha-venv"
+    VENV_IS_EXTERNAL=false
+    log_info "GitHub Actions detected - using workspace venv"
+else
+    # Local development (Mac, Linux, WSL)
+    VENV_PATH=".local/ha-venv"
+    VENV_IS_EXTERNAL=false
+    log_info "Local development detected - using workspace venv"
+fi
+
+if [[ ! -d "$VENV_PATH" ]]; then
+    log_info "Creating virtual environment at $VENV_PATH"
+    uv venv "$VENV_PATH"
+elif [[ ! -x "$VENV_PATH/bin/python3" ]]; then
+    # Venv exists but python3 is broken (broken symlink or missing)
+    log_warning "Existing venv has broken Python interpreter - recreating"
+    rm -rf "$VENV_PATH"
+    log_info "Creating virtual environment at $VENV_PATH"
+    uv venv "$VENV_PATH"
+fi
+
+# Create symlinks for IDE compatibility and tool expectations
+if [[ "$VENV_IS_EXTERNAL" == "true" ]]; then
+    # DevContainer: Create symlink from workspace to external venv
+    log_step "Creating workspace symlink for IDE type checking"
+    mkdir -p .local
+    # .local/ha-venv → /home/vscode/.local/ha-venv (absolute path - simpler and more reliable)
+    if [[ -d .local/ha-venv && ! -L .local/ha-venv ]]; then
+        log_warning "Skipping .local/ha-venv: directory already exists (not a symlink)"
+    else
+        ln -sf "$VENV_PATH" .local/ha-venv
+    fi
+fi
+
+# Create compatibility symlinks for common venv locations (all environments)
+log_step "Creating compatibility symlinks for tool expectations"
+mkdir -p .local
+
+# .venv → .local/ha-venv (Python/uv standard location)
+if [[ -d .venv && ! -L .venv ]]; then
+    log_warning "Skipping .venv: directory already exists (not a symlink)"
+else
+    ln -sf .local/ha-venv .venv
+fi
+
+# .local/venv → ha-venv (GitHub Copilot Agent expectation)
+if [[ -d .local/venv && ! -L .local/venv ]]; then
+    log_warning "Skipping .local/venv: directory already exists (not a symlink)"
+else
+    ln -sf ha-venv .local/venv
+fi
+
+# shellcheck source=/dev/null
+source "$VENV_PATH/bin/activate"
+
+# Auto-activate venv in shell RC files (only in DevContainer/Codespaces where venv is external)
+if [[ "$VENV_IS_EXTERNAL" == "true" ]]; then
+    set +e
+    if [[ -f $HOME/.bashrc ]]; then
+        if ! grep -q "source $VENV_PATH/bin/activate" "$HOME/.bashrc" 2>/dev/null; then
+            log_step "Configuring Bash to auto-activate virtual environment"
+            echo "source $VENV_PATH/bin/activate" >> "$HOME/.bashrc" || log_warning "Failed to update .bashrc"
+        fi
+    fi
+    if [[ -f $HOME/.zshrc ]]; then
+        if ! grep -q "source $VENV_PATH/bin/activate" "$HOME/.zshrc"; then
+            log_step "Configuring ZSH to auto-activate virtual environment"
+            echo "source $VENV_PATH/bin/activate" >> "$HOME/.zshrc" || log_warning "Failed to update .zshrc"
+        fi
+    fi
+    set -e
+fi
+
+log_header "Installing development dependencies"
+uv sync --group dev
+
+log_header "Installing test dependencies"
+uv sync --group test
+
+log_header "Installing runtime dependencies"
+if [[ -s requirements.txt ]] && grep -qv '^#' requirements.txt | grep -q '[^[:space:]]'; then
+    uv sync
+else
+    log_info "No runtime dependencies defined (this is normal for blueprints)"
+fi
+
+HA_VERSION="${HA_VERSION:-$(grep '"homeassistant"' hacs.json | head -1 | sed 's/.*"homeassistant"\s*:\s*"\([^"]*\)".*/\1/')}"
+
+if [[ -z "$HA_VERSION" ]]; then
+    log_error "HA_VERSION not set and could not be determined from hacs.json"
+    exit 1
+fi
+HA_CORE_BASE_URL="https://raw.githubusercontent.com/home-assistant/core/${HA_VERSION}"
+
+log_header "Installing Home Assistant ${HA_VERSION} runtime dependencies"
+mkdir -p "/tmp/homeassistant"
+curl -fsSL "${HA_CORE_BASE_URL}/homeassistant/package_constraints.txt" -o "/tmp/homeassistant/package_constraints.txt"  # constraints for requirements files
+curl -fsSL "${HA_CORE_BASE_URL}/requirements.txt" -o "/tmp/requirements.txt"  # required by requirements_all.txt
+curl -fsSL "${HA_CORE_BASE_URL}/requirements_all.txt" -o "/tmp/requirements_all.txt"
+uv pip install --requirement "/tmp/requirements_all.txt"
+
+log_header "Installing Home Assistant ${HA_VERSION} test dependencies"
+curl -fsSL "${HA_CORE_BASE_URL}/requirements_test_pre_commit.txt" -o "/tmp/requirements_test_pre_commit.txt"  # required by requirements_test.txt
+curl -fsSL "${HA_CORE_BASE_URL}/requirements_test.txt" -o "/tmp/requirements_test.txt"
+uv pip install --requirement "/tmp/requirements_test.txt"
+
+log_header "Installing Home Assistant ${HA_VERSION} core"
+uv pip install "homeassistant==${HA_VERSION}"
+
+set +e
+rm -rf /tmp/requirements*.txt /tmp/homeassistant/ || log_warning "Failed to clean up temporary files"
+set -e
+
+# Only install pre-commit hooks in local development, not in CI
+# GITHUB_ACTIONS is always set to "true" in GitHub Actions environments
+if [[ -d ".git" && -z "${GITHUB_ACTIONS:-}" ]]; then
+    log_header "Installing pre-commit hooks"
+    set +e
+    pre-commit install || log_warning "Failed to install pre-commit hooks"
+    set -e
+else
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+        log_info "Skipping pre-commit hooks (running in GitHub Actions)"
+    else
+        log_info "Skipping pre-commit hooks (not a Git repository)"
+    fi
+fi
+
+log_success "Bootstrap complete"

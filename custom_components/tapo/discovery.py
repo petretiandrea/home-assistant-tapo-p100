@@ -1,9 +1,8 @@
 import asyncio
-import logging
 from itertools import chain
+import logging
 from typing import Optional
 
-from custom_components.tapo.const import DISCOVERY_TIMEOUT
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -11,6 +10,7 @@ from homeassistant.helpers import (
 )
 from plugp100.discovery import DiscoveredDevice, TapoDiscovery
 
+from custom_components.tapo.const import DISCOVERY_TIMEOUT
 
 
 async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDevice]:
@@ -26,10 +26,10 @@ async def discovery_tapo_devices(hass: HomeAssistant) -> dict[str, DiscoveredDev
 
 
 async def discover_tapo_device(
-        ip: str,
+    ip: str,
 ) -> Optional[DiscoveredDevice]:
     try:
         return await TapoDiscovery.single_scan(ip, DISCOVERY_TIMEOUT)
-    except:
-        logging.error("Faild during discovery of device with ip {}", ip)
+    except Exception:
+        logging.error("Failed during discovery of device with ip {}", ip)
         return None

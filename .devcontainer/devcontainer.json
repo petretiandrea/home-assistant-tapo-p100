@@ -1,16 +1,27 @@
-// See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-  //"image": "mcr.microsoft.com/devcontainers/python:1-3.11-bullseye",
+  "name": "HA ha_integration_domain Dev Container",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": "."
   },
-  "name": "tapo integration development",
-  "appPort": ["9123:8123"],
-  "containerUser": "root",
-  "postCreateCommand": "uv sync --group dev",
-  "containerEnv": { "DEVCONTAINER": "1" },
-  "capAdd": ["CAP_NET_RAW", "CAP_NET_BROADCAST", "CAP_NET_BIND_SERVICE"],
-  "runArgs": ["--network=bridge"],
+  "postCreateCommand": "bash .devcontainer/setup-shell.sh && bash .devcontainer/setup-git.sh && script/setup/setup",
+  "postAttachCommand": "bash .devcontainer/post-attach.sh",
+  "containerEnv": {
+    // Home Assistant version to install in the devcontainer.
+    // Uncomment and set a specific version if needed (e.g., "2025.12.3").
+    // If not set, defaults to version from hacs.json.
+    // "HA_VERSION": "2025.12.3",
+    // Install HACS in the Home Assistant installation
+    "HA_INSTALL_HACS": "1",
+    // Enable asyncio debug mode for easier debugging of async code
+    "PYTHONASYNCIODEBUG": "1",
+    // Ensure Python output is sent straight to terminal (e.g. for logging)
+    "PYTHONUNBUFFERED": "1",
+    // Prevent Python from writing .pyc files to disk
+    "PYTHONDONTWRITEBYTECODE": "1",
+    // Optionally update apt package lists after container creation
+    "APT_UPDATE": "0"
+  },
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
@@ -18,6 +29,13 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "packages": ["ffmpeg", "libturbojpeg0", "libpcap-dev"]
+    }
+  },
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
     }
   },
   "customizations": {
@@ -34,22 +52,43 @@
         "ms-vscode-remote.remote-containers",
         "redhat.vscode-yaml"
       ],
+      // Please keep this file in sync with settings in .vscode/settings.default.jsonc
       "settings": {
-        "files.eol": "\n",
+        "chat.promptFiles": true,
         "editor.tabSize": 4,
-        "terminal.integrated.shell.linux": "/bin/bash",
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
-        "python.analysis.autoSearchPaths": false,
-        "python.linting.pylintEnabled": true,
-        "python.linting.enabled": true,
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
-        "editor.formatOnType": true,
+        "editor.formatOnType": false,
+        "files.eol": "\n",
         "files.trimTrailingWhitespace": true,
-        "python.testing.pytestArgs": ["tests", "--no-cov"],
-        "python.testing.unittestEnabled": false,
-        "python.testing.pytestEnabled": true,
-        "python.testing.pytestPath": "${containerWorkspaceFolder}/.venv/bin/pytest",
+        "files.associations": {
+          "**/translations/*.json": "jsontranslation"
+        },
+        "markdown.validate.enabled": false,
+        "markdown.validate.fileLinks.enabled": "ignore",
+        "markdown.validate.fragmentLinks.enabled": "ignore",
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.diagnosticMode": "workspace",
+        "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
+        "python.linting.pylintEnabled": false,
+        "python.terminal.activateEnvironment": true,
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.testing.pytestArgs": ["--no-cov"],
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/usr/bin/zsh"
+          }
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "yaml.customTags": [
+          "!secret scalar",
+          "!include scalar",
+          "!include_dir_list scalar",
+          "!include_dir_merge_list scalar",
+          "!include_dir_named scalar",
+          "!include_dir_merge_named scalar",
+          "!input scalar"
+        ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff",
           "editor.codeActionsOnSave": {
@@ -72,8 +111,32 @@
         "[jsontranslation]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.formatOnSave": false
-        }
+        },
+        "json.schemas": [
+          {
+            "fileMatch": ["custom_components/*/manifest.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/manifest_schema.json"
+          },
+          {
+            "fileMatch": ["custom_components/*/translations/*.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/translation_schema.json"
+          },
+          {
+            "fileMatch": ["hacs.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/hacs_schema.json"
+          },
+          {
+            "fileMatch": ["custom_components/*/icons.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/icons_schema.json"
+          }
+        ]
       }
     }
-  }
+  },
+  "mounts": [
+    // Mount host gitconfig for local development (ignored in Codespaces)
+    // In Codespaces, GitHub automatically configures Git with your account
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached,readonly"
+  ],
+  "remoteUser": "vscode"
 }

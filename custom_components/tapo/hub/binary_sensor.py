@@ -1,8 +1,9 @@
-from typing import Optional
-from typing import cast
+from typing import Optional, cast
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -14,20 +15,19 @@ from plugp100.components.water_leak import WaterLeakComponent
 from plugp100.devices.base import TapoDevice
 
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
 
 COMPONENT_MAPPING = {
-    SmartDoorComponent: 'SmartDoorSensor',
-    WaterLeakComponent: 'WaterLeakSensor',
-    MotionSensorComponent: 'MotionSensor',
-    BatteryComponent: 'LowBatterySensor'
+    SmartDoorComponent: "SmartDoorSensor",
+    WaterLeakComponent: "WaterLeakSensor",
+    MotionSensorComponent: "MotionSensor",
+    BatteryComponent: "LowBatterySensor",
 }
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
@@ -40,11 +40,7 @@ async def async_setup_entry(
 
 
 class SmartDoorSensor(CoordinatedTapoEntity, BinarySensorEntity):
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
 
     @property
@@ -59,11 +55,7 @@ class SmartDoorSensor(CoordinatedTapoEntity, BinarySensorEntity):
 class WaterLeakSensor(CoordinatedTapoEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
 
     @property
@@ -72,15 +64,13 @@ class WaterLeakSensor(CoordinatedTapoEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return self.device.get_component(WaterLeakComponent).water_leak_status != "normal"
+        return (
+            self.device.get_component(WaterLeakComponent).water_leak_status != "normal"
+        )
 
 
 class MotionSensor(CoordinatedTapoEntity, BinarySensorEntity):
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
 
     @property
@@ -95,11 +85,7 @@ class MotionSensor(CoordinatedTapoEntity, BinarySensorEntity):
 class LowBatterySensor(CoordinatedTapoEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(
-            self,
-            coordinator: TapoDataCoordinator,
-            device: TapoDevice
-    ):
+    def __init__(self, coordinator: TapoDataCoordinator, device: TapoDevice):
         super().__init__(coordinator, device)
         self._attr_name = "Battery Low"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC

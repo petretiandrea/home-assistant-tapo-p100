@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# script/test: Run project tests
+#
+# Runs pytest with project configuration. Automatically cleans up package
+# installations after test run to prevent Home Assistant from loading the
+# wrong version.
+#
+# Usage:
+#   ./script/test [OPTIONS] [PYTEST_OPTIONS]
+#
+# Options:
+#   --cov           Generate coverage report (terminal output)
+#   --cov-html      Generate HTML coverage report in htmlcov/
+#
+# Examples:
+#   ./script/test
+#   ./script/test -v
+#   ./script/test --cov
+#   ./script/test --cov-html
+#   ./script/test --cov -k test_midnight
+#   ./script/test tests/test_cache_validity.py
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    log_header "Activating virtual environment"
+    # shellcheck source=/dev/null
+    if [[ -f "$HOME/.local/ha-venv/bin/activate" ]]; then
+        source "$HOME/.local/ha-venv/bin/activate"
+    elif [[ -f "$PWD/.local/ha-venv/bin/activate" ]]; then
+        source "$PWD/.local/ha-venv/bin/activate"
+    else
+        log_error "Virtual environment not found in $HOME/.local/ha-venv or $PWD/.local/ha-venv"
+        exit 1
+    fi
+fi
+
+# Parse coverage flags
+COVERAGE_ARGS=()
+PYTEST_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --cov)
+            COVERAGE_ARGS+=("--cov=custom_components/tapo" "--cov-report=term-missing")
+            shift
+            ;;
+        --cov-html)
+            COVERAGE_ARGS+=("--cov=custom_components/tapo" "--cov-report=html")
+            shift
+            ;;
+        *)
+            PYTEST_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Check if pytest is available
+if ! python -c "import pytest" 2>/dev/null; then
+    log_info "pytest not found. Installing test dependencies..."
+    uv pip install -e ".[test]"
+fi
+
+# Run pytest with project configuration
+if [[ ${#COVERAGE_ARGS[@]} -gt 0 ]]; then
+    log_header "Running tests with coverage"
+else
+    log_header "Running tests"
+fi
+echo ""
+pytest "${COVERAGE_ARGS[@]}" "${PYTEST_ARGS[@]}"
+
+if [[ ${#COVERAGE_ARGS[@]} -gt 0 ]] && [[ " ${COVERAGE_ARGS[*]} " =~ " --cov-report=html " ]]; then
+    echo ""
+    log_success "Coverage report generated in htmlcov/index.html"
+fi
+
+# Clean up any accidental package installation from pytest/test dependencies
+# This prevents Home Assistant from loading the installed version instead of
+# the development version from custom_components/
+"$SCRIPT_DIR/clean" --minimal

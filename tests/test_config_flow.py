@@ -1,26 +1,25 @@
-from unittest.mock import AsyncMock, MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from custom_components.tapo import CONF_DISCOVERED_DEVICE_INFO
-from custom_components.tapo import CONF_HOST
-from custom_components.tapo import CONF_MAC
-from custom_components.tapo import DEFAULT_POLLING_RATE_S
-from custom_components.tapo import DOMAIN
-from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
 from homeassistant import config_entries
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_PASSWORD
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from plugp100.discovery.discovered_device import DiscoveredDevice
+from plugp100.new.tapodevice import TapoDevice
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from plugp100.new.tapodevice import TapoDevice
-from .conftest import IP_ADDRESS
-from .conftest import MAC_ADDRESS
+from custom_components.tapo import (
+    CONF_DISCOVERED_DEVICE_INFO,
+    CONF_HOST,
+    CONF_MAC,
+    DEFAULT_POLLING_RATE_S,
+    DOMAIN,
+)
+from custom_components.tapo.const import STEP_DISCOVERY_REQUIRE_AUTH
+
+from .conftest import IP_ADDRESS, MAC_ADDRESS
 
 
 async def test_discovery_auth(
@@ -31,7 +30,6 @@ async def test_discovery_auth(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-
         },
         data={
             CONF_HOST: IP_ADDRESS,

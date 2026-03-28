@@ -1,19 +1,21 @@
 from typing import cast
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from plugp100.components.overheat import OverheatComponent
 from plugp100.devices.base import TapoDevice
 
-
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
-from custom_components.tapo.hub.binary_sensor import async_setup_entry as async_setup_binary_sensors
+from custom_components.tapo.hub.binary_sensor import (
+    async_setup_entry as async_setup_binary_sensors,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):

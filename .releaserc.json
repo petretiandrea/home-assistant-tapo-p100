@@ -19,7 +19,10 @@
             "type": "breaking",
             "release": "major"
           },
-          { "scope": "ci", "release": false }
+          {
+            "scope": "ci",
+            "release": false
+          }
         ]
       }
     ],
@@ -28,6 +31,7 @@
       "@semantic-release/git",
       {
         "assets": [
+          "pyproject.toml",
           "custom_components/tapo/const.py",
           "custom_components/tapo/manifest.json"
         ],

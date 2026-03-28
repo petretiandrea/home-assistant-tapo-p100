@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# script/clean: Clean up development artifacts and caches
+#
+# Removes build artifacts, test caches, and accidental package installations.
+# Use --minimal for critical cleanup only, --deep to also remove __pycache__.
+#
+# Usage:
+#   ./script/clean [--minimal|--deep]
+#
+# Examples:
+#   ./script/clean           # Standard cleanup (recommended)
+#   ./script/clean --deep    # Also remove __pycache__
+#   ./script/clean --minimal # Only critical issues (.egg-info)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    log_header "Activating virtual environment"
+    # shellcheck source=/dev/null
+    if [[ -f "$PWD/.local/ha-venv/bin/activate" ]]; then
+        source "$PWD/.local/ha-venv/bin/activate"
+    elif [[ -f "$HOME/.local/ha-venv/bin/activate" ]]; then
+        source "$HOME/.local/ha-venv/bin/activate"
+    else
+        log_error "Virtual environment not found in $PWD/.local/ha-venv or $HOME/.local/ha-venv"
+        exit 1
+    fi
+fi
+
+MINIMAL_MODE=false
+DEEP_MODE=false
+
+if [[ ${1:-} == --minimal ]]; then
+    MINIMAL_MODE=true
+elif [[ ${1:-} == --deep ]]; then
+    DEEP_MODE=true
+fi
+
+if [[ $MINIMAL_MODE == false ]]; then
+    log_header "Cleaning development artifacts"
+fi
+
+# Clean up accidental package installation (always, even in minimal mode)
+if compgen -G "*.egg-info" > /dev/null; then
+    if [[ $MINIMAL_MODE == false ]]; then
+        log_step "Removing *.egg-info directories"
+    fi
+    rm -rf ./*.egg-info
+fi
+
+# Uninstall if accidentally installed (always, even in minimal mode)
+# Find all non-symlink directories in custom_components/
+if [[ -d custom_components ]]; then
+    while IFS= read -r -d '' dir; do
+        if [[ -d "$dir" && ! -L "${dir%/}" ]]; then
+            PACKAGE_NAME=$(basename "$dir")
+            if pip show "$PACKAGE_NAME" >/dev/null 2>&1; then
+                if [[ $MINIMAL_MODE == false ]]; then
+                    log_step "Uninstalling accidentally installed package: $PACKAGE_NAME"
+                fi
+                pip uninstall -y "$PACKAGE_NAME" >/dev/null 2>&1 || true
+            fi
+        fi
+    done < <(find custom_components -mindepth 1 -maxdepth 1 -type d -print0)
+fi
+
+# Exit early if minimal mode
+if [[ $MINIMAL_MODE == true ]]; then
+    exit 0
+fi
+
+# Clean pytest cache
+if [[ -d .pytest_cache ]]; then
+    log_step "Removing .pytest_cache"
+    rm -rf .pytest_cache
+fi
+
+# Clean coverage files
+if [[ -f .coverage ]]; then
+    log_step "Removing .coverage"
+    rm -f .coverage
+fi
+if [[ -f coverage.xml ]]; then
+    log_step "Removing coverage.xml"
+    rm -f coverage.xml
+fi
+
+# Clean ruff cache
+if [[ -d .ruff_cache ]]; then
+    log_step "Removing .ruff_cache"
+    rm -rf .ruff_cache
+fi
+
+# Optional: Clean __pycache__ (normally not needed, but useful for troubleshooting)
+if [[ $DEEP_MODE == true ]]; then
+    log_step "Deep clean: Removing all __pycache__ directories"
+    find . -type d -name "__pycache__" -delete 2>/dev/null || true
+    log_step "Deep clean: Removing all .pyc files"
+    find . -type f -name "*.pyc" -delete 2>/dev/null || true
+fi
+
+log_success "Cleanup complete"
+
+if [[ $DEEP_MODE == false ]]; then
+    echo ""
+    log_info "Tip: Use './script/clean --deep' to also remove __pycache__ directories"
+    log_step "(normally not needed - __pycache__ speeds up Home Assistant startup)"
+    echo ""
+    log_info "Tip: Use './script/setup/reset' to reset config/ to fresh HA installation"
+    log_step "(removes everything, restores configuration.yaml, re-runs setup)"
+fi

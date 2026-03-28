@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, Mock
 
-import pytest
 from homeassistant.components.number import NumberDeviceClass, NumberMode
-from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from plugp100.common.functional.tri import Try
 from plugp100.new.child.tapohubchildren import KE100Device, TriggerButtonDevice
 from plugp100.responses.temperature_unit import TemperatureUnit
+import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.number import (
@@ -14,7 +14,6 @@ from custom_components.tapo.hub.number import (
     TRVTemperatureOffset,
 )
 from tests.conftest import _mock_hub_child_device
-
 
 # class TestSensorMappings:
 #     coordinator = Mock(TapoDataCoordinator)
@@ -26,12 +25,13 @@ from tests.conftest import _mock_hub_child_device
 
 
 class TestTRVTemperatureOffset:
-
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device = _mock_hub_child_device(MagicMock(auto_spec=KE100Device))
-        self.temperature_offset = TRVTemperatureOffset(coordinator=self.coordinator, device=self.device)
+        self.temperature_offset = TRVTemperatureOffset(
+            coordinator=self.coordinator, device=self.device
+        )
 
     async def test_unique_id(self):
         assert self.temperature_offset.unique_id == "123_Temperature_Offset"
@@ -68,8 +68,10 @@ class TestTRVTemperatureOffset:
         expected_unit_of_temperature: UnitOfTemperature,
     ):
         self.device.temperature_unit = temperature_unit
-        assert self.temperature_offset.native_unit_of_measurement == expected_unit_of_temperature
-
+        assert (
+            self.temperature_offset.native_unit_of_measurement
+            == expected_unit_of_temperature
+        )
 
     async def test_async_set_native_value(self):
         value = 8
@@ -83,9 +85,7 @@ class TestPollUtilization:
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device = _mock_hub_child_device(MagicMock(auto_spec=TriggerButtonDevice))
-        self.entity = PollUtilization(
-            coordinator=self.coordinator, device=self.device
-        )
+        self.entity = PollUtilization(coordinator=self.coordinator, device=self.device)
 
     def test_unique_id(self):
         assert self.entity.unique_id == "123_poll_utilization"
@@ -138,14 +138,14 @@ class TestPollUtilization:
         # Mock RestoreNumber's async_get_last_number_data to return None
         with pytest.MonkeyPatch.context() as m:
             m.setattr(
-                self.entity, "async_get_last_number_data",
-                AsyncMock(return_value=None)
+                self.entity, "async_get_last_number_data", AsyncMock(return_value=None)
             )
             # Mock super().async_added_to_hass
             with pytest.MonkeyPatch.context() as m2:
                 m2.setattr(
-                    PollUtilization.__bases__[1], "async_added_to_hass",
-                    AsyncMock(return_value=None)
+                    PollUtilization.__bases__[1],
+                    "async_added_to_hass",
+                    AsyncMock(return_value=None),
                 )
                 await self.entity.async_added_to_hass()
         assert self.coordinator._poll_utilization_pct == float(DEFAULT_POLL_UTILIZATION)

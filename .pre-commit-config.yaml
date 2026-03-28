@@ -1,26 +1,30 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
+      # - id: check-json
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: local
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
     hooks:
-      - id: ruff-check
-        name: ruff check
-        entry: uv run ruff check --fix
-        language: system
-        types: [python]
-        require_serial: true
+      - id: ruff
+        args: [--fix]
       - id: ruff-format
-        name: ruff format
-        entry: uv run ruff format
-        language: system
-        types: [python]
-        require_serial: true
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=converation,hass,aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
+          - --skip=./.*,*.csv,*.json,*.ambr,uv.lock,custom_components/*/translations/*.json
+
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        files: \.(json|md|ya?ml)$

@@ -1,14 +1,14 @@
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-import pytest
 from plugp100.common.functional.tri import Success
 from plugp100.new.child.tapohubchildren import TriggerButtonDevice
 from plugp100.responses.hub_childs.s200b_device_state import (
     RotationEvent,
     SingleClickEvent,
 )
+import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
 from custom_components.tapo.hub.event import (
@@ -136,9 +136,7 @@ class TestTapoButtonEvent:
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device, _ = _mock_trigger_device()
-        self.entity = TapoButtonEvent(
-            coordinator=self.coordinator, device=self.device
-        )
+        self.entity = TapoButtonEvent(coordinator=self.coordinator, device=self.device)
 
     def test_unique_id(self):
         assert self.entity.unique_id == "123_button_event"
@@ -170,9 +168,7 @@ class TestTapoDialEvent:
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device, _ = _mock_trigger_device()
-        self.entity = TapoDialEvent(
-            coordinator=self.coordinator, device=self.device
-        )
+        self.entity = TapoDialEvent(coordinator=self.coordinator, device=self.device)
 
     def test_unique_id(self):
         assert self.entity.unique_id == "123_dial_event"
@@ -207,9 +203,7 @@ class TestTapoEventBaseStartupDeferral:
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
         self.device, _ = _mock_trigger_device()
-        self.entity = TapoButtonEvent(
-            coordinator=self.coordinator, device=self.device
-        )
+        self.entity = TapoButtonEvent(coordinator=self.coordinator, device=self.device)
 
     def test_ha_started_defaults_false(self):
         assert self.entity._ha_started is False
@@ -239,9 +233,7 @@ class TestPollAndFireEvents:
         self.coordinator._hub_entry_id = "entry_1"
         self.coordinator._event_log_cache = None
         self.device, self.logs = _mock_trigger_device()
-        self.entity = TapoButtonEvent(
-            coordinator=self.coordinator, device=self.device
-        )
+        self.entity = TapoButtonEvent(coordinator=self.coordinator, device=self.device)
         self.entity.hass = MagicMock()
         self.entity._ha_started = True
         self.entity._trigger_event = MagicMock()

@@ -1,19 +1,22 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock
 
-import pytest
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfTime
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from plugp100.common.functional.tri import Success
 from plugp100.new.child.tapohubchildren import TapoHubChildDevice, TriggerButtonDevice
 from plugp100.new.components.battery_component import BatteryComponent
 from plugp100.new.components.humidity_component import HumidityComponent
 from plugp100.new.components.report_mode_component import ReportModeComponent
 from plugp100.new.components.temperature_component import TemperatureComponent
+import pytest
 
 from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.sensor import BatteryLevelSensor, COMPONENT_MAPPING, PollLatencySensor
+from custom_components.tapo.hub.sensor import (
+    COMPONENT_MAPPING,
+    BatteryLevelSensor,
+    PollLatencySensor,
+)
 from tests.conftest import _mock_hub_child_device
 
 
@@ -21,15 +24,15 @@ class TestSensorMappings:
     coordinator = Mock(TapoDataCoordinator)
 
     def test_sensor_mappings(self):
-
         expected_mappings = {
-            HumidityComponent: 'HumiditySensor',
-            TemperatureComponent: 'TemperatureSensor',
-            ReportModeComponent: 'ReportIntervalDiagnostic',
-            BatteryComponent: 'BatteryLevelSensor'
+            HumidityComponent: "HumiditySensor",
+            TemperatureComponent: "TemperatureSensor",
+            ReportModeComponent: "ReportIntervalDiagnostic",
+            BatteryComponent: "BatteryLevelSensor",
         }
 
         assert COMPONENT_MAPPING == expected_mappings
+
 
 def _mock_battery_component(mock_device: MagicMock) -> MagicMock:
     battery_component = MagicMock(BatteryComponent())
@@ -39,12 +42,17 @@ def _mock_battery_component(mock_device: MagicMock) -> MagicMock:
     mock_device.add_component(battery_component)
     return mock_device
 
+
 class TestBatteryLevelSensor:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
-        self.device = _mock_battery_component(_mock_hub_child_device(MagicMock(auto_spec=TapoHubChildDevice)))
-        self.battery_sensor = BatteryLevelSensor(coordinator=self.coordinator, device=self.device)
+        self.device = _mock_battery_component(
+            _mock_hub_child_device(MagicMock(auto_spec=TapoHubChildDevice))
+        )
+        self.battery_sensor = BatteryLevelSensor(
+            coordinator=self.coordinator, device=self.device
+        )
 
     def test_unique_id(self):
         assert self.battery_sensor.unique_id == "123_Battery_Percentage"
@@ -359,6 +367,24 @@ class TestAdaptiveAlgorithmMath:
         assert pct_large > PollLatencySensor.HYSTERESIS_PCT
 
     def test_clamping_bounds(self):
-        assert max(PollLatencySensor.MIN_INTERVAL_MS, min(PollLatencySensor.MAX_INTERVAL_MS, 100)) == 300
-        assert max(PollLatencySensor.MIN_INTERVAL_MS, min(PollLatencySensor.MAX_INTERVAL_MS, 10000)) == 5000
-        assert max(PollLatencySensor.MIN_INTERVAL_MS, min(PollLatencySensor.MAX_INTERVAL_MS, 1000)) == 1000
+        assert (
+            max(
+                PollLatencySensor.MIN_INTERVAL_MS,
+                min(PollLatencySensor.MAX_INTERVAL_MS, 100),
+            )
+            == 300
+        )
+        assert (
+            max(
+                PollLatencySensor.MIN_INTERVAL_MS,
+                min(PollLatencySensor.MAX_INTERVAL_MS, 10000),
+            )
+            == 5000
+        )
+        assert (
+            max(
+                PollLatencySensor.MIN_INTERVAL_MS,
+                min(PollLatencySensor.MAX_INTERVAL_MS, 1000),
+            )
+            == 1000
+        )

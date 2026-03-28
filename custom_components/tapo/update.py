@@ -1,15 +1,23 @@
-import logging
 from datetime import timedelta
-from typing import cast, Any, Optional
+import logging
+from typing import Any, Optional, cast
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature, UpdateDeviceClass
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from plugp100.devices.base import TapoDevice
 from plugp100.errors import TapoException
-from plugp100.models.firmware import LatestFirmware, FirmwareDownloadProgress, FirmwareDownloadStatus
+from plugp100.models.firmware import (
+    FirmwareDownloadProgress,
+    FirmwareDownloadStatus,
+    LatestFirmware,
+)
 
 from custom_components.tapo import DOMAIN, HassTapoDeviceData
 from custom_components.tapo.coordinators import TapoDataCoordinator
@@ -20,27 +28,36 @@ POLL_DELAY_UPGRADE = timedelta(seconds=60)
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     if data.coordinator.is_hub:
         coordinators = [
-            TapoDeviceFirmwareDataCoordinator(hass, coordinator.device, POLL_DELAY_IDLE) \
+            TapoDeviceFirmwareDataCoordinator(hass, coordinator.device, POLL_DELAY_IDLE)
             for coordinator in data.child_coordinators
         ]
     else:
-        coordinators = [TapoDeviceFirmwareDataCoordinator(hass, data.coordinator.device, POLL_DELAY_IDLE)]
+        coordinators = [
+            TapoDeviceFirmwareDataCoordinator(
+                hass, data.coordinator.device, POLL_DELAY_IDLE
+            )
+        ]
 
-    async_add_entities([
-        TapoDeviceFirmwareEntity(coordinator, coordinator.device) for coordinator in coordinators
-    ], True)
+    async_add_entities(
+        [
+            TapoDeviceFirmwareEntity(coordinator, coordinator.device)
+            for coordinator in coordinators
+        ],
+        True,
+    )
 
 
 class TapoDeviceFirmwareDataCoordinator(TapoDataCoordinator):
-
-    def __init__(self, hass: HomeAssistant, device: TapoDevice, polling_interval: timedelta):
+    def __init__(
+        self, hass: HomeAssistant, device: TapoDevice, polling_interval: timedelta
+    ):
         super().__init__(hass, device, polling_interval)
         self._latest_firmware: Optional[LatestFirmware] = None
         self._download_status: Optional[FirmwareDownloadProgress] = None
@@ -55,9 +72,13 @@ class TapoDeviceFirmwareDataCoordinator(TapoDataCoordinator):
 
     async def poll_update(self):
         self._latest_firmware = (await self.device.get_latest_firmware()).get_or_raise()
-        self._download_status = (await self.device.get_firmware_download_state()).get_or_raise()
-        if self._download_status.status == FirmwareDownloadStatus.DOWNLOADING or \
-                self._download_status.status == FirmwareDownloadStatus.PREPARING:
+        self._download_status = (
+            await self.device.get_firmware_download_state()
+        ).get_or_raise()
+        if (
+            self._download_status.status == FirmwareDownloadStatus.DOWNLOADING
+            or self._download_status.status == FirmwareDownloadStatus.PREPARING
+        ):
             self.update_interval = POLL_DELAY_UPGRADE
         else:
             self.update_interval = POLL_DELAY_IDLE
@@ -67,15 +88,17 @@ class TapoDeviceFirmwareDataCoordinator(TapoDataCoordinator):
 class TapoDeviceFirmwareEntity(CoordinatedTapoEntity, UpdateEntity):
     _attr_has_entity_name = True
     _attr_supported_features = (
-            UpdateEntityFeature.INSTALL
-            | UpdateEntityFeature.PROGRESS
-            | UpdateEntityFeature.RELEASE_NOTES
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     coordinator: TapoDeviceFirmwareDataCoordinator
 
-    def __init__(self, coordinator: TapoDeviceFirmwareDataCoordinator, device: TapoDevice):
+    def __init__(
+        self, coordinator: TapoDeviceFirmwareDataCoordinator, device: TapoDevice
+    ):
         super().__init__(coordinator, device)
         self._attr_name = "Firmware"
 
@@ -87,13 +110,15 @@ class TapoDeviceFirmwareEntity(CoordinatedTapoEntity, UpdateEntity):
         return None
 
     async def async_install(
-            self, version: str | None, backup: bool, **kwargs: Any
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install a firmware update."""
         try:
-            result = (await self.device.start_firmware_upgrade())
+            result = await self.device.start_firmware_upgrade()
         except TapoException as ex:
-            raise HomeAssistantError("Unable to send Firmware update request. Check the controller is online.") from ex
+            raise HomeAssistantError(
+                "Unable to send Firmware update request. Check the controller is online."
+            ) from ex
         except Exception as ex:
             raise HomeAssistantError("Firmware update request rejected") from ex
         finally:
@@ -101,7 +126,8 @@ class TapoDeviceFirmwareEntity(CoordinatedTapoEntity, UpdateEntity):
 
         if not result:
             raise HomeAssistantError(
-                "Unable to send Firmware update request. Check the controller is online.")
+                "Unable to send Firmware update request. Check the controller is online."
+            )
 
     @property
     def installed_version(self) -> str | None:
@@ -110,17 +136,21 @@ class TapoDeviceFirmwareEntity(CoordinatedTapoEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         status = self.coordinator.latest_firmware
-        return status.firmware_version \
-            if status.firmware_version and status.need_to_upgrade \
+        return (
+            status.firmware_version
+            if status.firmware_version and status.need_to_upgrade
             else self.device.firmware_version
+        )
 
     @property
     def in_progress(self) -> bool | int | None:
         download_progress = self.coordinator.download_progress
         if download_progress is None:
             return False
-        if download_progress.status in (FirmwareDownloadStatus.DOWNLOADING,
-                                        FirmwareDownloadStatus.PREPARING):
+        if download_progress.status in (
+            FirmwareDownloadStatus.DOWNLOADING,
+            FirmwareDownloadStatus.PREPARING,
+        ):
             return download_progress.download_in_progress
         return False
 

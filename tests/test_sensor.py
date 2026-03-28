@@ -1,24 +1,26 @@
 """Test tapo switch."""
+
 from unittest.mock import MagicMock
 
-import pytest
-from custom_components.tapo.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+import pytest
 
-from .conftest import extract_entity_id
-from .conftest import mock_bulb
-from .conftest import mock_hub
-from .conftest import mock_led_strip
-from .conftest import mock_plug
-from .conftest import mock_plug_strip
-from .conftest import setup_platform
+from custom_components.tapo.const import DOMAIN
+
+from .conftest import (
+    extract_entity_id,
+    mock_bulb,
+    mock_hub,
+    mock_plug,
+    mock_plug_strip,
+    setup_platform,
+)
 
 
 @pytest.mark.parametrize(
-    "device",
-    [mock_plug(), mock_plug_strip(), mock_hub(), mock_bulb() ]
+    "device", [mock_plug(), mock_plug_strip(), mock_hub(), mock_bulb()]
 )
 async def test_signal_sensor(hass: HomeAssistant, device: MagicMock):
     device_registry = dr.async_get(hass)

@@ -1,8 +1,5 @@
-from datetime import date
-from datetime import datetime
-from typing import Optional
-from typing import Union
-from typing import cast
+from datetime import date, datetime
+from typing import Optional, Union, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,19 +10,21 @@ from homeassistant.helpers.typing import StateType
 from plugp100.components.energy import EnergyComponent
 from plugp100.devices.base import TapoDevice
 
-
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.entity import CoordinatedTapoEntity
-from custom_components.tapo.sensors import CurrentEnergySensorSource
-from custom_components.tapo.sensors import MonthEnergySensorSource
-from custom_components.tapo.sensors import MonthRuntimeSensorSource
-from custom_components.tapo.sensors import SignalSensorSource
-from custom_components.tapo.sensors import TodayEnergySensorSource
-from custom_components.tapo.sensors import TodayRuntimeSensorSource
+from custom_components.tapo.hub.sensor import (
+    async_setup_entry as async_setup_hub_sensors,
+)
+from custom_components.tapo.sensors import (
+    CurrentEnergySensorSource,
+    MonthEnergySensorSource,
+    MonthRuntimeSensorSource,
+    SignalSensorSource,
+    TodayEnergySensorSource,
+    TodayRuntimeSensorSource,
+)
 from custom_components.tapo.sensors.tapo_sensor_source import TapoSensorSource
-from custom_components.tapo.hub.sensor import async_setup_entry as async_setup_hub_sensors
 
 # Supported sensors: Today energy and current power
 SUPPORTED_ENERGY_SENSOR = [
@@ -43,7 +42,12 @@ async def async_setup_entry(
 ):
     # get tapo helper
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
-    _setup_from_coordinator(hass, data.coordinator, async_add_entities, is_strip=bool(data.child_coordinators))
+    _setup_from_coordinator(
+        hass,
+        data.coordinator,
+        async_add_entities,
+        is_strip=bool(data.child_coordinators),
+    )
     for child_coordinator in data.child_coordinators:
         _setup_socket_sensors(child_coordinator, async_add_entities)
     if data.coordinator.is_hub:
@@ -59,7 +63,10 @@ def _setup_from_coordinator(
     sensors = [TapoSensor(coordinator, coordinator.device, SignalSensorSource())]
     if not is_strip and coordinator.device.has_component(EnergyComponent):
         sensors.extend(
-            [TapoSensor(coordinator, coordinator.device, factory()) for factory in SUPPORTED_ENERGY_SENSOR]
+            [
+                TapoSensor(coordinator, coordinator.device, factory())
+                for factory in SUPPORTED_ENERGY_SENSOR
+            ]
         )
     async_add_entities(sensors, True)
 

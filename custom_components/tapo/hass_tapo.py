@@ -1,20 +1,24 @@
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from plugp100.components.energy import EnergyComponent
-from plugp100.discovery import DiscoveredDevice, connect_discovered_device
 from plugp100.devices import DeviceConnectConfiguration, TapoDevice, TapoPlug, connect
+from plugp100.discovery import DiscoveredDevice, connect_discovered_device
 
-from custom_components.tapo.components.child_energy_component import ChildEnergyComponent
-from custom_components.tapo.const import DEFAULT_POLLING_RATE_S, CONF_DISCOVERED_DEVICE_INFO
-from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.const import PLATFORMS
-from custom_components.tapo.coordinators import HassTapoDeviceData
-from custom_components.tapo.coordinators import TapoDataCoordinator
-from custom_components.tapo.hub.hass_tapo_hub import TapoHub, HassTapoHub
+from custom_components.tapo.components.child_energy_component import (
+    ChildEnergyComponent,
+)
+from custom_components.tapo.const import (
+    CONF_DISCOVERED_DEVICE_INFO,
+    DEFAULT_POLLING_RATE_S,
+    DOMAIN,
+    PLATFORMS,
+)
+from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
+from custom_components.tapo.hub.hass_tapo_hub import HassTapoHub, TapoHub
 from custom_components.tapo.setup_helpers import create_aiohttp_session
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,10 +54,12 @@ class HassTapo:
             return await self._initialize_device(hass, device, polling_rate)
 
     async def _initialize_device(
-            self, hass: HomeAssistant, device: TapoDevice, polling_rate: timedelta
+        self, hass: HomeAssistant, device: TapoDevice, polling_rate: timedelta
     ):
         coordinator = TapoDataCoordinator(hass, device, polling_rate)
-        await coordinator.async_config_entry_first_refresh()  # could raise ConfigEntryNotReady
+        await (
+            coordinator.async_config_entry_first_refresh()
+        )  # could raise ConfigEntryNotReady
 
         child_coordinators = []
         if isinstance(device, TapoPlug) and device.is_strip:

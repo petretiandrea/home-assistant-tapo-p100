@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# script/check: Run linting and type checking tools together
+#
+# Runs type-check (Pyright), lint-check (Ruff), and spell-check (codespell) in sequence.
+# Recommended before committing changes.
+#
+# Usage:
+#   ./script/check
+#
+# Examples:
+#   ./script/check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+"$SCRIPT_DIR/type-check"
+echo ""
+"$SCRIPT_DIR/lint-check"
+echo ""
+"$SCRIPT_DIR/spell-check"
+
+# Run hassfest validation if it has been set up (only in local environment, not CI)
+if [ -z "${CI:-}" ] && [ -z "${GITHUB_ACTIONS:-}" ] && [ -d "$SCRIPT_DIR/../.local/ha-core" ]; then
+    echo ""
+    "$SCRIPT_DIR/hassfest"
+fi
+
+log_success "All checks passed"

@@ -1,13 +1,14 @@
-from plugp100.devices import connect
-
-from custom_components.tapo.const import CONF_MAC
-from custom_components.tapo.const import DEFAULT_POLLING_RATE_S
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from plugp100.devices import connect
 
-from custom_components.tapo.setup_helpers import create_aiohttp_session, create_device_config
+from custom_components.tapo.const import CONF_MAC, DEFAULT_POLLING_RATE_S
+from custom_components.tapo.setup_helpers import (
+    create_aiohttp_session,
+    create_device_config,
+)
 
 
 async def migrate_entry_to_v8(hass: HomeAssistant, config_entry: ConfigEntry):

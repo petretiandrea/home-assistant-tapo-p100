@@ -2,15 +2,27 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run Home Assistant on port 9123",
+      "label": "Run Home Assistant",
       "type": "shell",
-      "command": ".devcontainer/start.sh run",
+      "command": "bash script/develop",
       "problemMatcher": []
     },
     {
-      "label": "Install a specific version of Home Assistant",
+      "label": "Bootstrap",
       "type": "shell",
-      "command": ".devcontainer/start.sh setversion",
+      "command": "bash script/setup/bootstrap",
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "bash script/lint-check",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test",
+      "type": "shell",
+      "command": "bash script/test",
       "problemMatcher": []
     }
   ]

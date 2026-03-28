@@ -1,8 +1,7 @@
 """Constants for tapo tests."""
+
 from custom_components.tapo.const import (
     CONF_PASSWORD,
-)
-from custom_components.tapo.const import (
     CONF_USERNAME,
 )
 

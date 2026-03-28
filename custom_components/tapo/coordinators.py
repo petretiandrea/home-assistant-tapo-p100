@@ -1,19 +1,14 @@
-import logging
 from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Dict
-from typing import List
-from typing import Type
-from typing import TypeVar
+import logging
+from typing import Dict, List, Type, TypeVar
 
 import aiohttp
 import async_timeout
-from homeassistant.core import CALLBACK_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from plugp100.devices.base import TapoDevice
 from plugp100.devices.hub import TapoHub
 from plugp100.errors import InvalidAuthentication, TapoException
@@ -56,10 +51,10 @@ StateMap = Dict[Type[T], T]
 
 class TapoDataCoordinator(ABC, DataUpdateCoordinator[StateMap]):
     def __init__(
-            self,
-            hass: HomeAssistant,
-            device: TapoDevice,
-            polling_interval: timedelta,
+        self,
+        hass: HomeAssistant,
+        device: TapoDevice,
+        polling_interval: timedelta,
     ):
         self._device = device
         super().__init__(
