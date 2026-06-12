@@ -14,7 +14,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.common.credentials import AuthCredential
 from plugp100.devices import DeviceConnectConfiguration, TapoDevice, connect
-from plugp100.discovery import DiscoveredDevice, connect_discovered_device
+from plugp100.discovery import DiscoveredDevice
 from plugp100.errors import InvalidAuthentication, TapoError, TapoException
 import voluptuous as vol
 
@@ -33,7 +33,11 @@ from custom_components.tapo.const import (
 )
 from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHost
-from custom_components.tapo.setup_helpers import create_aiohttp_session, get_host_port
+from custom_components.tapo.setup_helpers import (
+    connect_with_discovery_fallback,
+    create_aiohttp_session,
+    get_host_port,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -315,7 +319,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 device = await connect(config=config, session=session)
             else:
-                device = await connect_discovered_device(
+                device = await connect_with_discovery_fallback(
                     discovered_device, credential, session
                 )
             await device.update()
