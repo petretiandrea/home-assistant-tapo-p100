@@ -71,7 +71,7 @@ class HassTapoHub:
             _LOGGER.info("Detected child association change %s", str(event))
             if event.device_id not in initial_device_ids:
                 await hass.config_entries.async_reload(self.entry.entry_id)
-            elif event is DeviceAdded:
+            elif isinstance(event, DeviceAdded):
                 initial_device_ids.remove(event.device_id)
 
         self.entry.async_on_unload(
