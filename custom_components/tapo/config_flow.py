@@ -97,7 +97,7 @@ class FirstStepData:
 class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tapo."""
 
-    VERSION = 5
+    VERSION = 8
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
