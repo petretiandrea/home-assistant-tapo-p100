@@ -14,7 +14,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.common.credentials import AuthCredential
 from plugp100.devices import DeviceConnectConfiguration, TapoDevice, connect
-from plugp100.discovery import DiscoveredDevice, connect_discovered_device
+from plugp100.discovery import DiscoveredDevice
 from plugp100.errors import InvalidAuthentication, TapoError, TapoException
 import voluptuous as vol
 
@@ -32,8 +32,12 @@ from custom_components.tapo.const import (
     STEP_INIT,
 )
 from custom_components.tapo.discovery import discover_tapo_device
-from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHost
-from custom_components.tapo.setup_helpers import create_aiohttp_session, get_host_port
+from custom_components.tapo.errors import CannotConnect, DeviceNotSupported, InvalidAuth, InvalidHost
+from custom_components.tapo.setup_helpers import (
+    connect_discovered_device_with_fallback,
+    create_aiohttp_session,
+    get_host_port,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +101,7 @@ class FirstStepData:
 class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tapo."""
 
-    VERSION = 5
+    VERSION = 8
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
@@ -159,6 +163,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidHost as error:
                 errors["base"] = "invalid_hostname"
                 _LOGGER.exception("Failed to setup invalid host %s", str(error))
+            except DeviceNotSupported as error:
+                _LOGGER.exception("Device not supported %s", str(error))
+                return self.async_abort(reason="not_supported")
             except data_entry_flow.AbortFlow:
                 return self.async_abort(reason="already_configured")
             except Exception as error:  # pylint: disable=broad-except
@@ -240,6 +247,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidHost as error:
                 errors["base"] = "invalid_hostname"
                 _LOGGER.exception("Failed to setup invalid host %s", str(error))
+            except DeviceNotSupported as error:
+                _LOGGER.exception("Device not supported %s", str(error))
+                return self.async_abort(reason="not_supported")
             else:
                 return await self._async_create_config_entry_from_device_info(
                     device, user_input
@@ -315,7 +325,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 device = await connect(config=config, session=session)
             else:
-                device = await connect_discovered_device(
+                device = await connect_discovered_device_with_fallback(
                     discovered_device, credential, session
                 )
             await device.update()
@@ -324,7 +334,11 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise InvalidAuth from error
         except TapoException as error:
             self._raise_from_tapo_exception(error)
-        except (aiohttp.ClientError, Exception) as error:
+        except aiohttp.ClientError as error:
+            raise CannotConnect from error
+        except Exception as error:
+            if "Failed to determine the right tapo protocol" in str(error):
+                raise DeviceNotSupported from error
             raise CannotConnect from error
 
     def _raise_from_tapo_exception(self, exception: TapoException):

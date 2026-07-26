@@ -2,7 +2,8 @@
   "config": {
     "flow_title": "{name} ({host} - {mac})",
     "abort": {
-      "already_configured": "O dispositivo já está configurado"
+      "already_configured": "O dispositivo já está configurado",
+      "not_supported": "Dispositivo não suportado: este dispositivo usa um protocolo não suportado."
     },
     "error": {
       "cannot_connect": "Falha na conexão",

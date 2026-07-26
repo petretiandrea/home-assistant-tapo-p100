@@ -2,7 +2,8 @@
   "config": {
     "flow_title": "{name} ({host} - {mac})",
     "abort": {
-      "already_configured": "الجهاز مكون بالفعل"
+      "already_configured": "الجهاز مكون بالفعل",
+      "not_supported": "الجهاز غير مدعوم: يستخدم هذا الجهاز بروتوكولاً غير مدعوم."
     },
     "error": {
       "cannot_connect": "فشل الاتصال",

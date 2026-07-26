@@ -1,9 +1,8 @@
 from homeassistant import exceptions
 
 
-class DeviceNotSupported(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+class DeviceNotSupported(exceptions.HomeAssistantError):
+    """Error to indicate the device is not supported."""
 
 
 class CannotConnect(exceptions.HomeAssistantError):

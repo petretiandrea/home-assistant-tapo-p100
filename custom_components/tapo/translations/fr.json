@@ -2,7 +2,8 @@
   "config": {
     "flow_title": "{name} ({host} - {mac})",
     "abort": {
-      "already_configured": "Appareil est déjà configuré"
+      "already_configured": "Appareil est déjà configuré",
+      "not_supported": "Appareil non pris en charge : cet appareil utilise un protocole non pris en charge."
     },
     "error": {
       "cannot_connect": "Échec de la connexion",

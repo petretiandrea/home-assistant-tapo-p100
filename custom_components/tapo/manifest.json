@@ -18,7 +18,10 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/petretiandrea/home-assistant-tapo-p100/issues",
   "requirements": [
-    "plugp100==6.0.0.dev2"
+    "plugp100==6.0.0.dev2",
+    "ecdsa>=0.18.0",
+    "cryptography>=41.0.0",
+    "passlib>=1.7.4"
   ],
   "version": "3.5.0"
 }

@@ -2,7 +2,8 @@
   "config": {
     "flow_title": "{name} ({host} - {mac})",
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "Device is already configured",
+      "not_supported": "Device not supported: this device uses an unsupported protocol. Please update the plugp100 library or check for a newer firmware on your device."
     },
     "error": {
       "cannot_connect": "Failed to connect",
