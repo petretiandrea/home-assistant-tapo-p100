@@ -805,6 +805,18 @@ wheels = [
 ]
 
 [[package]]
+name = "ecdsa"
+version = "0.19.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/ca/8de7744cb3bc966c85430ca2d0fcaeea872507c6a4cf6e007f7fe269ed9d/ecdsa-0.19.2.tar.gz", hash = "sha256:62635b0ac1ca2e027f82122b5b81cb706edc38cd91c63dda28e4f3455a2bf930", size = 202432, upload-time = "2026-03-26T09:58:17.675Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/79/119091c98e2bf49e24ed9f3ae69f816d715d2904aefa6a2baa039a2ba0b0/ecdsa-0.19.2-py2.py3-none-any.whl", hash = "sha256:840f5dc5e375c68f36c1a7a5b9caad28f95daa65185c9253c0c08dd952bb7399", size = 150818, upload-time = "2026-03-26T09:58:15.808Z" },
+]
+
+[[package]]
 name = "envs"
 version = "1.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1051,7 +1063,7 @@ wheels = [
 
 [[package]]
 name = "home-assistant-tapo-p100"
-version = "3.2.2"
+version = "3.5.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -1088,7 +1100,7 @@ dev = [
     { name = "hassil", specifier = ">=3.5.0" },
     { name = "home-assistant-intents", specifier = ">=2026.3.3" },
     { name = "homeassistant", specifier = "==2026.3.4" },
-    { name = "plugp100", specifier = "==6.0.0.dev2" },
+    { name = "plugp100", specifier = "==6.0.0" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1484,6 +1496,15 @@ wheels = [
 ]
 
 [[package]]
+name = "passlib"
+version = "1.7.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/06/9da9ee59a67fae7761aab3ccc84fa4f3f33f125b370f1ccdb915bf967c11/passlib-1.7.4.tar.gz", hash = "sha256:defd50f72b65c5402ab2c573830a6978e5f202ad0d984793c8dde2c4152ebe04", size = 689844, upload-time = "2020-10-08T19:00:52.121Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/a4/ab6b7589382ca3df236e03faa71deac88cae040af60c071a78d254a62172/passlib-1.7.4-py2.py3-none-any.whl", hash = "sha256:aa6bca462b8d8bda89c70b382f0c298a20b5560af6cbfa2dce410c0a2fb669f1", size = 525554, upload-time = "2020-10-08T19:00:49.856Z" },
+]
+
+[[package]]
 name = "pillow"
 version = "12.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1558,21 +1579,23 @@ wheels = [
 
 [[package]]
 name = "plugp100"
-version = "6.0.0.dev2"
+version = "6.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "certifi" },
     { name = "cryptography" },
+    { name = "ecdsa" },
     { name = "jsons" },
+    { name = "passlib" },
     { name = "requests" },
     { name = "scapy" },
     { name = "semantic-version" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/68/cb8565b45ab02fc1be38c7fb4e936e01a1265c3369ae084cf88f1fdb213e/plugp100-6.0.0.dev2.tar.gz", hash = "sha256:45d83cfad11d425154fb36f1bb8c66dddfa0709b088d3672cc91f4f405b5f799", size = 60968, upload-time = "2026-03-13T19:03:25.833Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/c2/7fd8e8fc3f948608b12e83a1b1f46bcff987a2c815c651e291c144912091/plugp100-6.0.0.tar.gz", hash = "sha256:6bd0972c610079361f8c4cd0dbe4d399ae381c62dca6ba51ae4fd609a0afa472", size = 75914, upload-time = "2026-08-10T20:18:29.154Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/38/cb59c63a4c1319074b8b1869cde01c28b8cc5597489ea45153a0fb3a9bff/plugp100-6.0.0.dev2-py3-none-any.whl", hash = "sha256:e197a10133770d18b75b5679b3fd52e8d4a7fa787adac4d69b010050b5dc0876", size = 94598, upload-time = "2026-03-13T19:03:24.288Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/96/eb78d8fae97906f0c1cf2ca3532a8e862856263aded9f333f239c8eb291a/plugp100-6.0.0-py3-none-any.whl", hash = "sha256:2cc6f108bb539f564a496595498a33cb7e8c60df9fefe33e5fb71604132c5be1", size = 111278, upload-time = "2026-08-10T20:18:27.935Z" },
 ]
 
 [[package]]
