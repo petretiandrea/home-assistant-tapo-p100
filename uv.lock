@@ -1063,7 +1063,7 @@ wheels = [
 
 [[package]]
 name = "home-assistant-tapo-p100"
-version = "3.5.0"
+version = "3.5.2"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -1100,7 +1100,7 @@ dev = [
     { name = "hassil", specifier = ">=3.5.0" },
     { name = "home-assistant-intents", specifier = ">=2026.3.3" },
     { name = "homeassistant", specifier = "==2026.3.4" },
-    { name = "plugp100", specifier = "==6.0.0" },
+    { name = "plugp100", specifier = "==6.0.1" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1579,7 +1579,7 @@ wheels = [
 
 [[package]]
 name = "plugp100"
-version = "6.0.0"
+version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1593,9 +1593,9 @@ dependencies = [
     { name = "semantic-version" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/c2/7fd8e8fc3f948608b12e83a1b1f46bcff987a2c815c651e291c144912091/plugp100-6.0.0.tar.gz", hash = "sha256:6bd0972c610079361f8c4cd0dbe4d399ae381c62dca6ba51ae4fd609a0afa472", size = 75914, upload-time = "2026-08-10T20:18:29.154Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/84/fa/6ecadde6c0671219d36064c22c083ba0ab4f61a3e5cdc51181baef34cf05/plugp100-6.0.1.tar.gz", hash = "sha256:91d3816b4ec12d70285ae40dab5dd972236e050e5ed94c1978d7a906d29c80e2", size = 75945, upload-time = "2026-08-11T07:17:27.992Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/96/eb78d8fae97906f0c1cf2ca3532a8e862856263aded9f333f239c8eb291a/plugp100-6.0.0-py3-none-any.whl", hash = "sha256:2cc6f108bb539f564a496595498a33cb7e8c60df9fefe33e5fb71604132c5be1", size = 111278, upload-time = "2026-08-10T20:18:27.935Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/c7/1ec69f52a833f76b54de23f16d5ac91e26c6390a8456e070c960d78c1370/plugp100-6.0.1-py3-none-any.whl", hash = "sha256:1bf3ba60c1e295cf81df9ab009b041d16cda4396814b719ef132422d983406b0", size = 111275, upload-time = "2026-08-11T07:17:26.8Z" },
 ]
 
 [[package]]
