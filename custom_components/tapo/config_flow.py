@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 import aiohttp
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -47,6 +47,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_USERNAME, description="The username used with Tapo App, so your email"
         ): str,
         vol.Required(CONF_PASSWORD, description="The password used with Tapo App"): str,
+        vol.Optional(CONF_ADVANCED_SETTINGS, default=False): bool,
     }
 )
 
@@ -107,7 +108,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = dr.format_mac(discovery_info.macaddress)
         if discovered_device := await discover_tapo_device(discovery_info.ip):
@@ -115,9 +116,11 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 discovery_info.ip, mac_address, discovered_device
             )
 
+        return self.async_abort(reason="cannot_connect")
+
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         discovered_device = DiscoveredDevice.from_dict(
             discovery_info[CONF_DISCOVERED_DEVICE_INFO]
@@ -130,7 +133,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Optional[dict[str, Any]] = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         self.hass.data.setdefault(DOMAIN, {})
 
@@ -178,15 +181,18 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_advanced_config(
         self, user_input: Optional[dict[str, Any]] = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         errors = {}
         if user_input is not None:
+            assert self.first_step_data is not None
+            assert self.first_step_data.device is not None
+            assert self.first_step_data.user_input is not None
+
             polling_rate = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
-            return self.async_create_entry(
-                title=self.first_step_data.device.nickname,
-                data=self.first_step_data.user_input
-                | {CONF_SCAN_INTERVAL: polling_rate},
-            )
+            return await self._async_create_config_entry_from_device_info(
+                self.first_step_data.device,
+                self.first_step_data.user_input | {CONF_SCAN_INTERVAL: polling_rate},
+                )
         else:
             return self.async_show_form(
                 step_id=STEP_ADVANCED_SETTINGS,
@@ -199,7 +205,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host: str,
         mac_address: str,
         discovered_device: DiscoveredDevice,
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         self._discovered_info = discovered_device
         existing_entry = await self.async_set_unique_id(
             mac_address, raise_on_progress=False
@@ -220,7 +226,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_auth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         assert self._discovered_info is not None
         errors = {}
 
@@ -261,7 +267,7 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _recover_config_on_entry_error(
         self, entry: ConfigEntry, host: str
-    ) -> data_entry_flow.FlowResult | None:
+    ) -> ConfigFlowResult | None:
         if entry.state not in (
             ConfigEntryState.SETUP_ERROR,
             ConfigEntryState.SETUP_RETRY,
@@ -275,18 +281,24 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_create_config_entry_from_device_info(
         self, device: TapoDevice, options: dict[str, Any]
-    ):
+    ) -> ConfigFlowResult:
+        data = {**options}
+        data.pop(CONF_ADVANCED_SETTINGS, None)
+
         return self.async_create_entry(
             title=device.nickname,
-            data=options
-            | {
-                CONF_HOST: device.host,
-                CONF_MAC: device.mac,
-                CONF_SCAN_INTERVAL: DEFAULT_POLLING_RATE_S,
-                CONF_DISCOVERED_DEVICE_INFO: self._discovered_info.as_dict
-                if self._discovered_info is not None
-                else None,
-            },
+            data=data
+                 | {
+                     CONF_HOST: device.host,
+                     CONF_MAC: device.mac,
+                     CONF_SCAN_INTERVAL: data.get(
+                         CONF_SCAN_INTERVAL,
+                         DEFAULT_POLLING_RATE_S,
+                     ),
+                     CONF_DISCOVERED_DEVICE_INFO: self._discovered_info.as_dict
+                     if self._discovered_info is not None
+                     else None,
+                 },
         )
 
     async def _async_get_device_from_discovered(
@@ -340,7 +352,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             self.hass.config_entries.async_update_entry(
