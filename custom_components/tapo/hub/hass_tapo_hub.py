@@ -65,14 +65,38 @@ class HassTapoHub:
             device=self.hub,
         )
         # TODO: refactory with add_device and remove_device methods
-        initial_device_ids = list(map(lambda x: x.device_id, self.hub.children))
+        known_device_ids = {child.device_id for child in self.hub.children}
 
         async def _handle_child_device_event(event: HubDeviceEvent):
             _LOGGER.info("Detected child association change %s", str(event))
-            if event.device_id not in initial_device_ids:
+
+            if isinstance(event, DeviceAdded):
+                # H110 exposes internal IR/AV virtual children through the
+                # association stream. Their IDs are derived from the hub ID,
+                # but plugp100 does not expose them in hub.children.
+                if event.device_id.startswith(self.hub.device_id):
+                    _LOGGER.debug(
+                        "Ignoring internal H110 virtual child %s",
+                        event.device_id,
+                    )
+                    return
+
+                # The association subscription can replay DeviceAdded events for
+                # children that already existed when the subscription was created.
+                if event.device_id in known_device_ids:
+                    _LOGGER.debug(
+                        "Ignoring DeviceAdded for already known child %s",
+                        event.device_id,
+                    )
+                    return
+
+                known_device_ids.add(event.device_id)
                 await hass.config_entries.async_reload(self.entry.entry_id)
-            elif isinstance(event, DeviceAdded):
-                initial_device_ids.remove(event.device_id)
+                return
+
+            if event.device_id in known_device_ids:
+                known_device_ids.discard(event.device_id)
+                await hass.config_entries.async_reload(self.entry.entry_id)
 
         self.entry.async_on_unload(
             self.hub.subscribe_device_association(_handle_child_device_event)
