@@ -86,7 +86,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version != 8:
-        await migrate_entry_to_v8(hass, config_entry)
+        if not await migrate_entry_to_v8(hass, config_entry):
+            return False
         _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
