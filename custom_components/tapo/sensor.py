@@ -12,7 +12,10 @@ from plugp100.devices.base import TapoDevice
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
-from custom_components.tapo.entity import CoordinatedTapoEntity
+from custom_components.tapo.entity import (
+    CoordinatedTapoEntity,
+    strip_socket_device_info,
+)
 from custom_components.tapo.hub.sensor import (
     async_setup_entry as async_setup_hub_sensors,
 )
@@ -138,12 +141,6 @@ class SocketTapoSensor(TapoSensor):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.nickname,
-            "model": self.device.model,
-            "manufacturer": "TP-Link",
-            "sw_version": self.device.firmware_version,
-            "hw_version": self.device.device_info.hardware_version,
-            "via_device": (DOMAIN, self.device._parent_info.device_id),
-        }
+        return strip_socket_device_info(
+            self.hass, self.device, self.coordinator.config_entry.entry_id
+        )

@@ -85,3 +85,17 @@ async def test_plug_strip_child_onoff(hass: HomeAssistant):
         )
         sock.turn_off.assert_called_once()
         sock.turn_off.reset_mock()
+
+
+async def test_plug_strip_sockets_link_to_strip_device(hass: HomeAssistant):
+    device = mock_plug_strip()
+    entry = await setup_platform(hass, device, [SWITCH_DOMAIN])
+    devices = {
+        identifier: dev
+        for dev in dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+        for identifier in dev.identifiers
+    }
+    strip = devices[(DOMAIN, device.device_id)]
+    for sock in device.sockets:
+        assert hass.states.get(await extract_entity_id(sock, SWITCH_DOMAIN)) is not None
+        assert devices[(DOMAIN, sock.device_id)].via_device_id == strip.id

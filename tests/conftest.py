@@ -295,6 +295,8 @@ def mock_plug_strip() -> MagicMock:
         sock.turn_off = AsyncMock(return_value=Success(True))
         sock.device_id = f"123{i}"
         sock.parent_device_id = "123"
+        sock._parent_info.device_id = "123"
+        sock.__class__ = TapoStripSocket
         sock.nickname = f"Nickname{i}"
         sockets.append(sock)
 
