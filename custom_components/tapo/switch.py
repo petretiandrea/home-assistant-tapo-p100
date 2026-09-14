@@ -9,7 +9,10 @@ from plugp100.devices.plug import TapoPlug
 
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
-from custom_components.tapo.entity import CoordinatedTapoEntity
+from custom_components.tapo.entity import (
+    CoordinatedTapoEntity,
+    strip_socket_device_info,
+)
 from custom_components.tapo.hub.switch import (
     async_setup_entry as async_setup_hub_switch,
 )
@@ -57,18 +60,9 @@ class TapoPlugEntity(CoordinatedTapoEntity, SwitchEntity):
     @property
     def device_info(self):
         if isinstance(self._plug, TapoStripSocket):
-            # Strip sockets all share the strip's MAC, so including the MAC connection
-            # in device_info causes HA to merge all socket devices into the strip device.
-            # Use only the unique per-socket identifier and link via via_device instead.
-            return {
-                "identifiers": {(DOMAIN, self.device.device_id)},
-                "name": self.device.nickname,
-                "model": self.device.model,
-                "manufacturer": "TP-Link",
-                "sw_version": self.device.firmware_version,
-                "hw_version": self.device.device_info.hardware_version,
-                "via_device": (DOMAIN, self._plug._parent_info.device_id),
-            }
+            return strip_socket_device_info(
+                self.hass, self._plug, self.coordinator.config_entry.entry_id
+            )
         return self._device_info
 
     @property
