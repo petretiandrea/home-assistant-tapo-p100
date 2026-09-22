@@ -31,5 +31,5 @@ async def discover_tapo_device(
     try:
         return await TapoDiscovery.single_scan(ip, DISCOVERY_TIMEOUT)
     except Exception:
-        logging.error("Failed during discovery of device with ip {}", ip)
+        logging.error("Failed during discovery of device with ip %s", ip)
         return None
