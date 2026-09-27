@@ -48,6 +48,7 @@ class TestBatteryLevelSensor:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device = _mock_battery_component(
             _mock_hub_child_device(MagicMock(auto_spec=TapoDevice))
         )
@@ -83,6 +84,7 @@ class TestPollLatencySensorProperties:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.sensor = PollLatencySensor(
             coordinator=self.coordinator, device=self.device
@@ -120,6 +122,7 @@ class TestPollLatencySensorExtraStateAttributes:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.sensor = PollLatencySensor(
             coordinator=self.coordinator, device=self.device
@@ -150,6 +153,7 @@ class TestPollLatencySensorStartupDeferral:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.sensor = PollLatencySensor(
             coordinator=self.coordinator, device=self.device
@@ -186,6 +190,7 @@ class TestPollLatencySensorCoordinatorState:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, self.logs = _mock_trigger_device()
         self.sensor = PollLatencySensor(
             coordinator=self.coordinator, device=self.device

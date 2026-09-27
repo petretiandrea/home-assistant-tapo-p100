@@ -226,14 +226,19 @@ class PollLatencySensor(CoordinatedTapoEntity, SensorEntity):
         )
         if self.hass.state is CoreState.running:
             self._ha_started = True
+            self._event_log_poller.schedule_refresh()
         else:
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+            self.async_on_remove(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+                )
             )
 
     @callback
     def _on_ha_started(self, _event) -> None:
         self._ha_started = True
+        if self._event_log_poller is not None:
+            self._event_log_poller.schedule_refresh()
 
     @property
     def unique_id(self):

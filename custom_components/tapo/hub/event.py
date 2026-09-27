@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 import time
 from typing import Callable, cast
@@ -101,7 +100,7 @@ async def _do_fetch(coordinator, device, page_size):
     latency_ms = (time.monotonic() - start) * 1000
 
     coordinator._event_log_cache = {
-        "timestamp": now,
+        "timestamp": time.monotonic(),
         "logs": logs,
         "latency_ms": latency_ms,
     }
@@ -133,6 +132,8 @@ class HubEventLogPoller:
         self._entry_id = entry_id
         self._listeners: set[EventLogListener] = set()
         self._task: asyncio.Task | None = None
+        self._timer: asyncio.TimerHandle | None = None
+        self._failures = 0
         self._last_result: EventLogPollResult | None = None
         self._adaptive_state = AdaptivePollingState()
         self._coordinator._adaptive_polling_state = self._adaptive_state
@@ -151,33 +152,68 @@ class HubEventLogPoller:
 
         def _remove_listener() -> None:
             self._listeners.discard(listener)
+            if not self._listeners:
+                if self._timer is not None:
+                    self._timer.cancel()
+                    self._timer = None
+                if self._task is not None:
+                    self._task.cancel()
 
         return _remove_listener
 
     @callback
     def schedule_refresh(self) -> None:
-        if self._task and not self._task.done():
+        if self._timer is not None or (self._task and not self._task.done()):
+            return
+        entry = self._coordinator.config_entry
+        if entry is not None and entry.pref_disable_polling:
             return
         self._task = self._hass.async_create_task(self._async_refresh())
 
+    @callback
+    def _scheduled_refresh(self) -> None:
+        self._timer = None
+        self.schedule_refresh()
+
     async def _async_refresh(self) -> None:
         result: EventLogPollResult | None = None
+        started = time.monotonic()
         try:
-            logs, latency_ms = await fetch_event_logs(
-                self._coordinator,
-                self._device,
-                hass=self._hass,
-                entry_id=self._entry_id,
-            )
+            async with asyncio.timeout(10):
+                logs, latency_ms = await fetch_event_logs(
+                    self._coordinator,
+                    self._device,
+                    hass=self._hass,
+                    entry_id=self._entry_id,
+                )
+            self._failures = 0
             result = EventLogPollResult(logs=logs, latency_ms=latency_ms)
             self._apply_latency_sample(latency_ms)
         except Exception:
+            self._failures = min(self._failures + 1, 4)
             self._adaptive_state.latency_ms = None
             _LOGGER.debug("Failed to fetch event logs for %s", self._device.device_id)
 
         self._last_result = result
         for listener in tuple(self._listeners):
-            listener(result)
+            try:
+                listener(result)
+            except Exception:
+                _LOGGER.exception(
+                    "Event-log listener failed for %s", self._device.device_id
+                )
+
+        # Device-info polling uses HA's coarse coordinator scheduler. Event logs
+        # need a precise, independent cadence and must not wait for that request.
+        if self._listeners:
+            interval = (
+                self._adaptive_state.computed_interval_ms or self.MIN_INTERVAL_MS
+            ) / 1000
+            if self._failures:
+                delay = min(5.0, 0.5 * 2**self._failures)
+            else:
+                delay = max(0.05, interval - (time.monotonic() - started))
+            self._timer = self._hass.loop.call_later(delay, self._scheduled_refresh)
 
     @property
     def _u_max(self) -> float:
@@ -194,10 +230,8 @@ class HubEventLogPoller:
             state.ema_ms = latency_ms
             state.ema_jitter_ms = 0.0
             state.computed_interval_ms = max(
-                self.MIN_INTERVAL_MS, latency_ms / self._u_max
-            )
-            self._coordinator.update_interval = timedelta(
-                milliseconds=state.computed_interval_ms
+                self.MIN_INTERVAL_MS,
+                min(self.MAX_INTERVAL_MS, latency_ms / self._u_max),
             )
             return
 
@@ -221,10 +255,6 @@ class HubEventLogPoller:
         ):
             state.computed_interval_ms = target
             state.cycles_since_change = 0
-
-        self._coordinator.update_interval = timedelta(
-            milliseconds=state.computed_interval_ms
-        )
 
 
 def get_hub_event_log_poller(
@@ -293,14 +323,19 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
         )
         if self.hass.state is CoreState.running:
             self._ha_started = True
+            self._event_log_poller.schedule_refresh()
         else:
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+            self.async_on_remove(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+                )
             )
 
     @callback
     def _on_ha_started(self, _event) -> None:
         self._ha_started = True
+        if self._event_log_poller is not None:
+            self._event_log_poller.schedule_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:

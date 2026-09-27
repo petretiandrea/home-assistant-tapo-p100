@@ -63,6 +63,7 @@ class TestFetchEventLogs:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, self.logs = _mock_trigger_device()
         # Clear any cache
         if hasattr(self.coordinator, "_event_log_cache"):
@@ -119,6 +120,7 @@ class TestDoFetch:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, self.logs = _mock_trigger_device()
         self.coordinator._event_log_cache = None
 
@@ -139,6 +141,7 @@ class TestHubEventLogPoller:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.coordinator._event_log_cache = None
         self.coordinator._hub_entry_id = "entry_1"
         self.device, self.logs = _mock_trigger_device()
@@ -228,11 +231,93 @@ class TestHubEventLogPoller:
             <= HubEventLogPoller.MAX_INTERVAL_MS
         )
 
+    async def test_polls_again_without_device_info_update(self):
+        self.poller.add_listener(Mock())
+        self.poller.schedule_refresh()
+        await self.pending_task
+        delay, callback = self.hass.loop.call_later.call_args.args
+        assert 0.05 <= delay <= 0.3
+        self.coordinator._event_log_cache = None
+        callback()
+        await self.pending_task
+        assert self.device.get_event_logs.await_count == 2
+        self.device.update.assert_not_called()
+
+    async def test_coordinator_updates_do_not_bypass_timer(self):
+        self.poller.add_listener(Mock())
+        self.poller.schedule_refresh()
+        await self.pending_task
+        self.poller.schedule_refresh()
+        assert self.hass.async_create_task.call_count == 1
+
+    async def test_removing_last_listener_stops_polling(self):
+        remove = self.poller.add_listener(Mock())
+        self.poller.schedule_refresh()
+        await self.pending_task
+        timer = self.poller._timer
+        remove()
+        timer.cancel.assert_called_once()
+        assert self.poller._timer is None
+
+    async def test_removing_last_listener_cancels_inflight_request(self):
+        entered = asyncio.Event()
+
+        async def slow_fetch(**kwargs):
+            entered.set()
+            await asyncio.Future()
+
+        self.device.get_event_logs.side_effect = slow_fetch
+        remove = self.poller.add_listener(Mock())
+        self.poller.schedule_refresh()
+        await entered.wait()
+        remove()
+        with pytest.raises(asyncio.CancelledError):
+            await self.pending_task
+        self.hass.loop.call_later.assert_not_called()
+
+    async def test_error_backs_off_and_success_recovers(self):
+        listener = Mock()
+        self.poller.add_listener(listener)
+        self.device.get_event_logs.side_effect = RuntimeError("offline")
+        self.poller.schedule_refresh()
+        await self.pending_task
+        listener.assert_called_once_with(None)
+        assert self.hass.loop.call_later.call_args.args[0] == 1.0
+        self.device.get_event_logs.side_effect = None
+        self.hass.loop.call_later.call_args.args[1]()
+        await self.pending_task
+        assert self.poller._failures == 0
+        assert self.hass.loop.call_later.call_args.args[0] <= 0.3
+
+    async def test_broken_listener_does_not_stop_other_listener_or_timer(self):
+        listener = Mock()
+        self.poller.add_listener(Mock(side_effect=RuntimeError("bad listener")))
+        self.poller.add_listener(listener)
+        self.poller.schedule_refresh()
+        await self.pending_task
+        listener.assert_called_once()
+        self.hass.loop.call_later.assert_called_once()
+
+    def test_respects_disabled_polling(self):
+        self.coordinator.config_entry = Mock(pref_disable_polling=True)
+        self.poller.schedule_refresh()
+        self.hass.async_create_task.assert_not_called()
+
+    def test_first_sample_is_also_capped(self):
+        self.poller._apply_latency_sample(9000)
+        assert self.poller.adaptive_state.computed_interval_ms == 5000
+
+    def test_adaptation_does_not_speed_up_device_info_polling(self):
+        self.coordinator.update_interval = "unchanged"
+        self.poller._apply_latency_sample(25)
+        assert self.coordinator.update_interval == "unchanged"
+
 
 class TestTapoButtonEvent:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.entity = TapoButtonEvent(coordinator=self.coordinator, device=self.device)
 
@@ -273,6 +358,7 @@ class TestTapoDialEvent:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.entity = TapoDialEvent(coordinator=self.coordinator, device=self.device)
 
@@ -308,6 +394,7 @@ class TestTapoEventBaseStartupDeferral:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.device, _ = _mock_trigger_device()
         self.entity = TapoButtonEvent(coordinator=self.coordinator, device=self.device)
 
@@ -336,6 +423,7 @@ class TestPollAndFireEvents:
     @pytest.fixture(autouse=True)
     def init_data(self):
         self.coordinator = Mock(TapoDataCoordinator)
+        self.coordinator.config_entry = None
         self.coordinator._hub_entry_id = "entry_1"
         self.coordinator._event_log_cache = None
         self.device, self.logs = _mock_trigger_device()
