@@ -9,6 +9,8 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.14.2"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
