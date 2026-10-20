@@ -102,7 +102,7 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 
 ### H100 / S200D local events
 
-H100-connected S200D knobs use native hub-local actions to push button and rotation events to Home Assistant. Configure knobs, receiver address, and port during setup or through the H100 entry’s **Configure** screen. Existing H100/S200D entries automatically use this transport. Rotation events retain signed `degrees` for compatible S200D 30-degree steps, alongside `direction`, `amount`, and `signed_amount`. Unknown deltas report `degrees: null`; see the compatibility limits below.
+H100-connected S200D knobs use native hub-local actions to push button and rotation events to Home Assistant. Configure knobs, receiver address, and port during setup or through the H100 entry’s **Configure** screen. Existing H100/S200D entries automatically use this transport. Rotation events use native `direction`, `amount`, and `signed_amount` by default. Enable **Legacy rotation degrees (compatibility)** in setup or Configure only if existing automations need signed `degrees`; see the compatibility limits below.
 
 See [local push onboarding, network requirements, event examples, and compatibility limits](docs/local-push.md). Verified on H100 firmware 1.7.10; this uses an undocumented protocol. Other supported devices retain their existing handling.
 

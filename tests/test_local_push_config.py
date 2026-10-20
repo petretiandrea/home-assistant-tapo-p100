@@ -4,18 +4,25 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.tapo.config_flow import TapoConfigFlow
 from custom_components.tapo.const import DOMAIN
-from custom_components.tapo.hub.local_push import async_validate_push
+from custom_components.tapo.hub.local_push import (
+    CONF_LOCAL_PUSH_LEGACY_DEGREES,
+    async_validate_push,
+)
 
 A = "A" * 40
 CHOICES = [{"value": A, "label": "Test knob"}]
 DATA = {"host": "192.0.2.1", "username": "user", "password": "secret"}
 
 
-async def test_first_h100_setup_offers_push_with_all_knobs_selected(hass):
+@pytest.mark.parametrize("compatibility", [False, True])
+async def test_first_h100_setup_offers_push_with_all_knobs_selected(
+    hass, compatibility
+):
     device = SimpleNamespace(
         model="H100",
         nickname="Test hub",
@@ -38,18 +45,54 @@ async def test_first_h100_setup_offers_push_with_all_knobs_selected(hass):
         )
         assert result["step_id"] == "local_push"
         assert result["data_schema"]({})["local_push_device_ids"] == [A]
+        assert result["data_schema"]({})[CONF_LOCAL_PUSH_LEGACY_DEGREES] is False
         final = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "local_push_device_ids": [A],
                 "local_push_port": 18081,
                 "local_push_host": "192.0.2.2",
+                CONF_LOCAL_PUSH_LEGACY_DEGREES: compatibility,
             },
         )
         assert final["type"] == "create_entry"
         assert final["data"]["local_push_port"] == 18081
         assert final["data"]["local_push_device_ids"] == [A]
         assert final["data"]["password"] == DATA["password"]
+        assert final["data"][CONF_LOCAL_PUSH_LEGACY_DEGREES] is compatibility
+
+
+async def test_options_can_enable_and_disable_legacy_degrees(hass, monkeypatch):
+    monkeypatch.setattr(
+        "custom_components.tapo.config_flow.async_validate_push",
+        AsyncMock(return_value={}),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=DATA | {"local_push_device_ids": [A]}, version=8
+    )
+    entry.add_to_hass(hass)
+    hass.data[DOMAIN] = {
+        entry.entry_id: SimpleNamespace(
+            device=SimpleNamespace(model="H100"),
+            child_coordinators=[
+                SimpleNamespace(
+                    device=SimpleNamespace(model="S200D", device_id=A, nickname="Knob")
+                )
+            ],
+            local_push=None,
+        )
+    }
+    for compatibility in [True, False]:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        defaults = result["data_schema"]({"host": DATA["host"]})
+        assert defaults[CONF_LOCAL_PUSH_LEGACY_DEGREES] is (not compatibility)
+        final = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {"host": DATA["host"], CONF_LOCAL_PUSH_LEGACY_DEGREES: compatibility},
+        )
+        assert final["type"] == "create_entry"
+        assert entry.data[CONF_LOCAL_PUSH_LEGACY_DEGREES] is compatibility
+        assert entry.data["local_push_device_ids"] == [A]
 
 
 async def test_options_errors_do_not_save_and_empty_selection_disables(hass):

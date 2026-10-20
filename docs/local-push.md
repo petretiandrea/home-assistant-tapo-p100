@@ -10,7 +10,7 @@ The protocol is undocumented. Hardware verification covers H100 firmware **1.7.1
 
 1. Pair the S200D to the H100 in the Tapo app. Confirm the hub and knob are online.
 2. Install the integration, restart Home Assistant, and add the H100 using its IPv4 address and Tapo account credentials.
-3. The **Set up S200D local events** screen lists the paired S200D knobs, selected by default. Review the network settings below, then submit. An empty selection disables knob events; it does not fall back to polling.
+3. The **Set up S200D local events** screen lists the paired S200D knobs, selected by default. Review the network settings below, leave **Legacy rotation degrees (compatibility)** off for native events, then submit. An empty selection disables knob events; it does not fall back to polling.
 4. Wait for the hub's **Local Push** diagnostic sensor to show `connected`.
 5. Press and rotate each knob. The existing button and dial event entities should update. Add a Home Assistant automation using those entities or the `tapo_local_push` event below.
 
@@ -18,7 +18,7 @@ The integration configures transport and source attribution. The actions your kn
 
 ## Existing installations and later changes
 
-Existing H100/S200D installations without saved push settings automatically use local push for their associated knobs after upgrading. Existing event entity unique IDs and the `rotation` event type remain unchanged. Automations using signed `degrees` continue to work for the compatible S200D 30-degree steps described below; no change to the new amount fields is required. Confirm receiver connectivity after upgrading. Other firmware and deltas outside this mapping need verification.
+Existing H100/S200D installations without saved push settings automatically use local push for their associated knobs after upgrading. Existing event entity unique IDs and the `rotation` event type remain unchanged. Native direction and amount are the default, including entries without a saved compatibility setting. If an existing automation reads signed `degrees`, enable **Legacy rotation degrees (compatibility)** during setup or in Configure. This adds the compatibility field for all selected knobs on that hub without changing the native fields or enabling polling. Confirm receiver connectivity after upgrading. Other firmware and deltas outside the mapping below need verification.
 
 Open **Settings → Devices & services → TP-Link Tapo → H100 → Configure** to change:
 
@@ -27,6 +27,7 @@ Open **Settings → Devices & services → TP-Link Tapo → H100 → Configure**
 | S200D knobs using local push | All associated S200D knobs when no selection has been saved | Choose which knobs emit events. Deselecting disables their event entities. |
 | Receiver TCP port | `18080` | Choose an unused unprivileged port between `1024` and `65535`. |
 | Receiver IPv4 address | Automatic | Use the local address on Home Assistant's route to the hub, or specify a local IPv4 address for multi-adapter hosts. |
+| Legacy rotation degrees (compatibility) | Off | Add reconstructed signed `degrees` for existing automations on all selected knobs. Native direction and amount are always retained. |
 | Device information refresh interval | Existing setting, normally 30 seconds | Battery and ordinary device information, independent of push events. |
 
 Saving options reloads the integration and reconciles its rules. Pair new knobs in the Tapo app first, then select them in Configure. Setup validates device selection, IPv4 addresses, and local socket availability before saving; it does not test firewall reachability. If a receiver cannot bind during startup, the setup error directs you to Configure so you can fix the address/port.
@@ -54,7 +55,7 @@ Multiple H100 entries can share discovery UDP `20002` on one local IPv4 address.
 
 ## Events and migration
 
-Existing button event entities emit `single_click` or `double_click`. Dial entities emit `rotation`. Push events include `transport: local_push` and the native Tapo `device_id`; rotation attributes include legacy signed `degrees`, plus `direction`, `amount`, and `signed_amount`. The degree compatibility field uses the lookup below without any event-log reads.
+Existing button event entities emit `single_click` or `double_click`. Dial entities emit `rotation`. Push events include `transport: local_push` and the native Tapo `device_id`; rotation attributes use native `direction`, `amount`, and `signed_amount` by default. Enabling **Legacy rotation degrees (compatibility)** additionally includes signed `degrees` using the lookup below, without any event-log reads.
 
 The same events are also published on Home Assistant's event bus:
 
@@ -67,18 +68,19 @@ data:
   direction: clockwise
   amount: 9
   signed_amount: 9
-  degrees: 30
   action_id: LC6...
 ```
 
 - `amount` is the positive native brightness delta, from 1 through 100. It is a percentage-style change, not an angle or a count of physical detents.
 - `signed_amount` is positive clockwise and negative counterclockwise.
-- `degrees` preserves the signed integer used by existing rotation automations for recognized S200D 30-degree steps: positive clockwise, negative counterclockwise. Unknown deltas explicitly set `degrees: null`, while native direction and amount remain available. Do not treat `null` as a measured zero or round an unknown delta to the nearest step.
+- With **Legacy rotation degrees (compatibility)** enabled, `degrees` preserves the signed integer used by existing rotation automations for recognized S200D 30-degree steps: positive clockwise, negative counterclockwise. Unknown deltas explicitly set `degrees: null`, while native direction and amount remain available. Do not treat `null` as a measured zero or round an unknown delta to the nearest step. With compatibility disabled, the `degrees` field is absent.
 - `action_id` is the hub's opaque deduplication identifier. Source attribution is derived from the verified rule suffix encoded in that identifier. Unknown or ambiguous sources are rejected instead of guessing a knob.
 - The receiver suppresses exact encrypted retries and the manager suppresses repeated action identifiers within its bounded in-memory window. It does not promise durable exactly-once delivery across Home Assistant restarts.
 - No retained button/dial events are replayed as new actions during Home Assistant startup.
 
 ### Degree compatibility and verification
+
+**Legacy rotation degrees (compatibility)** is off by default. Leave it off for new automations, which can consume the actual native delta using `signed_amount`. Enable it only for existing degree-based automations; for example, the event above also includes `degrees: 30` when compatibility is enabled. Turning compatibility off removes that field on subsequent rotations and retains the native values.
 
 The hub sends a brightness delta rather than a raw angle. Firmware analysis found `delta = ceil(abs(degrees) * 100 / 360)`. This rounding cannot be inverted for arbitrary angles: 29, 30, 31, and 32 degrees all produce delta 9. It is invertible for the 30-degree increments observed from S200D knobs:
 
@@ -91,7 +93,7 @@ The hub sends a brightness delta rather than a raw angle. Firmware analysis foun
 | 42 | 150 | 92 | 330 |
 | 50 | 180 | 100 | 360 |
 
-Direction supplies the sign. The lookup restores legacy `degrees` for these increments; it does not multiply every delta by 3.6 or claim to recover arbitrary angles. For any other valid delta (for example, 7), the event still includes direction and native amount, with `degrees: null`. The dial entity explicitly clears any previous degree value for that event. New automations can use `signed_amount` without depending on this angle reconstruction.
+Direction supplies the sign. The lookup restores legacy `degrees` for these increments; it does not multiply every delta by 3.6 or claim to recover arbitrary angles. In compatibility mode, any other valid delta (for example, 7) still includes direction and native amount, with `degrees: null`. The dial entity explicitly clears any previous degree value for that event. New automations can use `signed_amount` without depending on this angle reconstruction.
 
 On H100 **1.7.10 Build260725 Rel042335** with two S200D knobs running **1.12.0 Build231121 Rel092508**, 672 uniquely matched pushed rotations recovered the original logged signed degrees with zero mismatches. This includes a controlled 36-rotation test (18 per knob) with rapid turns and direction reversals, with no missing or duplicate recorded events. Correlation used the knob identity, the trigger-event suffix in the native action identifier, and timestamps. The controlled comparison used Home Assistant's recorded event entities and the hub's original logs. Historical records without a unique counterpart were excluded.
 

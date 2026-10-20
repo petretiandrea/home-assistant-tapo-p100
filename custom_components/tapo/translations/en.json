@@ -41,15 +41,17 @@
       },
       "local_push": {
         "title": "Set up S200D local events",
-        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events retain signed degrees for compatible S200D 30-degree steps alongside direction and scaled amount. Unknown deltas report degrees as null; see the documented firmware limits. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
+        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events use native direction and scaled amount by default. Enable legacy rotation degrees only for existing degree-based automations. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
         "data": {
           "local_push_device_ids": "S200D knobs using local push",
           "local_push_port": "Receiver TCP port",
-          "local_push_host": "Receiver IPv4 address (blank for automatic)"
+          "local_push_host": "Receiver IPv4 address (blank for automatic)",
+          "local_push_legacy_degrees": "Legacy rotation degrees (compatibility)"
         },
         "data_description": {
           "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
-          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address."
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address.",
+          "local_push_legacy_degrees": "Off by default. Add reconstructed signed degrees for older automations on all selected knobs. Native direction and amount are always retained. Unknown deltas report degrees as null; see the documented firmware limits."
         }
       }
     }
@@ -64,11 +66,13 @@
           "scan_interval": "Device information refresh interval (seconds)",
           "local_push_device_ids": "S200D knobs using local push",
           "local_push_port": "Receiver TCP port",
-          "local_push_host": "Receiver IPv4 address (blank for automatic)"
+          "local_push_host": "Receiver IPv4 address (blank for automatic)",
+          "local_push_legacy_degrees": "Legacy rotation degrees (compatibility)"
         },
         "data_description": {
           "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
-          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address."
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address.",
+          "local_push_legacy_degrees": "Off by default. Add reconstructed signed degrees for older automations on all selected knobs. Native direction and amount are always retained. Unknown deltas report degrees as null; see the documented firmware limits."
         }
       }
     },

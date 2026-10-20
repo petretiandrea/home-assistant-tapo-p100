@@ -36,6 +36,7 @@ from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHos
 from custom_components.tapo.hub.local_push import (
     CONF_LOCAL_PUSH_DEVICES,
     CONF_LOCAL_PUSH_HOST,
+    CONF_LOCAL_PUSH_LEGACY_DEGREES,
     CONF_LOCAL_PUSH_PORT,
     DEFAULT_LOCAL_PUSH_PORT,
     async_validate_push,
@@ -118,6 +119,10 @@ def push_schema(data, choices):
             vol.Optional(
                 CONF_LOCAL_PUSH_HOST, default=data.get(CONF_LOCAL_PUSH_HOST, "")
             ): str,
+            vol.Optional(
+                CONF_LOCAL_PUSH_LEGACY_DEGREES,
+                default=data.get(CONF_LOCAL_PUSH_LEGACY_DEGREES, False),
+            ): bool,
         }
     )
 

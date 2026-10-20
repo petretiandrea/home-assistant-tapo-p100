@@ -1,7 +1,7 @@
 """H100 local action receiver and owned-rule lifecycle.
 
 This uses undocumented H100 1.7.10 behavior. Rotation retains the native
-brightness delta and restores legacy degrees for S200D's observed 30-degree steps.
+brightness delta; optional legacy degrees use S200D's observed 30-degree steps.
 """
 
 import asyncio
@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_LOCAL_PUSH_DEVICES = "local_push_device_ids"
 CONF_LOCAL_PUSH_PORT = "local_push_port"
 CONF_LOCAL_PUSH_HOST = "local_push_host"
+CONF_LOCAL_PUSH_LEGACY_DEGREES = "local_push_legacy_degrees"
 DEFAULT_LOCAL_PUSH_PORT = 18080
 EVENT_LOCAL_PUSH = "tapo_local_push"
 DISCOVERY_KEY = "tapo_local_push_discovery"
@@ -100,6 +101,7 @@ class LocalPushManager:
 
     def __init__(self, hass, entry, hub, device_ids, host, port):
         self.hass, self.entry, self.hub = hass, entry, hub
+        self.legacy_degrees = entry.data.get(CONF_LOCAL_PUSH_LEGACY_DEGREES, False)
         self.device_ids = set(device_ids)
         self.host, self.port = str(ipaddress.IPv4Address(host)), int(port)
         self.hub_host = str(ipaddress.IPv4Address(entry.data["host"]))
@@ -484,14 +486,15 @@ class LocalPushManager:
             if type(amount) is not int or not 1 <= amount <= 100:
                 return
             sign = 1 if rule["gesture"] == "positive" else -1
-            degrees = _S200D_DEGREES_BY_DELTA.get(amount)
             event.update(
                 event_type="rotation",
                 direction="clockwise" if sign > 0 else "counterclockwise",
                 amount=amount,
                 signed_amount=sign * amount,
-                degrees=sign * degrees if degrees is not None else None,
             )
+            if self.legacy_degrees:
+                degrees = _S200D_DEGREES_BY_DELTA.get(amount)
+                event["degrees"] = sign * degrees if degrees is not None else None
         self.received_commands += 1
         self.last_received = time.time()
         self._set_status(self.status, self.last_error)

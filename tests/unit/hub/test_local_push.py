@@ -9,7 +9,11 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant.core import CoreState
 import pytest
 
-from custom_components.tapo.hub.local_push import EVENT_LOCAL_PUSH, LocalPushManager
+from custom_components.tapo.hub.local_push import (
+    CONF_LOCAL_PUSH_LEGACY_DEGREES,
+    EVENT_LOCAL_PUSH,
+    LocalPushManager,
+)
 
 FIXTURES = Path(__file__).parents[2] / "fixtures"
 
@@ -54,16 +58,42 @@ def test_captured_commands_preserve_source_direction_and_amount(manager):
             "B" * 40 if command["method"] == "decrease_brightness" else "A" * 40
         )
         assert event["transport"] == "local_push"
+        assert "degrees" not in event
         if command["method"] != "reverse_status":
             assert event["amount"] == command["params"]["delta"]
             assert event["signed_amount"] == event["amount"] * (
                 -1 if event["device_id"] == "B" * 40 else 1
             )
-            assert event["degrees"] == {9: 30, 17: 60}[event["amount"]] * (
-                -1 if event["device_id"] == "B" * 40 else 1
-            )
-        else:
-            assert "degrees" not in event
+
+
+@pytest.mark.parametrize("compatibility", [None, False, True])
+def test_legacy_degrees_is_opt_in_and_preserves_native_amount(manager, compatibility):
+    data = dict(manager.entry.data)
+    if compatibility is not None:
+        data[CONF_LOCAL_PUSH_LEGACY_DEGREES] = compatibility
+    configured = LocalPushManager(
+        manager.hass,
+        SimpleNamespace(entry_id="configured", data=data),
+        manager.hub,
+        manager.device_ids,
+        manager.host,
+        manager.port,
+    )
+    configured._routes = manager._routes
+    configured._on_action(
+        {
+            "method": "increase_brightness",
+            "params": {"delta": 17},
+            "action_dedup_id": "LC6abcdef6135TRG011234567",
+        }
+    )
+    event = manager.hass.bus.async_fire.call_args.args[1]
+    assert event["signed_amount"] == 17
+    assert event["direction"] == "clockwise"
+    if compatibility:
+        assert event["degrees"] == 60
+    else:
+        assert "degrees" not in event
 
 
 @pytest.mark.parametrize(
@@ -72,6 +102,7 @@ def test_captured_commands_preserve_source_direction_and_amount(manager):
     ids=lambda sample: str(sample["raw_degrees"]),
 )
 def test_recorded_rotations_preserve_legacy_degrees(manager, sample):
+    manager.legacy_degrees = True
     token = "f6135" if sample["raw_degrees"] > 0 else "a7182"
     manager._on_action(
         {
@@ -98,6 +129,7 @@ def test_rotation_lookup_arithmetic_extension_to_360_degrees(
     manager, sign, delta, degrees
 ):
     """These larger steps follow the formula; hardware evidence stops at 210."""
+    manager.legacy_degrees = True
     token = "f6135" if sign > 0 else "a7182"
     manager._on_action(
         {
@@ -116,6 +148,7 @@ def test_rotation_lookup_arithmetic_extension_to_360_degrees(
 def test_unknown_rotation_delta_retains_native_data_without_guessing_degrees(
     manager, sign, delta
 ):
+    manager.legacy_degrees = True
     token = "f6135" if sign > 0 else "a7182"
     manager._on_action(
         {
@@ -136,6 +169,7 @@ def test_push_dial_entity_preserves_legacy_degrees_and_clears_unknown_value(mana
     from custom_components.tapo.hub.event import TapoDialEvent
     from tests.unit.hub.test_event import _mock_trigger_device
 
+    manager.legacy_degrees = True
     device, _ = _mock_trigger_device()
     entity = TapoDialEvent(MagicMock(), device)
     entity._ha_started = True
@@ -154,6 +188,16 @@ def test_push_dial_entity_preserves_legacy_degrees_and_clears_unknown_value(mana
         assert entity.state_attributes["degrees"] == degrees
         assert entity.state_attributes["signed_amount"] == -delta
     assert entity.async_write_ha_state.call_count == 3
+    manager.legacy_degrees = False
+    manager._on_action(
+        {
+            "method": "decrease_brightness",
+            "params": {"delta": 9},
+            "action_dedup_id": "LC6abcdea7182TRG010000003",
+        }
+    )
+    assert "degrees" not in entity.state_attributes
+    assert entity.state_attributes["signed_amount"] == -9
     device.get_event_logs.assert_not_awaited()
 
 
