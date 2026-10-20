@@ -23,6 +23,8 @@ docker cp "$auth_file" "$container_id:/home/vscode/.codex/auth.json"
 docker exec "$container_id" chown vscode:vscode /home/vscode/.codex/auth.json
 docker exec "$container_id" chmod 600 /home/vscode/.codex/auth.json
 docker exec -u vscode "$container_id" codex login status >&2
+docker exec -u vscode "$container_id" git -C /workspaces/home-assistant-tapo-p100 fetch origin "${ORCA_REPO_REF:-main}" >&2
+docker exec -u vscode "$container_id" git -C /workspaces/home-assistant-tapo-p100 reset --hard FETCH_HEAD >&2
 
 port=$(docker port "$container_id" 22/tcp | tail -n 1 | sed 's/.*://')
 for _ in {1..30}; do
