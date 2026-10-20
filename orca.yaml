@@ -1,0 +1,5 @@
+environmentRecipes:
+  - id: devcontainer-docker
+    name: Dev Container (Docker)
+    create: ./scripts/orca-vm/create.sh
+    destroy: ./scripts/orca-vm/destroy.sh

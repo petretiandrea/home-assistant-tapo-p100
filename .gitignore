@@ -21,3 +21,4 @@ config/*
 
 node_modules/
 .env
+scripts/orca-vm/.ssh/
