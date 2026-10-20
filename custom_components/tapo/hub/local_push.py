@@ -84,7 +84,11 @@ async def async_validate_push(hass, data, choices, current=None):
         return {CONF_LOCAL_PUSH_HOST: "invalid_receiver_address"}
     port = data.get(CONF_LOCAL_PUSH_PORT, DEFAULT_LOCAL_PUSH_PORT)
     try:
-        if not current or (current.host, current.port) != (str(address), port):
+        if (
+            not current
+            or not current.listening
+            or (current.host, current.port) != (str(address), port)
+        ):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
                 probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 probe.bind((str(address), port))
@@ -138,6 +142,15 @@ class LocalPushManager:
     def rule_ids(self):
         return sorted(rule["id"] for rule in self._state.get("rules", []))
 
+    @property
+    def listening(self):
+        """Whether this manager actually owns its receiver sockets."""
+        return (
+            not self._stop.is_set()
+            and self._runner is not None
+            and self._transport is not None
+        )
+
     @callback
     def subscribe(self, device_id, listener):
         listeners = self._listeners.setdefault(device_id, set())
@@ -160,7 +173,7 @@ class LocalPushManager:
                 _LOGGER.exception("Local push status listener failed")
 
     async def async_start(self):
-        """Bind first; reconcile in the background without delaying HA startup."""
+        """Prepare the receiver; bind and reconcile in a retrying background task."""
         self._state = await self._store.async_load() or {}
         self._state.setdefault("receiver_id", secrets.token_hex(20).upper())
         self._state.setdefault("rules", [])
@@ -189,10 +202,23 @@ class LocalPushManager:
                 "is_support_https": False,
             },
         }
-        self._runner = web.AppRunner(self._receiver.application(), access_log=None)
+        self._session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=12),
+            cookie_jar=aiohttp.CookieJar(unsafe=True),
+        )
+        self._stop_unsub = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._on_stop
+        )
+        self._task = self.hass.async_create_background_task(
+            self._run(), "Tapo H100 local push"
+        )
+
+    async def _async_bind(self):
+        """Publish socket ownership only after both receiver endpoints are ready."""
+        runner = web.AppRunner(self._receiver.application(), access_log=None)
         try:
-            await self._runner.setup()
-            await web.TCPSite(self._runner, self.host, self.port).start()
+            await runner.setup()
+            await web.TCPSite(runner, self.host, self.port).start()
             lock = self.hass.data.setdefault(DISCOVERY_LOCK_KEY, asyncio.Lock())
             async with lock:
                 endpoints = self.hass.data.setdefault(DISCOVERY_KEY, {})
@@ -207,20 +233,10 @@ class LocalPushManager:
                 responder.devices[self.hub_host] = self._discovery
                 self._responder = responder
                 self._transport = responder.transport
-        except Exception:
-            if self._runner:
-                await self._runner.cleanup()
+        except BaseException:
+            await runner.cleanup()
             raise
-        self._session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=12),
-            cookie_jar=aiohttp.CookieJar(unsafe=True),
-        )
-        self._stop_unsub = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._on_stop
-        )
-        self._task = self.hass.async_create_background_task(
-            self._run(), "Tapo H100 local push"
-        )
+        self._runner = runner
 
     async def _connect(self):
         cfg = DeviceConnectConfiguration(
@@ -267,8 +283,11 @@ class LocalPushManager:
     async def _run(self):
         while not self._stop.is_set():
             try:
+                if not self.listening:
+                    await self._async_bind()
                 self._announce()
                 if not await self._registered():
+                    self._routes = {}
                     self._set_status("connecting")
                     self._last_reconciled = 0
                 elif time.monotonic() - self._last_reconciled >= 30:
@@ -280,6 +299,7 @@ class LocalPushManager:
             except asyncio.CancelledError:
                 raise
             except Exception as error:
+                self._routes = {}
                 self._client = None
                 self._last_reconciled = 0
                 self._set_status("error", type(error).__name__)
@@ -385,6 +405,14 @@ class LocalPushManager:
             )
 
     async def _reconcile(self):
+        """Publish a complete verified route map or invalidate every old route."""
+        try:
+            await self._async_reconcile_rules()
+        except BaseException:
+            self._routes = {}
+            raise
+
+    async def _async_reconcile_rules(self):
         native = await self._native_rules()
         identifiers = set(native) | {rule["id"] for rule in self._state["rules"]}
         for rule in self._state["rules"]:
@@ -453,6 +481,8 @@ class LocalPushManager:
 
     @callback
     def _on_action(self, action):
+        if not self.available:
+            return
         dedup = action.get("action_dedup_id")
         if (
             not isinstance(dedup, str)
@@ -520,7 +550,7 @@ class LocalPushManager:
             self._task.cancel()
             await asyncio.gather(self._task, return_exceptions=True)
         try:
-            if self._session and not self._session.closed:
+            if self._state.get("rules") and self._session and not self._session.closed:
                 async with asyncio.timeout(10):
                     await self._delete_owned(
                         self._state.get("rules", []), await self._native_rules()
@@ -541,8 +571,10 @@ class LocalPushManager:
                 if not self._responder.devices:
                     self._transport.close()
                     self.hass.data[DISCOVERY_KEY].pop(self.host, None)
-        if self._runner:
-            await self._runner.cleanup()
-        if self._session:
-            await self._session.close()
-        self._set_status("stopped")
+        try:
+            if self._runner:
+                await self._runner.cleanup()
+        finally:
+            if self._session:
+                await self._session.close()
+            self._set_status("stopped")

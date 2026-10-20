@@ -7,7 +7,6 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 from plugp100.devices.base import TapoDevice
@@ -29,6 +28,7 @@ from custom_components.tapo.hub.local_push import (
     DEFAULT_LOCAL_PUSH_PORT,
     LocalPushManager,
 )
+from custom_components.tapo.hub.local_push_repairs import async_set_push_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,14 +109,32 @@ class HassTapoHub:
         }
         if self.hub.model != "H100":
             available = set()
-        selected = set(self.entry.data.get(CONF_LOCAL_PUSH_DEVICES, sorted(available)))
+        requested = (
+            set(self.entry.data.get(CONF_LOCAL_PUSH_DEVICES, sorted(available)))
+            if self.hub.model == "H100"
+            else set()
+        )
+        selected = requested & available
         for coordinator in child_coordinators:
             coordinator._local_push_managed = coordinator.device.device_id in available
-        if selected:
-            if not selected <= available:
-                raise ValueError(
-                    "A selected local push knob is not associated with this hub"
-                )
+            coordinator._local_push_selected = coordinator.device.device_id in selected
+            coordinator._local_push = None
+        async_set_push_issue(
+            hass,
+            self.entry,
+            "local_push_upgrade",
+            bool(available) and CONF_LOCAL_PUSH_DEVICES not in self.entry.data,
+        )
+        async_set_push_issue(
+            hass, self.entry, "local_push_missing_devices", bool(requested - available)
+        )
+        if not selected:
+            async_set_push_issue(hass, self.entry, "local_push_unavailable", False)
+            return
+
+        data = hass.data[DOMAIN][self.entry.entry_id]
+        push = None
+        try:
             host = self.entry.data.get(
                 CONF_LOCAL_PUSH_HOST
             ) or await async_get_source_ip(hass, target_ip=self.entry.data["host"])
@@ -128,21 +146,38 @@ class HassTapoHub:
                 host,
                 self.entry.data.get(CONF_LOCAL_PUSH_PORT, DEFAULT_LOCAL_PUSH_PORT),
             )
-            try:
-                await push.async_start()
-            except OSError as error:
-                await push.async_stop()
-                raise ConfigEntryNotReady(
-                    f"Local push cannot listen on {host}:{push.port} or UDP 20002. "
-                    "Configure the H100 receiver address/port in the integration options."
-                ) from error
-            except BaseException:
-                await push.async_stop()
-                raise
-            hass.data[DOMAIN][self.entry.entry_id].local_push = push
+            data.local_push = push
             for coordinator in child_coordinators:
                 if coordinator.device.device_id in selected:
                     coordinator._local_push = push
+
+            def update_push_issue():
+                if push.status == "error":
+                    async_set_push_issue(
+                        hass, self.entry, "local_push_unavailable", True
+                    )
+                elif push.status in ("connected", "stopped"):
+                    async_set_push_issue(
+                        hass, self.entry, "local_push_unavailable", False
+                    )
+
+            self.entry.async_on_unload(push.subscribe_status(update_push_issue))
+            await push.async_start()
+        except BaseException as error:
+            if push:
+                try:
+                    await push.async_stop()
+                except Exception:
+                    _LOGGER.warning("Could not fully close the partial local receiver")
+            if not isinstance(error, Exception):
+                raise
+            if push:
+                push._set_status("error", type(error).__name__)
+            async_set_push_issue(hass, self.entry, "local_push_unavailable", True)
+            _LOGGER.warning(
+                "Local knob events could not start (%s); other hub entities remain available",
+                type(error).__name__,
+            )
 
     async def setup_children(
         self,

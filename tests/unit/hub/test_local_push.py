@@ -42,6 +42,7 @@ def manager(monkeypatch):
         "f6135": {"id": "Rccf6135", "device_id": "A" * 40, "gesture": "positive"},
         "a7182": {"id": "R8ea7182", "device_id": "B" * 40, "gesture": "negative"},
     }
+    value._set_status("connected")
     return value
 
 
@@ -80,6 +81,7 @@ def test_legacy_degrees_is_opt_in_and_preserves_native_amount(manager, compatibi
         manager.port,
     )
     configured._routes = manager._routes
+    configured._set_status("connected")
     configured._on_action(
         {
             "method": "increase_brightness",
@@ -325,14 +327,198 @@ async def test_reconciliation_persists_before_writes_and_reuses_rules(manager):
     await manager._reconcile()
     assert set(native) == first_ids
     assert len(writes) == 8
+    native_reader = manager._native_rules
+    manager._native_rules = AsyncMock(side_effect=TimeoutError)
+    with pytest.raises(TimeoutError):
+        await manager._reconcile()
+    assert manager._routes == {}
+    manager._native_rules = native_reader
+    await manager._reconcile()
+    assert len(manager._routes) == 4
+    assert set(native) == first_ids
+    assert len(writes) == 8
+
+
+async def test_changed_rule_source_invalidates_stale_attribution(manager):
+    rule = manager._routes["f6135"]
+    manager._state["rules"] = [rule]
+    native = json.loads((FIXTURES / "h100_native_rules.json").read_text())[1]
+    native["trigger_team_list"][0]["event_list"][0]["device_id"] = "B" * 40
+    manager._native_rules = AsyncMock(return_value={rule["id"]: native})
+    manager._query = AsyncMock()
+    with pytest.raises(RuntimeError, match="Rule ID conflict"):
+        await manager._reconcile()
+    assert manager._routes == {}
+    manager._query.assert_not_awaited()
+    manager._on_action(
+        {
+            "method": "increase_brightness",
+            "params": {"delta": 9},
+            "action_dedup_id": "LC6abcdef6135TRG011234567",
+        }
+    )
+    manager.hass.bus.async_fire.assert_not_called()
+
+
+@pytest.mark.parametrize("status", ["starting", "connecting", "error", "stopped"])
+def test_unavailable_push_never_emits_using_retained_routes(manager, status):
+    manager._set_status(status)
+    manager._on_action(
+        {
+            "method": "reverse_status",
+            "params": {},
+            "action_dedup_id": "LC6abcde06ef2TRG011234567",
+        }
+    )
+    manager.hass.bus.async_fire.assert_not_called()
+
+
+async def test_background_bind_failure_retries_and_recovers(manager):
+    states = []
+    manager.subscribe_status(lambda: states.append((manager.status, manager.available)))
+    routes = dict(manager._routes)
+    manager._runner = manager._transport = None
+    attempts = 0
+
+    async def bind():
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise OSError("port busy")
+        manager._runner = manager._transport = MagicMock()
+
+    async def reconcile():
+        manager._routes = routes
+
+    waits = 0
+
+    async def wait():
+        nonlocal waits
+        waits += 1
+        if waits == 1:
+            assert manager._routes == {}
+            assert not manager.available
+        else:
+            manager._stop.set()
+
+    manager._async_bind = AsyncMock(side_effect=bind)
+    manager._announce = MagicMock()
+    manager._registered = AsyncMock(return_value=True)
+    manager._reconcile = AsyncMock(side_effect=reconcile)
+    manager._stop.wait = AsyncMock(side_effect=wait)
+    await manager._run()
+    assert attempts == 2
+    assert states == [("error", False), ("connected", True)]
+    assert manager._routes == routes
+
+
+@pytest.mark.parametrize("failure", ["tcp", "discovery"])
+async def test_partial_bind_releases_tcp_before_retry(manager, monkeypatch, failure):
+    from custom_components.tapo.hub.local_receiver import DiscoveryResponder
+
+    manager.hass.data = {}
+    manager._receiver = MagicMock()
+    manager._discovery = {"device_id": manager.receiver_id}
+    runners = [MagicMock(setup=AsyncMock(), cleanup=AsyncMock()) for _ in range(2)]
+    monkeypatch.setattr(
+        "custom_components.tapo.hub.local_push.web.AppRunner",
+        MagicMock(side_effect=runners),
+    )
+    start = AsyncMock(
+        side_effect=[OSError("busy"), None] if failure == "tcp" else [None, None]
+    )
+    monkeypatch.setattr(
+        "custom_components.tapo.hub.local_push.web.TCPSite",
+        lambda *a, **kw: SimpleNamespace(start=start),
+    )
+    responder = DiscoveryResponder()
+    responder.connection_made(MagicMock())
+    endpoints = [(responder.transport, responder)]
+    if failure == "discovery":
+        endpoints.insert(0, OSError("busy"))
+    manager.hass.loop.create_datagram_endpoint = AsyncMock(side_effect=endpoints)
+    with pytest.raises(OSError):
+        await manager._async_bind()
+    assert not manager.listening
+    runners[0].cleanup.assert_awaited_once()
+    await manager._async_bind()
+    assert manager.listening
+    assert manager._runner is runners[1]
+    assert responder.devices[manager.hub_host] == manager._discovery
+    await manager.async_stop()
+    runners[1].cleanup.assert_awaited_once()
+
+
+async def test_event_availability_tracks_transport_and_recovers_without_polling(
+    hass, manager, monkeypatch
+):
+    from custom_components.tapo.hub.event import TapoDialEvent
+    from tests.unit.hub.test_event import _mock_trigger_device
+
+    device, _ = _mock_trigger_device()
+    coordinator = MagicMock(last_update_success=True)
+    coordinator._local_push_managed = True
+    coordinator._local_push = manager
+    entity = TapoDialEvent(coordinator, device)
+    entity.hass = hass
+    entity.async_write_ha_state = MagicMock()
+    poller = MagicMock(side_effect=AssertionError("Push cannot fall back to polling"))
+    monkeypatch.setattr(
+        "custom_components.tapo.hub.event.get_hub_event_log_poller", poller
+    )
+    await entity.async_added_to_hass()
+    assert entity.available
+    manager._set_status("error", "RuleConflict")
+    assert not entity.available
+    manager._set_status("connected")
+    assert entity.available
+    assert entity.async_write_ha_state.call_count == 2
+    coordinator.last_update_success = False
+    assert not entity.available
+    poller.assert_not_called()
+    device.get_event_logs.assert_not_awaited()
+
+
+async def test_selected_knob_without_receiver_is_unavailable_and_never_polls(
+    hass, monkeypatch
+):
+    from plugp100.devices.children.trigger_button import TriggerButtonDevice
+
+    from custom_components.tapo.hub.event import async_setup_entry
+    from tests.unit.hub.test_event import _mock_trigger_device
+
+    device, _ = _mock_trigger_device()
+    device.__class__ = TriggerButtonDevice
+    device.has_component = MagicMock(return_value=True)
+    coordinator = MagicMock(device=device, last_update_success=True)
+    coordinator._local_push_managed = coordinator._local_push_selected = True
+    coordinator._local_push = None
+    hass.data["tapo"] = {"test": SimpleNamespace(child_coordinators=[coordinator])}
+    add = MagicMock()
+    await async_setup_entry(hass, SimpleNamespace(entry_id="test"), add)
+    entities = add.call_args.args[0]
+    assert len(entities) == 2
+    poller = MagicMock(side_effect=AssertionError("No polling when receiver fails"))
+    monkeypatch.setattr(
+        "custom_components.tapo.hub.event.get_hub_event_log_poller", poller
+    )
+    for entity in entities:
+        entity.hass = hass
+        entity.async_write_ha_state = MagicMock()
+        assert not entity.available
+        await entity.async_added_to_hass()
+        entity._ha_started = True
+        entity._handle_coordinator_update()
+    poller.assert_not_called()
+    device.get_event_logs.assert_not_awaited()
 
 
 async def test_incomplete_snapshot_and_suffix_conflict_refuse_writes(manager):
+    rule = manager._routes["06ef2"]
     manager._query = AsyncMock(return_value={"sum": 2, "rule_content_list": []})
     with pytest.raises(RuntimeError, match="Incomplete"):
         await manager._reconcile()
     assert manager._query.await_count == 1
-    rule = manager._routes["06ef2"]
     manager._state["rules"] = [rule]
     manager._native_rules = AsyncMock(return_value={"other06ef2": {"id": "other06ef2"}})
     manager._query.reset_mock()
@@ -420,6 +606,7 @@ async def test_multiple_hubs_share_discovery_and_release_last_socket(hass, monke
         value._run = AsyncMock()
         value._native_rules = AsyncMock(return_value={})
         await value.async_start()
+        await value._async_bind()
         managers.append(value)
     await hass.async_block_till_done()
     assert endpoint.await_count == 1
@@ -489,7 +676,7 @@ async def test_h100_defaults_to_push_and_deselection_never_enables_polling(
     }
     if selection is not None:
         data["local_push_device_ids"] = selection
-    entry = SimpleNamespace(entry_id="test", data=data)
+    entry = SimpleNamespace(entry_id="test", data=data, async_on_unload=MagicMock())
     coordinators = [SimpleNamespace(device=child) for child in children]
     state = SimpleNamespace(local_push=None)
     hass.data["tapo"] = {"test": state}
@@ -515,17 +702,19 @@ async def test_h100_defaults_to_push_and_deselection_never_enables_polling(
     } == expected
 
 
-async def test_push_bind_error_is_recoverable_and_closes_partial_receiver(
+async def test_push_setup_error_is_isolated_and_closes_partial_receiver(
     hass, monkeypatch
 ):
-    from homeassistant.exceptions import ConfigEntryNotReady
+    from homeassistant.helpers import issue_registry as ir
 
     from custom_components.tapo.hub.hass_tapo_hub import HassTapoHub
 
     child = SimpleNamespace(model="S200D", device_id="A" * 40)
     hub = SimpleNamespace(model="H100", children=[child])
     entry = SimpleNamespace(
-        entry_id="test", data={"host": "192.0.2.1", "local_push_host": "127.0.0.1"}
+        entry_id="test",
+        data={"host": "192.0.2.1", "local_push_host": "127.0.0.1"},
+        async_on_unload=MagicMock(),
     )
     push = MagicMock(port=18080)
     push.async_start = AsyncMock(side_effect=OSError("port in use"))
@@ -534,11 +723,13 @@ async def test_push_bind_error_is_recoverable_and_closes_partial_receiver(
         "custom_components.tapo.hub.hass_tapo_hub.LocalPushManager",
         lambda *a, **kw: push,
     )
-    with pytest.raises(ConfigEntryNotReady, match="Configure the H100 receiver"):
-        await HassTapoHub(entry, hub)._async_setup_local_push(
-            hass, [SimpleNamespace(device=child)]
-        )
+    hass.data["tapo"] = {"test": SimpleNamespace(local_push=None)}
+    coordinator = SimpleNamespace(device=child)
+    await HassTapoHub(entry, hub)._async_setup_local_push(hass, [coordinator])
     push.async_stop.assert_awaited_once()
+    assert coordinator._local_push is push
+    assert coordinator._local_push_selected
+    assert ir.async_get(hass).async_get_issue("tapo", "local_push_unavailable_test")
 
 
 @pytest.mark.parametrize("change", ["schedule", "future_action", "custom_action"])

@@ -21,6 +21,7 @@ from custom_components.tapo.coordinators import HassTapoDeviceData
 from custom_components.tapo.discovery import discovery_tapo_devices
 from custom_components.tapo.errors import DeviceNotSupported
 from custom_components.tapo.hass_tapo import HassTapo
+from custom_components.tapo.hub.local_push_repairs import async_clear_push_issues
 from custom_components.tapo.migrations import migrate_entry_to_v8
 from custom_components.tapo.setup_helpers import create_device_config
 
@@ -105,6 +106,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             await data.local_push.async_stop()
         data.config_entry_update_unsub()
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove migration and recovery notices belonging to this entry."""
+    async_clear_push_issues(hass, entry)
 
 
 def async_create_discovery_flow(

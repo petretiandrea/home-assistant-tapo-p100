@@ -106,6 +106,8 @@ H100-connected S200D knobs use native hub-local actions to push button and rotat
 
 See [local push onboarding, network requirements, event examples, and compatibility limits](docs/local-push.md). Verified on H100 firmware 1.7.10; this uses an undocumented protocol. Other supported devices retain their existing handling.
 
+Existing H100/S200D entries receive an upgrade notice in Home Assistant Repairs until Configure is saved. Receiver failures leave other hub devices usable, mark affected knob events unavailable, and retry in the background. Recovery notices clear after successful verification.
+
 ### Additional features
 
 - [x] manually change ip address. Now you can change the ip address of a tapo device without removing and re-adding it.

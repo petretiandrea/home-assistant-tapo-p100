@@ -41,6 +41,7 @@ from custom_components.tapo.hub.local_push import (
     DEFAULT_LOCAL_PUSH_PORT,
     async_validate_push,
 )
+from custom_components.tapo.hub.local_push_repairs import async_set_push_issue
 from custom_components.tapo.setup_helpers import create_aiohttp_session, get_host_port
 
 _LOGGER = logging.getLogger(__name__)
@@ -427,6 +428,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=self.config_entry.data | user_input
                 )
+                if choices is not None:
+                    async_set_push_issue(
+                        self.hass, self.config_entry, "local_push_upgrade", False
+                    )
                 return self.async_create_entry(title="", data={})
         return self.async_show_form(
             step_id="init",
@@ -446,11 +451,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
         if data.device.model != "H100":
             return None
-        return [
+        choices = [
             {"value": c.device.device_id, "label": c.device.nickname}
             for c in data.child_coordinators
             if c.device.model == "S200D"
         ]
+        available = {choice["value"] for choice in choices}
+        choices.extend(
+            {"value": device_id, "label": f"{device_id} (no longer paired)"}
+            for device_id in sorted(
+                set(self.config_entry.data.get(CONF_LOCAL_PUSH_DEVICES, [])) - available
+            )
+        )
+        return choices
 
 
 def is_supported_device(discovered_device: DiscoveredDevice) -> bool:

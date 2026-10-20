@@ -175,7 +175,14 @@ async def test_port_conflict_and_current_receiver_exemption(hass):
                 hass,
                 data,
                 CHOICES,
-                current=SimpleNamespace(host="127.0.0.1", port=18080),
+                current=SimpleNamespace(host="127.0.0.1", port=18080, listening=True),
             )
             == {}
         )
+        # A failed manager with the same configured ports owns no sockets.
+        assert await async_validate_push(
+            hass,
+            data,
+            CHOICES,
+            current=SimpleNamespace(host="127.0.0.1", port=18080, listening=False),
+        ) == {"base": "receiver_unavailable"}

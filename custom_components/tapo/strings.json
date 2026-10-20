@@ -63,5 +63,19 @@
       "invalid_receiver_address": "Enter a local IPv4 address assigned to this Home Assistant host, or leave it blank for automatic selection. The hub address must also be IPv4.",
       "receiver_unavailable": "The receiver could not bind its address or ports. Use an IPv4 address assigned to Home Assistant and an unused TCP port (1024\u201365535). UDP 20002 must also be available. Each H100 on the same address needs a different TCP port."
     }
+  },
+  "issues": {
+    "local_push_upgrade": {
+      "title": "Review local knob events for {hub}",
+      "description": "Knob events now use local push. Open [the Tapo integration]({integration_url}) and choose Configure for this hub. Review the selected S200D knobs, receiver IPv4 address and TCP port (default 18080). Allow hub-to-Home-Assistant TCP traffic and UDP 20002, and Home-Assistant-to-hub UDP 21112 on your LAN.\n\nIf existing automations read degrees, enable Legacy rotation degrees (compatibility); native direction and amount remain the default. Saving Configure acknowledges this upgrade notice."
+    },
+    "local_push_missing_devices": {
+      "title": "Review unpaired knobs on {hub}",
+      "description": "Some selected S200D knobs are no longer paired with this hub. Paired knobs and other hub devices continue independently. Open [the Tapo integration]({integration_url}), choose Configure for this hub, and deselect entries marked no longer paired, or pair the knobs again in the Tapo app."
+    },
+    "local_push_unavailable": {
+      "title": "Local knob events need attention on {hub}",
+      "description": "The local receiver or managed hub rules could not be verified. Affected knob event entities are unavailable; ordinary device updates run independently. The receiver retries automatically.\n\nOpen [the Tapo integration]({integration_url}) and choose Configure for this hub. Check the receiver IPv4 address, available TCP port, UDP 20002 and LAN firewall rules. If a managed rule was edited, restore its expected source and target; the integration will not overwrite conflicting rules. The Local Push diagnostic sensor shows the last error type when available. This notice clears after verified recovery."
+    }
   }
 }

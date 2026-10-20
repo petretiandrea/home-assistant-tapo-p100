@@ -20,6 +20,8 @@ The integration configures transport and source attribution. The actions your kn
 
 Existing H100/S200D installations without saved push settings automatically use local push for their associated knobs after upgrading. Existing event entity unique IDs and the `rotation` event type remain unchanged. Native direction and amount are the default, including entries without a saved compatibility setting. If an existing automation reads signed `degrees`, enable **Legacy rotation degrees (compatibility)** during setup or in Configure. This adds the compatibility field for all selected knobs on that hub without changing the native fields or enabling polling. Confirm receiver connectivity after upgrading. Other firmware and deltas outside the mapping below need verification.
 
+A persistent **Review local knob events** notice appears in Home Assistant Repairs for existing H100/S200D entries without saved push settings. It links to the integration and explains receiver connectivity and legacy-degree compatibility. Saving Configure acknowledges the notice; subsequent reloads do not recreate it once settings are saved. New installations complete that review in onboarding.
+
 Open **Settings → Devices & services → TP-Link Tapo → H100 → Configure** to change:
 
 | Setting | Default | Purpose |
@@ -30,7 +32,9 @@ Open **Settings → Devices & services → TP-Link Tapo → H100 → Configure**
 | Legacy rotation degrees (compatibility) | Off | Add reconstructed signed `degrees` for existing automations on all selected knobs. Native direction and amount are always retained. |
 | Device information refresh interval | Existing setting, normally 30 seconds | Battery and ordinary device information, independent of push events. |
 
-Saving options reloads the integration and reconciles its rules. Pair new knobs in the Tapo app first, then select them in Configure. Setup validates device selection, IPv4 addresses, and local socket availability before saving; it does not test firewall reachability. If a receiver cannot bind during startup, the setup error directs you to Configure so you can fix the address/port.
+Saving options reloads the integration and reconciles its rules. Pair new knobs in the Tapo app first, then select them in Configure. Setup validates device selection, IPv4 addresses, and local socket availability before saving; it does not test firewall reachability. If a receiver cannot bind during startup, the hub's other entities still load. The receiver retries in the background, and affected knob event entities stay unavailable until recovery. A Repair notice links to Configure so you can correct the address or port. A manager that failed to bind does not bypass socket validation when its settings are edited.
+
+Removing a knob from the hub does not block the remaining knobs or other hub devices. Its saved selection remains visible as **no longer paired** in Configure, with a Repair notice explaining how to deselect or pair it again. Only currently paired selected S200D devices are passed to the receiver. The removed device's verified owned rules are retired during successful reconciliation.
 
 The previous Poll Latency and Poll Utilization entities are no longer created for H100/S200D. Their old registry entries may remain unavailable after upgrade and can be removed in Home Assistant. There is no background fast-polling fallback for these knobs.
 
@@ -141,10 +145,25 @@ The transport does not prescribe dimming sensitivity, restore behavior, or light
 
 The hub's **Local Push** sensor reports `starting`, `connecting`, `connected`, `error`, or `stopped`, together with receiver address/port, selected device IDs, owned rule IDs, command count, last receipt time, and last error type. Counters are per manager lifetime and reset on reload. `connected` means registration and the managed rules were verified; it is not an end-to-end firewall test. Check a physical gesture as part of setup.
 
-The integration persists a random receiver identity and its owned rule IDs in a private Home Assistant Store. Ownership is saved before any hub writes. New rules are created disabled, read back and verified, then enabled and verified again. Rule contents and source suffixes must remain unambiguous. An incomplete native rule snapshot or ownership conflict causes an error rather than overwriting/deleting unknown rules.
+Selected knob event entities reflect both ordinary device availability and push transport health. They are unavailable while the receiver is starting, reconnecting, or in error, and recover when registration and rules are verified. No fast event polling is enabled while the receiver is unavailable. Ordinary hub sensor, battery, and device information refreshes remain independent of receiver startup failures. Invalid receiver settings or a partially initialized receiver also leave the rest of the hub entry usable.
+
+The integration persists a random receiver identity and its owned rule IDs in a private Home Assistant Store. Ownership is saved before any hub writes. New rules are created disabled, read back and verified, then enabled and verified again. Rule contents and source suffixes must remain unambiguous. An incomplete native rule snapshot or ownership conflict causes an error rather than overwriting/deleting unknown rules. Failed reconciliation or lost registration invalidates the old source mapping and pauses event delivery; a complete successful reconciliation restores it. A changed rule cannot keep attributing commands through a stale mapping after its conflict is detected.
+
+Receiver and rule failures create an entry-scoped Repair notice with recovery guidance. It stays visible during reconnection and clears after verified recovery. Removing a hub entry clears only that entry's notices. A failed TCP or discovery bind closes its partial listener before retrying; unloading releases the receiver's own shared discovery registration and HTTP session.
 
 On unload, the integration removes only its verified owned rules, withdraws its own receiver, and closes its sockets and private HTTP session. The original Tapo rules are preserved. Cleanup is bounded when the hub is offline; ownership is retained for recovery on a later push-enabled setup. If disabling while the hub is unreachable leaves rules on it, reconnect the hub and enable push once more, then disable it while connected so cleanup can finish. Do not delete the private Store while hub rules still refer to the receiver.
 
 Registration and rules are reconciled periodically. Automated tests cover idempotent reconciliation, resource cleanup, source isolation, and retry handling. Hardware tests verified custom-port operation, two independent knobs, local operation during a temporary hub internet block, and recovery after a Tapo integration reload with stable receiver/rule identities. Hub power-cycle recovery, long-duration operation, other hub models, and other firmware versions remain unverified.
 
 Receiver authentication uses the existing Tapo account credentials; it does not accept blank/default credentials. Incoming HTTP and discovery requests are restricted to the configured H100 source address. No credentials or derived authentication hash are included in diagnostics.
+
+## Final-build hardware validation
+
+The failure-isolation and Repair behavior above has automated coverage. Complete these checks against the exact release candidate before claiming hardware validation for those additions:
+
+1. Exercise first-run onboarding and upgrade an existing polling entry. Review the upgrade notice, save receiver settings, and verify that acknowledgement survives reload.
+2. Check clicks and both rotation directions on each knob. Enable and disable legacy-degree compatibility and inspect the event attributes.
+3. Restart Home Assistant, then power-cycle the H100. Verify automatic reconnection, stable rule ownership, and no startup replay.
+4. Interrupt and restore LAN reachability. Verify unavailable/recovered knob entities, cleared recovery notices, and no duplicate actions.
+5. Change a receiver port, remove a paired knob, and disable push while the hub is reachable. Confirm the other hub devices remain usable and only verified owned rules are removed.
+6. Observe normal operation for 24–48 hours, including KLAP session renewal, before claiming extended-run verification.

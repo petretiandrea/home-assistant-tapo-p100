@@ -253,7 +253,7 @@ async def async_setup_entry(
     for child_coordinator in data.child_coordinators:
         device = child_coordinator.device
         if getattr(child_coordinator, "_local_push_managed", False) and not getattr(
-            child_coordinator, "_local_push", None
+            child_coordinator, "_local_push_selected", False
         ):
             continue
         if isinstance(device, TriggerButtonDevice) and device.has_component(
@@ -284,12 +284,21 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
         self._ha_started: bool = False
         self._event_log_poller: HubEventLogPoller | None = None
 
+    @property
+    def available(self):
+        if getattr(self.coordinator, "_local_push_managed", False):
+            push = getattr(self.coordinator, "_local_push", None)
+            return super().available and bool(push and push.available)
+        return super().available
+
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if push := getattr(self.coordinator, "_local_push", None):
-            self.async_on_remove(
-                push.subscribe(self._device.device_id, self._handle_local_push)
-            )
+        if getattr(self.coordinator, "_local_push_managed", False):
+            if push := getattr(self.coordinator, "_local_push", None):
+                self.async_on_remove(
+                    push.subscribe(self._device.device_id, self._handle_local_push)
+                )
+                self.async_on_remove(push.subscribe_status(self.async_write_ha_state))
             self._ha_started = self.hass.state is CoreState.running
             if not self._ha_started:
                 self.async_on_remove(
@@ -322,7 +331,7 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         if not self._ha_started:
             return
-        if getattr(self.coordinator, "_local_push", None) is not None:
+        if getattr(self.coordinator, "_local_push_managed", False):
             self.async_write_ha_state()
             return
         if self._event_log_poller is None:
