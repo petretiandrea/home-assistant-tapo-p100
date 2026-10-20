@@ -41,7 +41,7 @@
       },
       "local_push": {
         "title": "Set up S200D local events",
-        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events contain direction and scaled amount instead of degrees. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
+        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events retain signed degrees for compatible S200D 30-degree steps alongside direction and scaled amount. Unknown deltas report degrees as null; see the documented firmware limits. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
         "data": {
           "local_push_device_ids": "S200D knobs using local push",
           "local_push_port": "Receiver TCP port",

@@ -54,12 +54,107 @@ def test_captured_commands_preserve_source_direction_and_amount(manager):
             "B" * 40 if command["method"] == "decrease_brightness" else "A" * 40
         )
         assert event["transport"] == "local_push"
-        assert "degrees" not in event
         if command["method"] != "reverse_status":
             assert event["amount"] == command["params"]["delta"]
             assert event["signed_amount"] == event["amount"] * (
                 -1 if event["device_id"] == "B" * 40 else 1
             )
+            assert event["degrees"] == {9: 30, 17: 60}[event["amount"]] * (
+                -1 if event["device_id"] == "B" * 40 else 1
+            )
+        else:
+            assert "degrees" not in event
+
+
+@pytest.mark.parametrize(
+    "sample",
+    json.loads((FIXTURES / "h100_rotation_degrees.json").read_text())["samples"],
+    ids=lambda sample: str(sample["raw_degrees"]),
+)
+def test_recorded_rotations_preserve_legacy_degrees(manager, sample):
+    token = "f6135" if sample["raw_degrees"] > 0 else "a7182"
+    manager._on_action(
+        {
+            "method": sample["method"],
+            "params": {"delta": sample["delta"]},
+            "action_dedup_id": f"LC6abcde{token}TRG011234567",
+        }
+    )
+    event = manager.hass.bus.async_fire.call_args.args[1]
+    assert event["event_type"] == "rotation"
+    assert event["degrees"] == sample["raw_degrees"]
+    assert type(event["degrees"]) is int
+    assert event["amount"] == sample["delta"]
+    assert event["signed_amount"] == sample["delta"] * (
+        1 if sample["raw_degrees"] > 0 else -1
+    )
+
+
+@pytest.mark.parametrize("sign", [-1, 1])
+@pytest.mark.parametrize(
+    ("delta", "degrees"), [(67, 240), (75, 270), (84, 300), (92, 330), (100, 360)]
+)
+def test_rotation_lookup_arithmetic_extension_to_360_degrees(
+    manager, sign, delta, degrees
+):
+    """These larger steps follow the formula; hardware evidence stops at 210."""
+    token = "f6135" if sign > 0 else "a7182"
+    manager._on_action(
+        {
+            "method": "increase_brightness" if sign > 0 else "decrease_brightness",
+            "params": {"delta": delta},
+            "action_dedup_id": f"LC6abcde{token}TRG011234567",
+        }
+    )
+    event = manager.hass.bus.async_fire.call_args.args[1]
+    assert event["degrees"] == sign * degrees
+    assert event["signed_amount"] == sign * delta
+
+
+@pytest.mark.parametrize("sign", [-1, 1])
+@pytest.mark.parametrize("delta", [1, 7, 8, 10, 16, 18, 99])
+def test_unknown_rotation_delta_retains_native_data_without_guessing_degrees(
+    manager, sign, delta
+):
+    token = "f6135" if sign > 0 else "a7182"
+    manager._on_action(
+        {
+            "method": "increase_brightness" if sign > 0 else "decrease_brightness",
+            "params": {"delta": delta},
+            "action_dedup_id": f"LC6abcde{token}TRG011234567",
+        }
+    )
+    event = manager.hass.bus.async_fire.call_args.args[1]
+    assert event["event_type"] == "rotation"
+    assert event["degrees"] is None
+    assert event["amount"] == delta
+    assert event["signed_amount"] == sign * delta
+    assert event["direction"] == ("clockwise" if sign > 0 else "counterclockwise")
+
+
+def test_push_dial_entity_preserves_legacy_degrees_and_clears_unknown_value(manager):
+    from custom_components.tapo.hub.event import TapoDialEvent
+    from tests.unit.hub.test_event import _mock_trigger_device
+
+    device, _ = _mock_trigger_device()
+    entity = TapoDialEvent(MagicMock(), device)
+    entity._ha_started = True
+    entity.async_write_ha_state = MagicMock()
+    manager.subscribe("B" * 40, entity._handle_local_push)
+    for index, (delta, degrees) in enumerate([(17, -60), (7, None), (9, -30)]):
+        manager._on_action(
+            {
+                "method": "decrease_brightness",
+                "params": {"delta": delta},
+                "action_dedup_id": f"LC6abcdea7182TRG01{index:07d}",
+            }
+        )
+        # Exercise the actual EventEntity state attributes used by old templates.
+        assert entity.state_attributes["event_type"] == "rotation"
+        assert entity.state_attributes["degrees"] == degrees
+        assert entity.state_attributes["signed_amount"] == -delta
+    assert entity.async_write_ha_state.call_count == 3
+    device.get_event_logs.assert_not_awaited()
 
 
 @pytest.mark.parametrize("dedup", [None, "", "LC6", "LC6abcdeZZZZZTRG011234567"])

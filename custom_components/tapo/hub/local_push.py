@@ -1,7 +1,7 @@
 """H100 local action receiver and owned-rule lifecycle.
 
-This uses undocumented H100 1.7.10 behavior. Rotation exposes the received
-brightness delta; it does not manufacture original degree measurements.
+This uses undocumented H100 1.7.10 behavior. Rotation retains the native
+brightness delta and restores legacy degrees for S200D's observed 30-degree steps.
 """
 
 import asyncio
@@ -43,6 +43,24 @@ GESTURES = {
     "double_click": ("doubleClick", "reverseStatus", "reverse_status"),
     "positive": ("rotation", "increaseBrightness", "increase_brightness"),
     "negative": ("rotation", "decreaseBrightness", "decrease_brightness"),
+}
+# H100 derives delta as ceil(abs(degrees) * 100 / 360). Its rounded output
+# is invertible on S200D's observed 30-degree steps, not on arbitrary angles.
+# Verified against 672 paired rotations on H100 1.7.10 / S200D 1.12.0;
+# see docs/local-push.md. Never snap an unknown delta to a guessed angle.
+_S200D_DEGREES_BY_DELTA = {
+    9: 30,
+    17: 60,
+    25: 90,
+    34: 120,
+    42: 150,
+    50: 180,
+    59: 210,
+    67: 240,
+    75: 270,
+    84: 300,
+    92: 330,
+    100: 360,
 }
 
 
@@ -466,11 +484,13 @@ class LocalPushManager:
             if type(amount) is not int or not 1 <= amount <= 100:
                 return
             sign = 1 if rule["gesture"] == "positive" else -1
+            degrees = _S200D_DEGREES_BY_DELTA.get(amount)
             event.update(
                 event_type="rotation",
                 direction="clockwise" if sign > 0 else "counterclockwise",
                 amount=amount,
                 signed_amount=sign * amount,
+                degrees=sign * degrees if degrees is not None else None,
             )
         self.received_commands += 1
         self.last_received = time.time()
