@@ -8,16 +8,56 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "local_push": {
+        "title": "Set up S200D local events",
+        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events contain direction and scaled amount instead of degrees. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
+        "data": {
+          "local_push_device_ids": "S200D knobs using local push",
+          "local_push_port": "Receiver TCP port",
+          "local_push_host": "Receiver IPv4 address (blank for automatic)"
+        },
+        "data_description": {
+          "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address."
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_hostname": "[%key:common::config_flow::error::invalid_hostname%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_push_devices": "A selected knob is no longer associated with this hub. Deselect it and try again.",
+      "invalid_receiver_address": "Enter a local IPv4 address assigned to this Home Assistant host, or leave it blank for automatic selection. The hub address must also be IPv4.",
+      "receiver_unavailable": "The receiver could not bind its address or ports. Use an IPv4 address assigned to Home Assistant and an unused TCP port (1024\u201365535). UDP 20002 must also be available. Each H100 on the same address needs a different TCP port."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure device and local events",
+        "description": "H100/S200D events use local push. Changing these settings reloads the integration and reconciles only its own hub rules. Deselect a knob to stop receiving its events; this does not enable event polling. Other supported devices keep their existing transport. See the local push setup and network requirements in the documentation.",
+        "data": {
+          "host": "Hub or device address",
+          "scan_interval": "Device information refresh interval (seconds)",
+          "local_push_device_ids": "S200D knobs using local push",
+          "local_push_port": "Receiver TCP port",
+          "local_push_host": "Receiver IPv4 address (blank for automatic)"
+        },
+        "data_description": {
+          "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address."
+        }
+      }
+    },
+    "error": {
+      "invalid_push_devices": "A selected knob is no longer associated with this hub. Deselect it and try again.",
+      "invalid_receiver_address": "Enter a local IPv4 address assigned to this Home Assistant host, or leave it blank for automatic selection. The hub address must also be IPv4.",
+      "receiver_unavailable": "The receiver could not bind its address or ports. Use an IPv4 address assigned to Home Assistant and an unused TCP port (1024\u201365535). UDP 20002 must also be available. Each H100 on the same address needs a different TCP port."
     }
   }
 }

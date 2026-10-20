@@ -75,6 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device_config = create_device_config(entry)
         device = HassTapo(entry, device_config)
         return await device.initialize_device(hass)
+    except ConfigEntryNotReady:
+        raise
     except DeviceNotSupported as error:
         raise error
     except Exception as error:
@@ -99,6 +101,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     if data and unload_ok:
+        if data.local_push is not None:
+            await data.local_push.async_stop()
         data.config_entry_update_unsub()
     return unload_ok
 

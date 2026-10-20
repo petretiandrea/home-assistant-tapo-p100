@@ -252,6 +252,10 @@ async def async_setup_entry(
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
     for child_coordinator in data.child_coordinators:
         device = child_coordinator.device
+        if getattr(child_coordinator, "_local_push_managed", False) and not getattr(
+            child_coordinator, "_local_push", None
+        ):
+            continue
         if isinstance(device, TriggerButtonDevice) and device.has_component(
             TriggerLogComponent
         ):
@@ -282,6 +286,18 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        if push := getattr(self.coordinator, "_local_push", None):
+            self.async_on_remove(
+                push.subscribe(self._device.device_id, self._handle_local_push)
+            )
+            self._ha_started = self.hass.state is CoreState.running
+            if not self._ha_started:
+                self.async_on_remove(
+                    self.hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STARTED, self._on_ha_started
+                    )
+                )
+            return
         self._event_log_poller = get_hub_event_log_poller(
             self.hass,
             self.coordinator,
@@ -306,6 +322,9 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         if not self._ha_started:
             return
+        if getattr(self.coordinator, "_local_push", None) is not None:
+            self.async_write_ha_state()
+            return
         if self._event_log_poller is None:
             self._event_log_poller = get_hub_event_log_poller(
                 self.hass,
@@ -314,6 +333,16 @@ class _TapoEventBase(CoordinatedTapoEntity, EventEntity):
                 getattr(self.coordinator, "_hub_entry_id", None),
             )
         self._event_log_poller.schedule_refresh()
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_local_push(self, event) -> None:
+        if not self._ha_started or event["event_type"] not in self._attr_event_types:
+            return
+        self._trigger_event(
+            event["event_type"],
+            {key: value for key, value in event.items() if key != "event_type"},
+        )
         self.async_write_ha_state()
 
     @callback

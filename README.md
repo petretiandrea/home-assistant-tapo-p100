@@ -85,7 +85,8 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 - [x] support for `T100` motion sensor hub's device
 - [x] support for `T110` smart door hub's device
 - [x] support for `S220`, `S210` switch hub's device
-- [x] support for `S200B` button and `S200D` dial hub's device (button press and dial rotation events reported to HA, double-click not supported)
+- [x] support for `S200B` button and `S200D` dial hub's device
+- [x] authenticated local push for `S200D` on `H100`, replacing fast event polling; see [setup, configuration, and migration](docs/local-push.md)
 - [x] support for tapo powerstrip (`P300`). A special thanks go to @alxlk to support me with max one-time contribution which allows me to buy the device
 - [x] support for tapo switch (`P100`, `P110`, `P105`, `P115`, `P125`, `P110M`)
 - [x] support for tapo powerstrip (`P304M`) with individual socket support and energy monitoring via [PR #933](https://github.com/petretiandrea/home-assistant-tapo-p100/pull/933)
@@ -98,6 +99,12 @@ Please be sure to have DHCP discovery enabled on your `configuration.yaml` (enab
 - [x] support for additional tapo sensors: `overheat` and `wifi_signal`
 - [x] allow configuration from home assistant UI with config flow
 - [x] allow configuration from `configuration.yaml`. supported domains are `switch`, `light`, `sensor`
+
+### H100 / S200D local events
+
+H100-connected S200D knobs use native hub-local actions to push button and rotation events to Home Assistant. Configure knobs, receiver address, and port during setup or through the H100 entry’s **Configure** screen. Existing H100/S200D entries automatically use this transport. Rotation automations must migrate from `degrees` to `direction` and scaled `signed_amount`.
+
+See [local push onboarding, network requirements, event examples, and compatibility limits](docs/local-push.md). Verified on H100 firmware 1.7.10; this uses an undocumented protocol. Other supported devices retain their existing handling.
 
 ### Additional features
 
