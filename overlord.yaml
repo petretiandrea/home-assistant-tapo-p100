@@ -1,5 +1,11 @@
-environmentRecipes:
-  - id: devcontainer-docker
-    name: Dev Container (Docker)
-    create: ./scripts/orca-vm/create.sh
-    destroy: ./scripts/orca-vm/destroy.sh
+version: 1
+environment:
+  type: devcontainer
+  config: .devcontainer/devcontainer.json
+agent:
+  type: codex
+  executable: codex
+checks: []
+limits:
+  timeoutMinutes: 90
+  retainWorkspaceHours: 48

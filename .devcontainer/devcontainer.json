@@ -4,7 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": "."
   },
-  "postCreateCommand": "bash .devcontainer/setup-shell.sh && bash .devcontainer/setup-git.sh && script/setup/setup",
+  "postCreateCommand": "bash .devcontainer/setup-shell.sh && bash .devcontainer/setup-git.sh && script/setup/setup && sudo npm install -g @openai/codex",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
   "containerEnv": {
     // Home Assistant version to install in the devcontainer.
