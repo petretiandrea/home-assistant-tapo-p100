@@ -4,6 +4,10 @@ This recipe starts one local Docker container per Orca workspace. It builds on
 `.devcontainer/devcontainer.json`, adds SSH and Codex, and uses the repository's
 `script/setup/setup` to prepare Home Assistant.
 
+The repository-root `overlord.yaml` exposes the same recipe for Overlord.
+`orca.yaml` remains available for Orca; both configurations share the scripts
+in this directory. Keep their recipe definitions in sync when changing them.
+
 One-time setup:
 
 ```sh
