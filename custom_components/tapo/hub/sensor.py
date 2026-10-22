@@ -51,6 +51,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     data = cast(HassTapoDeviceData, hass.data[DOMAIN][entry.entry_id])
+    if data.local_push is not None:
+        async_add_entities(
+            [LocalPushStatusSensor(data.coordinator, data.device, data.local_push)]
+        )
     for child_coordinator in data.child_coordinators:
         sensors = [
             eval(cls)(child_coordinator, child_coordinator.device)
@@ -64,14 +68,54 @@ async def async_setup_entry(
                     filter(lambda x: not isinstance(x, BatteryLevelSensor), sensors)
                 )
 
-        if isinstance(
-            child_coordinator.device, TriggerButtonDevice
-        ) and child_coordinator.device.has_component(TriggerLogComponent):
+        if (
+            isinstance(child_coordinator.device, TriggerButtonDevice)
+            and child_coordinator.device.has_component(TriggerLogComponent)
+            and not getattr(child_coordinator, "_local_push_managed", False)
+        ):
             sensors.append(
                 PollLatencySensor(child_coordinator, child_coordinator.device)
             )
 
         async_add_entities(sensors, True)
+
+
+class LocalPushStatusSensor(CoordinatedTapoEntity, SensorEntity):
+    """Diagnostic state of the receiver and owned hub rules."""
+
+    _attr_name = "Local Push"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:gesture-tap-button"
+
+    def __init__(self, coordinator, device, manager):
+        super().__init__(coordinator, device)
+        self.manager = manager
+
+    @property
+    def unique_id(self):
+        return super().unique_id + "_local_push"
+
+    @property
+    def native_value(self):
+        return self.manager.status
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "receiver_ip": self.manager.host,
+            "receiver_port": self.manager.port,
+            "receiver_id": self.manager.receiver_id,
+            "device_ids": sorted(self.manager.device_ids),
+            "rule_ids": self.manager.rule_ids,
+            "received_commands": self.manager.received_commands,
+            "last_received": self.manager.last_received,
+            "last_error": self.manager.last_error,
+            "experimental": True,
+        }
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        self.async_on_remove(self.manager.subscribe_status(self.async_write_ha_state))
 
 
 class HumiditySensor(CoordinatedTapoEntity, SensorEntity):

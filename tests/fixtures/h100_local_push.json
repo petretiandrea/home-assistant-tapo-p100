@@ -1,0 +1,100 @@
+{
+  "firmware": "H1001.7.10",
+  "commands": [
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 17
+      },
+      "action_dedup_id": "LC6Kf4aCf6135e514e2454040",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 17
+      },
+      "action_dedup_id": "LC6Z0NyVf6135e31f62454041",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "reverse_status",
+      "params": {},
+      "action_dedup_id": "LC6kWO3h06ef25c2612454042",
+      "format_matches_firmware": true,
+      "routing_token": "06ef2",
+      "rule_id": "R2f06ef2",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "decrease_brightness",
+      "params": {
+        "delta": 17
+      },
+      "action_dedup_id": "LC614HdXa71827445d2454043",
+      "format_matches_firmware": true,
+      "routing_token": "a7182",
+      "rule_id": "R8ea7182",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 9
+      },
+      "action_dedup_id": "LC68XtQyf613558f922454044",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 9
+      },
+      "action_dedup_id": "LC6NRAb3f6135656762454044",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 9
+      },
+      "action_dedup_id": "LC6a8Yjhf6135c04282454045",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "reverse_status",
+      "params": {},
+      "action_dedup_id": "LC6i1eP006ef2527c62454049",
+      "format_matches_firmware": true,
+      "routing_token": "06ef2",
+      "rule_id": "R2f06ef2",
+      "rule_and_method_match": true
+    },
+    {
+      "method": "increase_brightness",
+      "params": {
+        "delta": 9
+      },
+      "action_dedup_id": "LC6C4BJMf61350e0782454054",
+      "format_matches_firmware": true,
+      "routing_token": "f6135",
+      "rule_id": "Rccf6135",
+      "rule_and_method_match": true
+    }
+  ]
+}

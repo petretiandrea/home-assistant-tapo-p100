@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import List
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -20,6 +21,14 @@ from custom_components.tapo.const import (
     PLATFORMS,
 )
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
+from custom_components.tapo.hub.local_push import (
+    CONF_LOCAL_PUSH_DEVICES,
+    CONF_LOCAL_PUSH_HOST,
+    CONF_LOCAL_PUSH_PORT,
+    DEFAULT_LOCAL_PUSH_PORT,
+    LocalPushManager,
+)
+from custom_components.tapo.hub.local_push_repairs import async_set_push_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +73,11 @@ class HassTapoHub:
             child_coordinators=child_coordinators,
             device=self.hub,
         )
+        try:
+            await self._async_setup_local_push(hass, child_coordinators)
+        except BaseException:
+            hass.data[DOMAIN][self.entry.entry_id].config_entry_update_unsub()
+            raise
         # TODO: refactory with add_device and remove_device methods
         initial_device_ids = list(map(lambda x: x.device_id, self.hub.children))
 
@@ -78,8 +92,92 @@ class HassTapoHub:
             self.hub.subscribe_device_association(_handle_child_device_event)
         )
 
-        await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
+        try:
+            await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
+        except BaseException:
+            data = hass.data[DOMAIN][self.entry.entry_id]
+            if data.local_push:
+                await data.local_push.async_stop()
+            data.config_entry_update_unsub()
+            raise
         return True
+
+    async def _async_setup_local_push(self, hass, child_coordinators):
+        """Replace the event transport for H100/S200D, preserving other devices."""
+        available = {
+            child.device_id for child in self.hub.children if child.model == "S200D"
+        }
+        if self.hub.model != "H100":
+            available = set()
+        requested = (
+            set(self.entry.data.get(CONF_LOCAL_PUSH_DEVICES, sorted(available)))
+            if self.hub.model == "H100"
+            else set()
+        )
+        selected = requested & available
+        for coordinator in child_coordinators:
+            coordinator._local_push_managed = coordinator.device.device_id in available
+            coordinator._local_push_selected = coordinator.device.device_id in selected
+            coordinator._local_push = None
+        async_set_push_issue(
+            hass,
+            self.entry,
+            "local_push_upgrade",
+            bool(available) and CONF_LOCAL_PUSH_DEVICES not in self.entry.data,
+        )
+        async_set_push_issue(
+            hass, self.entry, "local_push_missing_devices", bool(requested - available)
+        )
+        if not selected:
+            async_set_push_issue(hass, self.entry, "local_push_unavailable", False)
+            return
+
+        data = hass.data[DOMAIN][self.entry.entry_id]
+        push = None
+        try:
+            host = self.entry.data.get(
+                CONF_LOCAL_PUSH_HOST
+            ) or await async_get_source_ip(hass, target_ip=self.entry.data["host"])
+            push = LocalPushManager(
+                hass,
+                self.entry,
+                self.hub,
+                selected,
+                host,
+                self.entry.data.get(CONF_LOCAL_PUSH_PORT, DEFAULT_LOCAL_PUSH_PORT),
+            )
+            data.local_push = push
+            for coordinator in child_coordinators:
+                if coordinator.device.device_id in selected:
+                    coordinator._local_push = push
+
+            def update_push_issue():
+                if push.status == "error":
+                    async_set_push_issue(
+                        hass, self.entry, "local_push_unavailable", True
+                    )
+                elif push.status in ("connected", "stopped"):
+                    async_set_push_issue(
+                        hass, self.entry, "local_push_unavailable", False
+                    )
+
+            self.entry.async_on_unload(push.subscribe_status(update_push_issue))
+            await push.async_start()
+        except BaseException as error:
+            if push:
+                try:
+                    await push.async_stop()
+                except Exception:
+                    _LOGGER.warning("Could not fully close the partial local receiver")
+            if not isinstance(error, Exception):
+                raise
+            if push:
+                push._set_status("error", type(error).__name__)
+            async_set_push_issue(hass, self.entry, "local_push_unavailable", True)
+            _LOGGER.warning(
+                "Local knob events could not start (%s); other hub entities remain available",
+                type(error).__name__,
+            )
 
     async def setup_children(
         self,
@@ -88,13 +186,13 @@ class HassTapoHub:
         devices: List[TapoDevice],
         polling_rate: timedelta,
     ) -> List[TapoDataCoordinator]:
-        button_polling_rate = timedelta(milliseconds=DEFAULT_BUTTON_POLLING_RATE_MS)
         coordinators = [
             TapoDataCoordinator(
                 hass,
                 child_device,
-                button_polling_rate
+                timedelta(milliseconds=DEFAULT_BUTTON_POLLING_RATE_MS)
                 if isinstance(child_device, TriggerButtonDevice)
+                and not (self.hub.model == "H100" and child_device.model == "S200D")
                 else polling_rate,
             )
             for child_device in devices

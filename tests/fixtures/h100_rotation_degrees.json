@@ -1,0 +1,82 @@
+{
+  "hub_firmware": "H100 1.7.10 Build260725 Rel042335",
+  "knob_firmware": "S200D 1.12.0 Build231121 Rel092508",
+  "physical_knobs": 2,
+  "matched_rotations": 672,
+  "controlled_rotations": 36,
+  "source": "Sanitized native push delta / original hub log pairs. Counts include 636 historical matches and 36 controlled turns. Unmatched historical records are excluded. The controlled comparison used Home Assistant recorder history and original hub logs.",
+  "samples": [
+    {
+      "raw_degrees": -150,
+      "method": "decrease_brightness",
+      "delta": 42,
+      "observations": 2
+    },
+    {
+      "raw_degrees": -120,
+      "method": "decrease_brightness",
+      "delta": 34,
+      "observations": 17
+    },
+    {
+      "raw_degrees": -90,
+      "method": "decrease_brightness",
+      "delta": 25,
+      "observations": 47
+    },
+    {
+      "raw_degrees": -60,
+      "method": "decrease_brightness",
+      "delta": 17,
+      "observations": 95
+    },
+    {
+      "raw_degrees": -30,
+      "method": "decrease_brightness",
+      "delta": 9,
+      "observations": 117
+    },
+    {
+      "raw_degrees": 30,
+      "method": "increase_brightness",
+      "delta": 9,
+      "observations": 121
+    },
+    {
+      "raw_degrees": 60,
+      "method": "increase_brightness",
+      "delta": 17,
+      "observations": 155
+    },
+    {
+      "raw_degrees": 90,
+      "method": "increase_brightness",
+      "delta": 25,
+      "observations": 78
+    },
+    {
+      "raw_degrees": 120,
+      "method": "increase_brightness",
+      "delta": 34,
+      "observations": 28
+    },
+    {
+      "raw_degrees": 150,
+      "method": "increase_brightness",
+      "delta": 42,
+      "observations": 10
+    },
+    {
+      "raw_degrees": 180,
+      "method": "increase_brightness",
+      "delta": 50,
+      "observations": 1
+    },
+    {
+      "raw_degrees": 210,
+      "method": "increase_brightness",
+      "delta": 59,
+      "observations": 1
+    }
+  ]
+}
