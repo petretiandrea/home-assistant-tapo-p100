@@ -163,6 +163,34 @@ class TapoLightEntity(CoordinatedTapoEntity, LightEntity):
         if not on:
             return (await self.device.turn_off()).get_or_raise()
 
+        # Send power, color and brightness in a single request. Sending them one by
+        # one makes a bulb that is turned on from off briefly show its previous
+        # color before switching to the requested one.
+        light_component = self.device.get_component(LightComponent)
+        has_color = hue_saturation is not None or color_temp is not None
+        if (
+            light_component is not None
+            and effect is None
+            and (has_color or (brightness is not None and not current_effect))
+        ):
+            params = LightColorDeviceInfoParams(device_on=True, brightness=brightness)
+            if (
+                hue_saturation is not None
+                and ColorMode.HS in self.supported_color_modes
+            ):
+                params.hue = int(hue_saturation[0])
+                params.saturation = int(hue_saturation[1])
+                if params.saturation > 0:
+                    params.color_temp = 0
+            elif (
+                color_temp is not None
+                and ColorMode.COLOR_TEMP in self.supported_color_modes
+            ):
+                params.color_temp = int(color_temp)
+            return (
+                await light_component._client.set_device_info(params)
+            ).get_or_raise()
+
         (await self.device.turn_on()).get_or_raise()
         if effect is not None:
             (
