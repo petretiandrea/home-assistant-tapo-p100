@@ -1,0 +1,11 @@
+version: 1
+environment:
+  type: devcontainer
+  config: .devcontainer/devcontainer.json
+agent:
+  type: codex
+  executable: codex
+checks: []
+limits:
+  timeoutMinutes: 90
+  retainWorkspaceHours: 48
