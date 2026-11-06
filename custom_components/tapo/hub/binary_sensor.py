@@ -64,9 +64,10 @@ class WaterLeakSensor(CoordinatedTapoEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return (
-            self.device.get_component(WaterLeakComponent).water_leak_status != "normal"
-        )
+        water_leak_status = self.device.get_component(
+            WaterLeakComponent
+        ).water_leak_status
+        return water_leak_status not in ("normal", "water_dry")
 
 
 class MotionSensor(CoordinatedTapoEntity, BinarySensorEntity):
