@@ -84,14 +84,10 @@ def mock_discovery():
     discovered_device = mock_discovered_device()
     device = _mock_base_device(MagicMock(auto_spec=TapoDevice))
     with patch(
-        "custom_components.tapo.config_flow.connect_discovered_device",
+        "custom_components.tapo.setup_helpers.connect_discovered_device",
         AsyncMock(return_value=device),
     ):
-        with patch(
-            "custom_components.tapo.hass_tapo.connect_discovered_device",
-            AsyncMock(return_value=device),
-        ):
-            yield discovered_device
+        yield discovered_device
 
 
 async def setup_platform(
