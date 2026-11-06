@@ -6,7 +6,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from plugp100.components.energy import EnergyComponent
 from plugp100.devices import DeviceConnectConfiguration, TapoDevice, TapoPlug, connect
-from plugp100.discovery import DiscoveredDevice, connect_discovered_device
+from plugp100.discovery import DiscoveredDevice
 
 from custom_components.tapo.components.child_energy_component import (
     ChildEnergyComponent,
@@ -19,7 +19,10 @@ from custom_components.tapo.const import (
 )
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
 from custom_components.tapo.hub.hass_tapo_hub import HassTapoHub, TapoHub
-from custom_components.tapo.setup_helpers import create_aiohttp_session
+from custom_components.tapo.setup_helpers import (
+    connect_with_discovery_fallback,
+    create_aiohttp_session,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class HassTapo:
         if discover_data := self.entry.data.get(CONF_DISCOVERED_DEVICE_INFO):
             _LOGGER.info("Found discovered data, avoid to guess protocol")
             discovered_device = DiscoveredDevice.from_dict(discover_data)
-            device = await connect_discovered_device(
+            device = await connect_with_discovery_fallback(
                 discovered_device=discovered_device,
                 credentials=self.config.credentials,
                 session=session,

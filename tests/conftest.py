@@ -84,14 +84,10 @@ def mock_discovery():
     discovered_device = mock_discovered_device()
     device = _mock_base_device(MagicMock(auto_spec=TapoDevice))
     with patch(
-        "custom_components.tapo.config_flow.connect_discovered_device",
+        "custom_components.tapo.setup_helpers.connect_discovered_device",
         AsyncMock(return_value=device),
     ):
-        with patch(
-            "custom_components.tapo.hass_tapo.connect_discovered_device",
-            AsyncMock(return_value=device),
-        ):
-            yield discovered_device
+        yield discovered_device
 
 
 async def setup_platform(
@@ -315,6 +311,7 @@ def _mock_base_device(device: MagicMock) -> MagicMock:
     device.device_info.hardware_version = "1.0.0"
     device.mac = "1A-22-33-B4-C5-66"
     device.update = AsyncMock(return_value=None)
+    device.client.get_device_info = AsyncMock(return_value=Success({"model": "T100"}))
     device.registry = MockComponentsRegistry()
     device.add_component = MagicMock(side_effect=device.registry.add_component)
     device.get_component = MagicMock(side_effect=device.registry.get_component)
