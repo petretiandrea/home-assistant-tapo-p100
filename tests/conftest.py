@@ -56,6 +56,23 @@ class Components:
         return cls(payload["component_list"])
 
 
+def get_device_by_identifier(
+    registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+    identifier: tuple[str, str],
+) -> dr.DeviceEntry | None:
+    """Look up a registry device by identifier, compatible across HA versions.
+
+    ``DeviceRegistry.async_get_device`` is deprecated since Home Assistant
+    2026.9 in favour of ``async_get_device_by_identifier`` (added in 2026.8).
+    """
+    if hasattr(registry, "async_get_device_by_identifier"):
+        return registry.async_get_device_by_identifier(
+            identifier, config_entry.entry_id
+        )
+    return registry.async_get_device(identifiers={identifier})
+
+
 IP_ADDRESS = "1.2.3.4"
 MAC_ADDRESS = "1a:22:33:b4:c5:66"
 

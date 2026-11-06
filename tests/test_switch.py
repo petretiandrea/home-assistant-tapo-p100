@@ -11,16 +11,24 @@ from homeassistant.helpers import device_registry as dr
 
 from custom_components.tapo.const import DOMAIN
 
-from .conftest import extract_entity_id, mock_plug, mock_plug_strip, setup_platform
+from .conftest import (
+    extract_entity_id,
+    get_device_by_identifier,
+    mock_plug,
+    mock_plug_strip,
+    setup_platform,
+)
 
 
 async def test_switch_setup(hass: HomeAssistant):
     device_registry = dr.async_get(hass)
     device = mock_plug()
-    await setup_platform(hass, device, [SWITCH_DOMAIN])
+    config_entry = await setup_platform(hass, device, [SWITCH_DOMAIN])
     entity_id = await extract_entity_id(device, SWITCH_DOMAIN)
     state_entity = hass.states.get(entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
+    device = get_device_by_identifier(
+        device_registry, config_entry, (DOMAIN, device.device_id)
+    )
     assert device is not None
     assert state_entity is not None
     assert state_entity.state == "on"

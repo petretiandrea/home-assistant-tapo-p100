@@ -11,6 +11,7 @@ from custom_components.tapo.const import DOMAIN
 
 from .conftest import (
     extract_entity_id,
+    get_device_by_identifier,
     mock_bulb,
     mock_hub,
     mock_plug,
@@ -24,12 +25,14 @@ from .conftest import (
 )
 async def test_switch_overheat(hass: HomeAssistant, device: MagicMock):
     device_registry = dr.async_get(hass)
-    await setup_platform(hass, device, [BINARY_SENSOR_DOMAIN])
+    config_entry = await setup_platform(hass, device, [BINARY_SENSOR_DOMAIN])
     entity_id = await extract_entity_id(device, BINARY_SENSOR_DOMAIN, "overheat")
     assert len(hass.states.async_all()) == 1
 
     state_entity = hass.states.get(entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
+    device = get_device_by_identifier(
+        device_registry, config_entry, (DOMAIN, device.device_id)
+    )
     assert state_entity is not None
     assert state_entity.state == "on"
     assert state_entity.attributes["device_class"] == "heat"

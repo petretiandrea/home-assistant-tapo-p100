@@ -72,29 +72,32 @@ async def test_discovery_ip_change_dhcp(
         version=8,
         unique_id=dr.format_mac(mock_discovery.mac),
     )
+    # The device is unreachable for the whole test: the first setup and the
+    # reload triggered by the host update must not open real connections.
     with patch(
-        "plugp100.api.tapo_client.TapoClient.get_device_info",
+        "custom_components.tapo.hass_tapo.connect",
         AsyncMock(side_effect=Exception("Something wrong")),
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+        assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
-    with patch(
-        "custom_components.tapo.config_flow.discover_tapo_device",
-        AsyncMock(return_value=mock_discovery),
-    ):
-        discovery_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DhcpServiceInfo(
-                ip="127.0.0.2",
-                macaddress=MAC_ADDRESS.replace(":", ""),
-                hostname="hostname",
-            ),
-        )
-        assert discovery_result["type"] is FlowResultType.ABORT
-        assert discovery_result["reason"] == "already_configured"
-        assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+        with patch(
+            "custom_components.tapo.config_flow.discover_tapo_device",
+            AsyncMock(return_value=mock_discovery),
+        ):
+            discovery_result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_DHCP},
+                data=DhcpServiceInfo(
+                    ip="127.0.0.2",
+                    macaddress=MAC_ADDRESS.replace(":", ""),
+                    hostname="hostname",
+                ),
+            )
+            assert discovery_result["type"] is FlowResultType.ABORT
+            assert discovery_result["reason"] == "already_configured"
+            await hass.async_block_till_done()
+            assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
