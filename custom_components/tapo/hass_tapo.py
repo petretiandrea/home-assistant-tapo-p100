@@ -4,6 +4,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from plugp100.components.energy import EnergyComponent
 from plugp100.devices import DeviceConnectConfiguration, TapoDevice, TapoPlug, connect
 from plugp100.discovery import DiscoveredDevice, connect_discovered_device
@@ -18,6 +19,7 @@ from custom_components.tapo.const import (
     PLATFORMS,
 )
 from custom_components.tapo.coordinators import HassTapoDeviceData, TapoDataCoordinator
+from custom_components.tapo.entity import tapo_device_info
 from custom_components.tapo.hub.hass_tapo_hub import HassTapoHub, TapoHub
 from custom_components.tapo.setup_helpers import create_aiohttp_session
 
@@ -89,6 +91,13 @@ class HassTapo:
             child_coordinators=child_coordinators,
             device=device,
         )
+
+        if isinstance(device, TapoPlug) and device.is_strip:
+            # Register the strip before the platforms set up its sockets, which
+            # link to the strip device by its registry id.
+            dr.async_get(hass).async_get_or_create(
+                config_entry_id=self.entry.entry_id, **tapo_device_info(device)
+            )
 
         await hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         return True
