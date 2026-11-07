@@ -657,9 +657,10 @@ def test_push_entity_updates_never_schedule_event_logs(manager, monkeypatch):
     device.get_event_logs.assert_not_awaited()
 
 
+@pytest.mark.parametrize("hub_address", ["192.0.2.1", "192.0.2.1:80", "192.0.2.1:8080"])
 @pytest.mark.parametrize("selection", [None, [], ["A" * 40]])
 async def test_h100_defaults_to_push_and_deselection_never_enables_polling(
-    hass, monkeypatch, selection
+    hass, monkeypatch, selection, hub_address
 ):
     from custom_components.tapo.hub.hass_tapo_hub import HassTapoHub
 
@@ -669,10 +670,9 @@ async def test_h100_defaults_to_push_and_deselection_never_enables_polling(
     ]
     hub = SimpleNamespace(model="H100", children=children)
     data = {
-        "host": "192.0.2.1",
+        "host": hub_address,
         "username": "user",
         "password": "test-secret",
-        "local_push_host": "127.0.0.1",
     }
     if selection is not None:
         data["local_push_device_ids"] = selection
@@ -686,10 +686,15 @@ async def test_h100_defaults_to_push_and_deselection_never_enables_polling(
     monkeypatch.setattr(
         "custom_components.tapo.hub.hass_tapo_hub.LocalPushManager", factory
     )
+    source_ip = AsyncMock(return_value="127.0.0.1")
+    monkeypatch.setattr(
+        "custom_components.tapo.hub.hass_tapo_hub.async_get_source_ip", source_ip
+    )
     await HassTapoHub(entry, hub)._async_setup_local_push(hass, coordinators)
     expected = {"A" * 40, "B" * 40} if selection is None else set(selection)
     assert all(c._local_push_managed for c in coordinators)
     if expected:
+        source_ip.assert_awaited_once_with(hass, target_ip="192.0.2.1")
         assert factory.call_args.args[3] == expected
         push.async_start.assert_awaited_once()
         assert state.local_push is push
@@ -742,3 +747,33 @@ def test_user_modified_rule_semantics_are_not_owned(manager, change):
     else:
         native["action_setting_list"][0]["action_id"] = "user-action"
     assert not manager._owns_native_rule(manager._routes["06ef2"], native)
+
+
+@pytest.mark.parametrize(
+    ("hub_address", "expected_port"),
+    [("192.0.2.1", 80), ("192.0.2.1:80", 80), ("192.0.2.1:8080", 8080)],
+)
+async def test_management_connection_preserves_hub_port(
+    manager, monkeypatch, hub_address, expected_port
+):
+    manager.entry.data.update(host=hub_address, username="user", password="test-secret")
+    configured = LocalPushManager(
+        manager.hass,
+        manager.entry,
+        manager.hub,
+        manager.device_ids,
+        manager.host,
+        manager.port,
+    )
+    configured._session = MagicMock()
+    client = MagicMock()
+    connect = AsyncMock(return_value=SimpleNamespace(client=client))
+    monkeypatch.setattr("custom_components.tapo.hub.local_push.connect", connect)
+    await configured._connect()
+    config, session = connect.call_args.args
+    assert config.host == "192.0.2.1"
+    assert config.port == expected_port
+    assert session is configured._session
+    assert configured._client is client
+    # Discovery announcements and the incoming peer filter use an IP, never IP:port.
+    assert configured.hub_host == "192.0.2.1"

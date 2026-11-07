@@ -29,6 +29,7 @@ from custom_components.tapo.hub.local_push import (
     LocalPushManager,
 )
 from custom_components.tapo.hub.local_push_repairs import async_set_push_issue
+from custom_components.tapo.setup_helpers import get_host_port
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,9 +136,10 @@ class HassTapoHub:
         data = hass.data[DOMAIN][self.entry.entry_id]
         push = None
         try:
+            hub_host, _ = get_host_port(self.entry.data["host"])
             host = self.entry.data.get(
                 CONF_LOCAL_PUSH_HOST
-            ) or await async_get_source_ip(hass, target_ip=self.entry.data["host"])
+            ) or await async_get_source_ip(hass, target_ip=hub_host)
             push = LocalPushManager(
                 hass,
                 self.entry,

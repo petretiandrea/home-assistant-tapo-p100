@@ -186,3 +186,23 @@ async def test_port_conflict_and_current_receiver_exemption(hass):
             CHOICES,
             current=SimpleNamespace(host="127.0.0.1", port=18080, listening=False),
         ) == {"base": "receiver_unavailable"}
+
+
+@pytest.mark.parametrize("hub_address", ["192.0.2.1", "192.0.2.1:80", "192.0.2.1:8080"])
+async def test_validation_routes_to_hub_ip_without_management_port(hass, hub_address):
+    with (
+        patch(
+            "custom_components.tapo.hub.local_push.async_get_source_ip",
+            AsyncMock(return_value="127.0.0.1"),
+        ) as source_ip,
+        patch("custom_components.tapo.hub.local_push.socket.socket"),
+    ):
+        assert (
+            await async_validate_push(
+                hass,
+                DATA | {"host": hub_address, "local_push_device_ids": [A]},
+                CHOICES,
+            )
+            == {}
+        )
+    source_ip.assert_awaited_once_with(hass, target_ip="192.0.2.1")

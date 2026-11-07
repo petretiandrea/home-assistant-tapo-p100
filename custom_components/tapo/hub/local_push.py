@@ -23,6 +23,8 @@ from plugp100.api.requests.tapo_request import TapoRequest
 from plugp100.common.credentials import AuthCredential
 from plugp100.devices.factory import DeviceConnectConfiguration, connect
 
+from custom_components.tapo.setup_helpers import get_host_port
+
 from .local_receiver import (
     DiscoveryResponder,
     VirtualReceiver,
@@ -73,11 +75,12 @@ async def async_validate_push(hass, data, choices, current=None):
     if not selected <= {choice["value"] for choice in choices}:
         return {CONF_LOCAL_PUSH_DEVICES: "invalid_push_devices"}
     try:
+        hub_host, _ = get_host_port(data["host"])
         host = data.get(CONF_LOCAL_PUSH_HOST) or await async_get_source_ip(
-            hass, target_ip=data["host"]
+            hass, target_ip=hub_host
         )
         address = ipaddress.IPv4Address(host)
-        ipaddress.IPv4Address(data["host"])
+        ipaddress.IPv4Address(hub_host)
         if address.is_unspecified or address.is_multicast:
             raise ValueError("Unicast receiver address required")
     except (ValueError, OSError):
@@ -108,7 +111,8 @@ class LocalPushManager:
         self.legacy_degrees = entry.data.get(CONF_LOCAL_PUSH_LEGACY_DEGREES, False)
         self.device_ids = set(device_ids)
         self.host, self.port = str(ipaddress.IPv4Address(host)), int(port)
-        self.hub_host = str(ipaddress.IPv4Address(entry.data["host"]))
+        hub_host, self.hub_port = get_host_port(entry.data["host"])
+        self.hub_host = str(ipaddress.IPv4Address(hub_host))
         if hub.model != "H100" or not 1024 <= self.port <= 65535:
             raise ValueError("Local push requires H100 and an unprivileged TCP port")
         self._store = Store(
@@ -241,6 +245,7 @@ class LocalPushManager:
     async def _connect(self):
         cfg = DeviceConnectConfiguration(
             host=self.hub_host,
+            port=self.hub_port,
             credentials=AuthCredential(
                 self.entry.data["username"], self.entry.data["password"]
             ),
