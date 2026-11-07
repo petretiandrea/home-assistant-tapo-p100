@@ -9,7 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, selector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from plugp100.common.credentials import AuthCredential
@@ -33,6 +33,15 @@ from custom_components.tapo.const import (
 )
 from custom_components.tapo.discovery import discover_tapo_device
 from custom_components.tapo.errors import CannotConnect, InvalidAuth, InvalidHost
+from custom_components.tapo.hub.local_push import (
+    CONF_LOCAL_PUSH_DEVICES,
+    CONF_LOCAL_PUSH_HOST,
+    CONF_LOCAL_PUSH_LEGACY_DEGREES,
+    CONF_LOCAL_PUSH_PORT,
+    DEFAULT_LOCAL_PUSH_PORT,
+    async_validate_push,
+)
+from custom_components.tapo.hub.local_push_repairs import async_set_push_issue
 from custom_components.tapo.setup_helpers import create_aiohttp_session, get_host_port
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,21 +79,61 @@ STEP_ADVANCED_CONFIGURATION = vol.Schema(
 )
 
 
-def step_options(entry: config_entries.ConfigEntry) -> vol.Schema:
-    return vol.Schema(
+def step_options(
+    entry: config_entries.ConfigEntry, push_choices=None, user_input=None
+) -> vol.Schema:
+    data = entry.data | (user_input or {})
+    schema = vol.Schema(
         {
             vol.Required(
                 CONF_HOST,
                 description="The IP address of your tapo device (must be static)",
-                default=entry.data.get(CONF_HOST),
+                default=data.get(CONF_HOST),
             ): str,
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 description="Polling rate in seconds (e.g. 0.5 seconds means 500ms)",
-                default=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S),
+                default=data.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S),
             ): vol.All(vol.Coerce(float), vol.Clamp(min=1)),
         }
     )
+    if push_choices is not None:
+        schema = schema.extend(push_schema(data, push_choices).schema)
+    return schema
+
+
+def push_schema(data, choices):
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_LOCAL_PUSH_DEVICES,
+                default=data.get(
+                    CONF_LOCAL_PUSH_DEVICES, [choice["value"] for choice in choices]
+                ),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=choices, multiple=True)
+            ),
+            vol.Optional(
+                CONF_LOCAL_PUSH_PORT,
+                default=data.get(CONF_LOCAL_PUSH_PORT, DEFAULT_LOCAL_PUSH_PORT),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1024, max=65535)),
+            vol.Optional(
+                CONF_LOCAL_PUSH_HOST, default=data.get(CONF_LOCAL_PUSH_HOST, "")
+            ): str,
+            vol.Optional(
+                CONF_LOCAL_PUSH_LEGACY_DEGREES,
+                default=data.get(CONF_LOCAL_PUSH_LEGACY_DEGREES, False),
+            ): bool,
+        }
+    )
+
+
+def push_choices(device):
+    return [
+        {"value": child.device_id, "label": child.nickname}
+        for child in device.children
+        if child.model == "S200D"
+    ]
 
 
 @dataclasses.dataclass(frozen=False)
@@ -184,10 +233,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             polling_rate = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_RATE_S)
-            return self.async_create_entry(
-                title=self.first_step_data.device.nickname,
-                data=self.first_step_data.user_input
-                | {CONF_SCAN_INTERVAL: polling_rate},
+            return await self._async_finish_setup(
+                self.first_step_data.device,
+                self.first_step_data.user_input | {CONF_SCAN_INTERVAL: polling_rate},
             )
         else:
             return self.async_show_form(
@@ -278,9 +326,9 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_config_entry_from_device_info(
         self, device: TapoDevice, options: dict[str, Any]
     ) -> ConfigFlowResult:
-        return self.async_create_entry(
-            title=device.nickname,
-            data=options
+        return await self._async_finish_setup(
+            device,
+            options
             | {
                 CONF_HOST: device.host,
                 CONF_MAC: device.mac,
@@ -289,6 +337,29 @@ class TapoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self._discovered_info is not None
                 else None,
             },
+        )
+
+    async def _async_finish_setup(self, device, data):
+        if device.model == "H100":
+            self._pending_device, self._pending_data = device, data
+            return await self.async_step_local_push()
+        return self.async_create_entry(title=device.nickname, data=data)
+
+    async def async_step_local_push(self, user_input=None):
+        """Configure local events while onboarding a hub."""
+        choices = push_choices(self._pending_device)
+        errors = {}
+        if user_input is not None:
+            data = self._pending_data | user_input
+            errors = await async_validate_push(self.hass, data, choices)
+            if not errors:
+                return self.async_create_entry(
+                    title=self._pending_device.nickname, data=data
+                )
+        return self.async_show_form(
+            step_id="local_push",
+            data_schema=push_schema(user_input or {}, choices),
+            errors=errors,
         )
 
     async def _async_get_device_from_discovered(
@@ -340,19 +411,59 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self) -> None:
         """Initialize options flow."""
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
+    async def async_step_init(self, user_input=None):
+        """Configure the receiver without changing rules until settings are saved."""
+        data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
+        choices = self._push_choices()
+        errors = {}
         if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=self.config_entry.data | user_input
-            )
-            return self.async_create_entry(title="", data={})
+            if choices is not None:
+                errors = await async_validate_push(
+                    self.hass,
+                    self.config_entry.data | user_input,
+                    choices,
+                    current=data.local_push if data else None,
+                )
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=self.config_entry.data | user_input
+                )
+                if choices is not None:
+                    async_set_push_issue(
+                        self.hass, self.config_entry, "local_push_upgrade", False
+                    )
+                return self.async_create_entry(title="", data={})
         return self.async_show_form(
             step_id="init",
-            data_schema=step_options(self.config_entry),
+            data_schema=step_options(self.config_entry, choices, user_input),
+            errors=errors,
         )
+
+    def _push_choices(self):
+        data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
+        if data is None:
+            # Still allow disabling push when setup failed (e.g. a port conflict).
+            selected = self.config_entry.data.get(CONF_LOCAL_PUSH_DEVICES)
+            return (
+                [{"value": value, "label": value} for value in selected]
+                if selected
+                else None
+            )
+        if data.device.model != "H100":
+            return None
+        choices = [
+            {"value": c.device.device_id, "label": c.device.nickname}
+            for c in data.child_coordinators
+            if c.device.model == "S200D"
+        ]
+        available = {choice["value"] for choice in choices}
+        choices.extend(
+            {"value": device_id, "label": f"{device_id} (no longer paired)"}
+            for device_id in sorted(
+                set(self.config_entry.data.get(CONF_LOCAL_PUSH_DEVICES, [])) - available
+            )
+        )
+        return choices
 
 
 def is_supported_device(discovered_device: DiscoveredDevice) -> bool:

@@ -7,7 +7,10 @@
     "error": {
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid credentials",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "invalid_push_devices": "A selected knob is no longer associated with this hub. Deselect it and try again.",
+      "invalid_receiver_address": "Enter a local IPv4 address assigned to this Home Assistant host, or leave it blank for automatic selection. The hub address must also be IPv4.",
+      "receiver_unavailable": "The receiver could not bind its address or ports. Use an IPv4 address assigned to Home Assistant and an unused TCP port (1024\u201365535). UDP 20002 must also be available. Each H100 on the same address needs a different TCP port."
     },
     "step": {
       "user": {
@@ -35,26 +38,63 @@
         "data": {
           "scan_interval": "Refresh rate in seconds"
         }
-      }
-    }
-  },
-  "options": {
-    "error": {
-      "invalid_path": "The path provided is not valid. Should be in the format `user/repo-name` and should be a valid github repository."
-    },
-    "step": {
-      "init": {
-        "title": "Configure Tapo Device",
-        "description": "By customizing the polling rate unexpected behavior could happens. The device could even become unresponsive for a while.",
+      },
+      "local_push": {
+        "title": "Set up S200D local events",
+        "description": "H100/S200D uses authenticated local push instead of event-log polling. Selected knobs get four hub-local rules managed by this integration; you do not need a Tapo bulb, rooting, MQTT, or a Tapo app automation. Allow the hub to reach Home Assistant on the receiver TCP port and UDP 20002; allow Home Assistant to reach hub UDP 21112. Supported behavior has been verified on H100 firmware 1.7.10. Rotation events use native direction and scaled amount by default. Enable legacy rotation degrees only for existing degree-based automations. Deselecting a knob disables its event entities. Pair additional knobs in the Tapo app first, then select them in Configure.",
         "data": {
-          "host": "IP address or hostname of tapo device",
-          "password": "Tapo App Password",
-          "username": "Tapo App Username (email)",
-          "track_device_mac": "Try to track device dynamic ip using MAC address. (Your HA must be able to access to same network of device)",
-          "scan_interval": "Refresh rate in seconds"
+          "local_push_device_ids": "S200D knobs using local push",
+          "local_push_port": "Receiver TCP port",
+          "local_push_host": "Receiver IPv4 address (blank for automatic)",
+          "local_push_legacy_degrees": "Legacy rotation degrees (compatibility)"
+        },
+        "data_description": {
+          "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address.",
+          "local_push_legacy_degrees": "Off by default. Add reconstructed signed degrees for older automations on all selected knobs. Native direction and amount are always retained. Unknown deltas report degrees as null; see the documented firmware limits."
         }
       }
     }
   },
-  "title": "TP-Link Tapo"
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure device and local events",
+        "description": "H100/S200D events use local push. Changing these settings reloads the integration and reconciles only its own hub rules. Deselect a knob to stop receiving its events; this does not enable event polling. Other supported devices keep their existing transport. See the local push setup and network requirements in the documentation.",
+        "data": {
+          "host": "Hub or device address",
+          "scan_interval": "Device information refresh interval (seconds)",
+          "local_push_device_ids": "S200D knobs using local push",
+          "local_push_port": "Receiver TCP port",
+          "local_push_host": "Receiver IPv4 address (blank for automatic)",
+          "local_push_legacy_degrees": "Legacy rotation degrees (compatibility)"
+        },
+        "data_description": {
+          "local_push_port": "Default 18080. Home Assistant Container must expose this port; host networking is recommended.",
+          "local_push_host": "Automatic selection uses the route to the hub. For multiple adapters, specify a reachable local IPv4 address.",
+          "local_push_legacy_degrees": "Off by default. Add reconstructed signed degrees for older automations on all selected knobs. Native direction and amount are always retained. Unknown deltas report degrees as null; see the documented firmware limits."
+        }
+      }
+    },
+    "error": {
+      "invalid_push_devices": "A selected knob is no longer associated with this hub. Deselect it and try again.",
+      "invalid_receiver_address": "Enter a local IPv4 address assigned to this Home Assistant host, or leave it blank for automatic selection. The hub address must also be IPv4.",
+      "receiver_unavailable": "The receiver could not bind its address or ports. Use an IPv4 address assigned to Home Assistant and an unused TCP port (1024\u201365535). UDP 20002 must also be available. Each H100 on the same address needs a different TCP port."
+    }
+  },
+  "title": "TP-Link Tapo",
+  "issues": {
+    "local_push_upgrade": {
+      "title": "Review local knob events for {hub}",
+      "description": "Knob events now use local push. Open [the Tapo integration]({integration_url}) and choose Configure for this hub. Review the selected S200D knobs, receiver IPv4 address and TCP port (default 18080). Allow hub-to-Home-Assistant TCP traffic and UDP 20002, and Home-Assistant-to-hub UDP 21112 on your LAN.\n\nIf existing automations read degrees, enable Legacy rotation degrees (compatibility); native direction and amount remain the default. Saving Configure acknowledges this upgrade notice."
+    },
+    "local_push_missing_devices": {
+      "title": "Review unpaired knobs on {hub}",
+      "description": "Some selected S200D knobs are no longer paired with this hub. Paired knobs and other hub devices continue independently. Open [the Tapo integration]({integration_url}), choose Configure for this hub, and deselect entries marked no longer paired, or pair the knobs again in the Tapo app."
+    },
+    "local_push_unavailable": {
+      "title": "Local knob events need attention on {hub}",
+      "description": "The local receiver or managed hub rules could not be verified. Affected knob event entities are unavailable; ordinary device updates run independently. The receiver retries automatically.\n\nOpen [the Tapo integration]({integration_url}) and choose Configure for this hub. Check the receiver IPv4 address, available TCP port, UDP 20002 and LAN firewall rules. If a managed rule was edited, restore its expected source and target; the integration will not overwrite conflicting rules. The Local Push diagnostic sensor shows the last error type when available. This notice clears after verified recovery."
+    }
+  }
 }

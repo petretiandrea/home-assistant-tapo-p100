@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, List, Type, TypeVar
 
 import aiohttp
 import async_timeout
@@ -17,6 +17,9 @@ from plugp100.models.child import PowerStripChild
 from custom_components.tapo.const import DOMAIN
 from custom_components.tapo.helpers import _raise_from_tapo_exception
 
+if TYPE_CHECKING:
+    from custom_components.tapo.hub.local_push import LocalPushManager
+
 _LOGGER = logging.getLogger(__name__)
 
 DEBOUNCER_COOLDOWN = 2
@@ -28,6 +31,7 @@ class HassTapoDeviceData:
     coordinator: "TapoDataCoordinator"
     config_entry_update_unsub: CALLBACK_TYPE
     child_coordinators: List["TapoDataCoordinator"]
+    local_push: "LocalPushManager | None" = None
 
 
 # def create_tapo_device(model: str, client: TapoClient) -> Optional[TapoDevice]:

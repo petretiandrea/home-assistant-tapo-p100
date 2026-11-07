@@ -1,0 +1,135 @@
+[
+  {
+    "id": "R2f06ef2",
+    "version": 2,
+    "condition": 0,
+    "condition_type": 0,
+    "enabled": true,
+    "trigger_team_list": [
+      {
+        "team": 0,
+        "team_type": 0,
+        "event_list": [
+          {
+            "device_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "event_id": "singleClick",
+            "param_list": []
+          }
+        ]
+      }
+    ],
+    "action_setting_list": [
+      {
+        "device_id": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        "trigger_time": 0,
+        "type": 3,
+        "delay_seconds": 0,
+        "future_type": 0,
+        "service": {
+          "id": "reverseStatus",
+          "params": {}
+        }
+      }
+    ],
+    "effective_periods": [
+      {
+        "period_type": 0,
+        "days_of_week": 127,
+        "start_time": 0,
+        "end_time": 0,
+        "start_type": 0,
+        "end_type": 0
+      }
+    ]
+  },
+  {
+    "id": "Rccf6135",
+    "version": 2,
+    "condition": 0,
+    "condition_type": 0,
+    "enabled": true,
+    "trigger_team_list": [
+      {
+        "team": 0,
+        "team_type": 0,
+        "event_list": [
+          {
+            "device_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "event_id": "rotation",
+            "param_list": [
+              "\"rotate_deg\":  __GT[0]"
+            ]
+          }
+        ]
+      }
+    ],
+    "action_setting_list": [
+      {
+        "device_id": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        "trigger_time": 0,
+        "type": 3,
+        "delay_seconds": 0,
+        "future_type": 0,
+        "service": {
+          "id": "increaseBrightness",
+          "params": {}
+        }
+      }
+    ],
+    "effective_periods": [
+      {
+        "period_type": 0,
+        "days_of_week": 127,
+        "start_time": 0,
+        "end_time": 0,
+        "start_type": 0,
+        "end_type": 0
+      }
+    ]
+  },
+  {
+    "id": "R8ea7182",
+    "version": 2,
+    "condition": 0,
+    "condition_type": 0,
+    "enabled": true,
+    "trigger_team_list": [
+      {
+        "team": 0,
+        "team_type": 0,
+        "event_list": [
+          {
+            "device_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "event_id": "rotation",
+            "param_list": [
+              "\"rotate_deg\":  __LT[0]"
+            ]
+          }
+        ]
+      }
+    ],
+    "action_setting_list": [
+      {
+        "device_id": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        "trigger_time": 0,
+        "type": 3,
+        "delay_seconds": 0,
+        "future_type": 0,
+        "service": {
+          "id": "decreaseBrightness",
+          "params": {}
+        }
+      }
+    ],
+    "effective_periods": [
+      {
+        "period_type": 0,
+        "days_of_week": 127,
+        "start_time": 0,
+        "end_time": 0,
+        "start_type": 0,
+        "end_type": 0
+      }
+    ]
+  }
+]

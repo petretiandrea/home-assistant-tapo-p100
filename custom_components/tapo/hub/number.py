@@ -30,8 +30,10 @@ async def async_setup_entry(
         device = child_coordinator.device
         if isinstance(device, KE100Device):
             async_add_entities([TRVTemperatureOffset(child_coordinator, device)], True)
-        elif isinstance(device, TriggerButtonDevice) and device.has_component(
-            TriggerLogComponent
+        elif (
+            isinstance(device, TriggerButtonDevice)
+            and device.has_component(TriggerLogComponent)
+            and not getattr(child_coordinator, "_local_push_managed", False)
         ):
             async_add_entities([PollUtilization(child_coordinator, device)], True)
 

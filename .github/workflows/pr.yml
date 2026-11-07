@@ -35,7 +35,9 @@ jobs:
             The subject "{subject}" found in the pull request title "{title}"
             didn't match the configured pattern. Please ensure that the subject
             doesn't start with an uppercase character.
-          wip: true
+          # Native draft PRs handle WIP. The legacy WIP status writer requires
+          # write permissions unavailable to fork pull_request workflows.
+          wip: false
 
   lint:
     uses: ./.github/workflows/lint.yml
