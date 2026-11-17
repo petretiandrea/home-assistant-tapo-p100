@@ -13,7 +13,7 @@ jobs:
     environment: sponsors
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Generate Sponsors 💖
         uses: JamesIves/github-sponsors-readme-action@v1
