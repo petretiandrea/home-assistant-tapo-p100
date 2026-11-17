@@ -34,7 +34,7 @@ jobs:
           echo "Home Assistant version: ${HA_VERSION}"
 
       - name: Cache Home Assistant virtual environment
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             .local/ha-venv
