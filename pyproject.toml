@@ -21,7 +21,7 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-homeassistant-custom-component==0.13.320",
+    "pytest-homeassistant-custom-component==0.13.375",
     "pytest-asyncio",
     "async-timeout",
 ]
