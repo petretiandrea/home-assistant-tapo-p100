@@ -9,7 +9,7 @@ dependencies = []   # runtime deps are managed by Home Assistant itself
 [dependency-groups]
 dev = [
     { include-group = "test" },
-    "homeassistant==2026.3.4",
+    "homeassistant==2026.11.3",
     "hassil>=3.5.0",
     "home-assistant-intents>=2026.3.3",
     "aiodiscover>=1.6.0",
